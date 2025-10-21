@@ -1,0 +1,34 @@
+h1 {
+    font-family: 'Roboto Slab', serif;
+    font-weight: bold;
+}
+
+h2 {
+    font-family: 'Roboto Slab', serif;
+    font-weight: normal;
+}
+
+h3 {
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: bold;
+}
+
+p {
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: normal;
+}
+
+.notes {
+    font-family: 'Fira Sans', sans-serif;
+    font-style: italic;
+}
+
+:root {
+    --blue: #002677;
+    --yellow: #F4DA40;
+    --red: #C8102E;
+    --cyan: #199BFC;
+    --black: #25282A;
+    --gray: #D9D9D6;
+    --dibris: #007C58;
+}
