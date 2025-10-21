@@ -1,1 +1,1 @@
-# group-pi-dataviz.github.io
+# Group Pi - Data Visualization Project
