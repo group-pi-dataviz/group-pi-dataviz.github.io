@@ -1,6 +1,12 @@
-@media (max-width: 620px) {
+@media (max-width: 292px) {
     body {
-        margin: 150px auto 0;
+        margin: 180px auto 70px;
+    }
+}
+
+@media (max-width: 620px) and (min-width: 293px) {
+    body {
+        margin: 150px auto 70px;
     }
 }
 @media (min-width: 621px) {
