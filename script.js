@@ -33,7 +33,9 @@ function parseNumber(str) {
   return parseFloat(str.replace(",", "."));
 }
 
-const data = await d3.dsv(";", "./data/apac_data.csv", (d) => {
+const dataSource = "apac_data_test.csv";
+
+const data = await d3.dsv(";", "./data/" + dataSource, (d) => {
   // Converte "31-dicembre-2016" → "31-December-2016" e poi in oggetto Date
   const weekStr = d["WEEK"]
     .toLowerCase()
@@ -59,7 +61,7 @@ const data = await d3.dsv(";", "./data/apac_data.csv", (d) => {
   };
 });
 
-console.log(data[0]);
+console.log(data.length, data[0]);
 
 const countriesFilter = ['Afghanistan', 'Pakistan'];
 
@@ -71,7 +73,8 @@ const marginRight = 0;
 const marginBottom = 10;
 const marginLeft = 30;
 const width = 928;
-const height = Math.ceil((data.length + 0.1) * barHeight) + marginTop + marginBottom;
+const height = 400;
+// const height = Math.ceil((data.length + 0.1) * barHeight) + marginTop + marginBottom;
 
 // Create the scales.
 const x = d3.scaleLinear()
@@ -133,4 +136,4 @@ svg.append("g")
 
 console.log(svg.node());
 
-//document.getElementById("chart").appendChild(svg.node());
+document.getElementById("chart").appendChild(svg.node());
