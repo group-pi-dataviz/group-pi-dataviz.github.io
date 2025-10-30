@@ -133,4 +133,4 @@ svg.append("g")
 
 console.log(svg.node());
 
-// document.getElementById("chart").appendChild(svg.node());
+//document.getElementById("chart").appendChild(svg.node());
