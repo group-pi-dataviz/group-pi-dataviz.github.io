@@ -33,7 +33,7 @@ function parseNumber(str) {
   return parseFloat(str.replace(",", "."));
 }
 
-const dataSource = "apac_data_test.csv";
+const dataSource = "event_fatalities.csv";
 
 const data = await d3.dsv(";", "./data/" + dataSource, (d) => {
   // Converte "31-dicembre-2016" → "31-December-2016" e poi in oggetto Date

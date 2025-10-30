@@ -1,16 +1,16 @@
-country,events,fatalities
-India,194826,13353
-Pakistan,108247,53153
-Myanmar,96280,98367
-Afghanistan,68495,203233
-South Korea,43999,0
-Bangladesh,32817,8150
-Nepal,24669,388
-Indonesia,23596,1720
-Philippines,18317,18295
-China,16941,107
-Thailand,13146,3397
-Japan,13042,1
-Sri Lanka,8843,528
-Taiwan,6983,0
-Australia,4109,7
+country;events;fatalities
+India;194826;13353
+Pakistan;108247;53153
+Myanmar;96280;98367
+Afghanistan;68495;203233
+South Korea;43999;0
+Bangladesh;32817;8150
+Nepal;24669;388
+Indonesia;23596;1720
+Philippines;18317;18295
+China;16941;107
+Thailand;13146;3397
+Japan;13042;1
+Sri Lanka;8843;528
+Taiwan;6983;0
+Australia;4109;7
