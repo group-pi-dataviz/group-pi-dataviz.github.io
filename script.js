@@ -1,5 +1,38 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
+// --- --- --- Utility --- --- ---
+
+window.sections = [intro_id, sec1_id, about_id];
+window.addEventListener('scroll', () => {
+    let currentSection = null;
+
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+
+        //if the section is currently in the viewport
+        if (rect.top <= 0 && rect.bottom > 0) {
+            currentSection = section;
+
+            //calculate progress within this section
+            const sectionHeight = section.offsetHeight;
+            const scrollWithinSection = Math.abs(rect.top);
+
+            let progress = (scrollWithinSection / sectionHeight) * 100;
+
+            //clamp
+            progress = Math.min(100, Math.max(0, progress));
+
+            progressBar_id.style.width = `${progress}%`;
+        }
+    });
+
+    if (!currentSection) {
+    }
+});
+
+
+// --- --- --- Charts  --- --- ---
+
 // const data = d3.csv("./data/apac_data.csv", function(d) {console.log(d); return d;});
 
 /*
