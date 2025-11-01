@@ -2,31 +2,51 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 // --- --- --- Utility --- --- ---
 
-window.sections = [intro_id, sec1_id, about_id];
+//creates a rectangle of the height of the source html tag and puts it below target
+window.addThumbnail = function (source, target, scale) {
+  const sourceRect = source.getBoundingClientRect();
+  const thumbnail = document.createElement("div");
+  thumbnail.classList = "rounded bg-[repeating-linear-gradient(0deg,_#dedede_0,_#dedede_7px,_white_5px,_white_10px)] bg-[size:100%_10px]";
+  thumbnail.style.width = "100%";
+  thumbnail.style.height = sourceRect.height * scale + "px";
+  target.appendChild(thumbnail);
+}
+
+const thumbnailScale = 0.1;
+addThumbnail(intro_id, intro_id_nav, thumbnailScale);
+addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
+addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
+
 window.addEventListener('scroll', () => {
-    let currentSection = null;
+    const main = document.querySelector('main');
+    if (!main) return;
 
-    sections.forEach(section => {
-        const rect = section.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
+    console.log("main", mainRect.top, mainRect.bottom, mainRect.height);
 
-        //if the section is currently in the viewport
-        if (rect.top <= 0 && rect.bottom > 0) {
-            currentSection = section;
+    const bodyRect = document.body.getBoundingClientRect();
+    console.log("body", bodyRect.top, bodyRect.bottom, bodyRect.height);
+    // console.log("full height", bodyRect.height - mainRect.height);
+    //console.log("main scroll", mainRect.top + mainRect.height);
 
-            //calculate progress within this section
-            const sectionHeight = section.offsetHeight;
-            const scrollWithinSection = Math.abs(rect.top);
+    const progressBar_id = document.querySelector('#progressBar_id');
+    if (!progressBar_id) return;
 
-            let progress = (scrollWithinSection / sectionHeight) * 100;
+    if (mainRect.top >= 0)
+      progressBar_id.style.height = `0%`;
+    else if (mainRect.bottom <= 0)
+      progressBar_id.style.height = `100%`;
+    else
+    {
+      const extraStuff = bodyRect.height - mainRect.height;
+      const extraTop = mainRect.top - bodyRect.top;
+      const extraBottom = bodyRect.bottom - mainRect.bottom;
+      console.log("extraStuff", extraStuff, "extraTop", extraTop, "extraBottom", extraBottom);
 
-            //clamp
-            progress = Math.min(100, Math.max(0, progress));
-
-            progressBar_id.style.width = `${progress}%`;
-        }
-    });
-
-    if (!currentSection) {
+      const fullHeight = bodyRect.height - mainRect.height;
+  
+      const progress = Math.abs(mainRect.top) / fullHeight * 100;
+        progressBar_id.style.height = `${progress}%`;
     }
 });
 
