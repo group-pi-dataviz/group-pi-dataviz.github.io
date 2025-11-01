@@ -22,13 +22,6 @@ window.addEventListener('scroll', () => {
     if (!main) return;
 
     const mainRect = main.getBoundingClientRect();
-    // console.log("main", mainRect.top, mainRect.bottom, mainRect.height);
-
-    const bodyRect = document.body.getBoundingClientRect();
-    // console.log("body", bodyRect.top, bodyRect.bottom, bodyRect.height);
-    // console.log("full height", bodyRect.height - mainRect.height);
-    //console.log("main scroll", mainRect.top + mainRect.height);
-
     const progressBar_id = document.querySelector('#progressBar_id');
     if (!progressBar_id) return;
 
@@ -38,15 +31,10 @@ window.addEventListener('scroll', () => {
       progressBar_id.style.height = `100%`;
     else
     {
-      const extraStuff = bodyRect.height - mainRect.height;
-      const extraTop = mainRect.top - bodyRect.top;
-      const extraBottom = bodyRect.bottom - mainRect.bottom;
-      // console.log("extraStuff", extraStuff, "extraTop", extraTop, "extraBottom", extraBottom);
-
-      const fullHeight = bodyRect.height - mainRect.height;
-  
-      const progress = Math.abs(mainRect.top) / fullHeight * 100;
-        progressBar_id.style.height = `${progress}%`;
+      //main lerp from 0 -> main_max = mainRect.height - window.innerHeight
+      const progress = Math.min(100, Math.max(0, (Math.abs(mainRect.top) / (mainRect.height - window.innerHeight)) * 100));
+      progressBar_id.style.top = `${mainRect.top}px`;
+      progressBar_id.style.height = `${progress}%`;
     }
 });
 
