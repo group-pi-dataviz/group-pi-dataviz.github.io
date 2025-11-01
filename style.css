@@ -88,3 +88,8 @@ nav a:hover::after {
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
+
+.waffle-cell {
+    stroke: #fff; /* White border to separate squares */
+    stroke-width: 1px;
+}
