@@ -115,71 +115,6 @@ const marginBottom = 10;
 const marginLeft = 30;
 const width = 928;
 const height = 400;
-// // const height = Math.ceil((data.length + 0.1) * barHeight) + marginTop + marginBottom;
-
-// // Create the scales.
-// const x = d3.scaleLinear()
-//     .domain([0, d3.max(data, d => d.events)])
-//     .range([marginLeft, width - marginRight]);
-  
-// const y = d3.scaleBand()
-//     .domain(d3.sort(data, d => -d.events).map(d => d.country))
-//     .rangeRound([marginTop, height - marginBottom])
-//     .padding(0.1);
-
-// // Create a value format.
-// const format = x.tickFormat(20, "");
-
-// // Create the SVG container.
-// const svg = d3.create("svg")
-//     .attr("width", width)
-//     .attr("height", height)
-//     .attr("viewBox", [0, 0, width, height])
-//     .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
-  
-// // Append a rect for each letter.
-// svg.append("g")
-//     .attr("fill", "steelblue")
-//     .selectAll()
-//     .data(data)
-//     .join("rect")
-//     .attr("x", x(0))
-//     .attr("y", (d) => y(d.country))
-//     .attr("width", (d) => x(d.events) - x(0))
-//     .attr("height", y.bandwidth());
-  
-// // Append a label for each letter.
-// svg.append("g")
-//     .attr("fill", "white")
-//     .attr("text-anchor", "end")
-//     .selectAll()
-//     .data(data)
-//     .join("text")
-//     .attr("x", (d) => x(d.events))
-//     .attr("y", (d) => y(d.country) + y.bandwidth() / 2)
-//     .attr("dy", "0.35em")
-//     .attr("dx", -4)
-//     .text((d) => format(d.events))
-//     .call((text) => text.filter(d => x(d.events) - x(0) < 20) // short bars
-//     .attr("dx", +4)
-//     .attr("fill", "black")
-//     .attr("text-anchor", "start"));
-
-// // Create the axes.
-// svg.append("g")
-//     .attr("transform", `translate(0,${marginTop})`)
-//     .call(d3.axisTop(x).ticks(width / 80, "%"))
-//     .call(g => g.select(".domain").remove());
-
-// svg.append("g")
-//     .attr("transform", `translate(${marginLeft},0)`)
-//     .call(d3.axisLeft(y).tickSizeOuter(0));
-
-// console.log(svg.node());
-
-// document.getElementById("chart").appendChild(svg.node());
-
-
 
 // --- --- --- Waffle --- --- ---
 
@@ -204,53 +139,45 @@ function dataToWaffleData(waffleData) {
 }
 
 function drawWaffleChart(waffleData) {
-    const [waffleDataViz, violentPerc] = dataToWaffleData(waffleData);
-    // --- 1. Configuration ---
-    const N_CELLS = 10;
-    const SQUARE_SIZE = 25; // Size of each square (cell)
-    const SQUARE_GAP = 2;   // Gap between squares
+  //convert data to waffle format
+  const [waffleDataViz, violentPerc] = dataToWaffleData(waffleData);
 
-    // Calculate total width/height for the 10x10 grid
-    const totalSideLength = N_CELLS * SQUARE_SIZE + (N_CELLS - 1) * SQUARE_GAP;
+  const N_CELLS = 10;
+  const SQUARE_SIZE = 25;
+  const SQUARE_GAP = 2;
 
-    const margin = { top: 0, right: 0, bottom: 0, left: 0 };
-    const width = totalSideLength;
-    const height = totalSideLength;
+  const totalSideLength = N_CELLS * SQUARE_SIZE + (N_CELLS - 1) * SQUARE_GAP;
 
-    const colorScale = d3.scaleOrdinal().domain(waffleDataViz)
-      .range(["lightgray", "#ff4d4d"]); // lightgray for non-violent, red for violent
+  const margin = { top: 0, right: 0, bottom: 0, left: 0 };
+  const width = totalSideLength;
+  const height = totalSideLength;
 
-    // --- 2. Setup SVG Container ---
-    // Remove any existing SVG to prevent charts from stacking if the function is called multiple times
-    d3.select("#waffle_id").select("svg").remove();
+  const colorScale = d3.scaleOrdinal()
+    .domain(waffleDataViz)
+    .range(["lightgray", "#ff4d4d"]);
 
-    // Select the container and append the SVG
-    const svg = d3.select("#waffle_id") 
-        .append("svg")
-        .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
-        .attr("class", "m-auto max-w-[500px]")
+  const svg = d3.select("#waffle_id") 
+      .append("svg")
+      .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
+      .attr("class", "m-auto max-w-[500px]")
 
-    // --- 3. Data Binding and Drawing Rectangles ---
-    svg.selectAll(".waffle-cell")
-        .data(waffleDataViz)
-        .enter()
-        .append("rect")
-        .attr("class", "waffle-cell")
-        .attr("rx", 2)
-        .attr("ry", 2)
-        // Use the x, y grid indices to calculate the pixel position
-        .attr("x", d => d.x * (SQUARE_SIZE + SQUARE_GAP))
-        .attr("y", d => d.y * (SQUARE_SIZE + SQUARE_GAP))
-        .attr("width", SQUARE_SIZE)
-        .attr("height", SQUARE_SIZE)
-        // Set the fill color based on the data element's index or category
-        .attr("fill", d => colorScale(d.index)) // Using modulo 10 to fit in d3.schemeCategory10
-        // Add an optional title for hover/tooltip functionality
-        .append("title")
-        .text(d => d.index === 1 ? `Violent (${violentPerc}%)` : `Non-Violent (${100 - violentPerc}%)`);
+  svg.selectAll(".waffle-cell")
+      .data(waffleDataViz)
+      .enter()
+      .append("rect")
+      .attr("class", "waffle-cell")
+      .attr("rx", 2)
+      .attr("ry", 2)
+      .attr("x", d => d.x * (SQUARE_SIZE + SQUARE_GAP))
+      .attr("y", d => d.y * (SQUARE_SIZE + SQUARE_GAP))
+      .attr("width", SQUARE_SIZE)
+      .attr("height", SQUARE_SIZE)
+      .attr("fill", d => colorScale(d.index))
+      .append("title")
+      .text(d => d.index === 1 ? `Violent (${violentPerc}%)` : `Non-Violent (${100 - violentPerc}%)`);
 
-    console.log(svg.node());
-    return svg.node();
+  console.log(svg.node());
+  return svg.node();
 }
 
 waffle_id.appendChild(drawWaffleChart(waffleData));
@@ -259,8 +186,6 @@ waffle_id.appendChild(drawWaffleChart(waffleData));
 
 const groupedDataSrc = "event_fatalities.csv";
 const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
-
-console.log(groupedData);
 
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
   const colors = function(category) {
@@ -282,7 +207,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
 
   const xScale = d3.scaleLinear()
     .domain([0, d3.max(groupedData, d => Math.max(d.events, d.fatalities))])
-    .range([70, maxWidth - 20]);
+    .range([70, maxWidth - 40]);
 
   const groups = svg.selectAll(".grouped-bar")
     .data(groupedData)
@@ -338,6 +263,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("font-size", "10px")
     .text(d => d.fatalities);
 
+  //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
@@ -346,6 +272,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("transform", `translate(70,0)`)
     .call(d3.axisLeft(yScale));
   
+  //legend
   const legend = svg.append("g")
     .attr("transform", `translate(${maxWidth - 100}, ${maxHeight - 100})`);
 
