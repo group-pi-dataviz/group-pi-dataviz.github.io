@@ -198,13 +198,13 @@ function dataToWaffleData(waffleData) {
   for (let i = 0; i < 100; i++) {
     let percIndex = (100-i);
 
-    array.push({x: i % 10, y: Math.floor(i /10), index: percIndex < violentPerc ? 1 : 0});
+    array.push({x: i % 10, y: Math.floor(i /10), index: percIndex <= violentPerc ? 1 : 0});
   }
-  return array;
+  return [array, violentPerc];
 }
 
 function drawWaffleChart(waffleData) {
-    waffleData = dataToWaffleData(waffleData);
+    const [waffleDataViz, violentPerc] = dataToWaffleData(waffleData);
     // --- 1. Configuration ---
     const N_CELLS = 10;
     const SQUARE_SIZE = 25; // Size of each square (cell)
@@ -217,7 +217,7 @@ function drawWaffleChart(waffleData) {
     const width = totalSideLength;
     const height = totalSideLength;
 
-    const colorScale = d3.scaleOrdinal().domain(waffleData)
+    const colorScale = d3.scaleOrdinal().domain(waffleDataViz)
       .range(["lightgray", "#ff4d4d"]); // lightgray for non-violent, red for violent
 
     // --- 2. Setup SVG Container ---
@@ -227,26 +227,27 @@ function drawWaffleChart(waffleData) {
     // Select the container and append the SVG
     const svg = d3.select("#waffle_id") 
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .attr("class", "m-auto")
+        .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
+        .attr("class", "m-auto max-w-[500px]")
 
     // --- 3. Data Binding and Drawing Rectangles ---
     svg.selectAll(".waffle-cell")
-        .data(waffleData)
+        .data(waffleDataViz)
         .enter()
         .append("rect")
         .attr("class", "waffle-cell")
+        .attr("rx", 2)
+        .attr("ry", 2)
         // Use the x, y grid indices to calculate the pixel position
         .attr("x", d => d.x * (SQUARE_SIZE + SQUARE_GAP))
         .attr("y", d => d.y * (SQUARE_SIZE + SQUARE_GAP))
         .attr("width", SQUARE_SIZE)
         .attr("height", SQUARE_SIZE)
         // Set the fill color based on the data element's index or category
-        .attr("fill", d => colorScale(d.index % 10)) // Using modulo 10 to fit in d3.schemeCategory10
+        .attr("fill", d => colorScale(d.index)) // Using modulo 10 to fit in d3.schemeCategory10
         // Add an optional title for hover/tooltip functionality
-        .append("title") 
-        .text(d => `Element Index: ${d.index}\n(x: ${d.x}, y: ${d.y})`);
+        .append("title")
+        .text(d => d.index === 1 ? `Violent (${violentPerc}%)` : `Non-Violent (${100 - violentPerc}%)`);
 
     console.log(svg.node());
     return svg.node();
@@ -261,54 +262,118 @@ const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
 
 console.log(groupedData);
 
-function drawGroupedChart(groupedData) {
-  const events = new Set(groupedData.map(d => d.events));
-  const fatalities = new Set(groupedData.map(d => d.fatalities));
-
-  //horizontal grouped bar chart
-  const margin = {top: 30, right: 30, bottom: 70, left: 60},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
+  const colors = function(category) {
+    switch(category) {
+      case "events": return "darkgray";
+      case "fatalities": return "#ff4d4d";
+      default: return "gray";
+    }
+  }
 
   const svg = d3.create("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "m-auto");
 
-  const y = d3.scaleBand()
-    .domain(["events, fatalities"])
-    .range([0, width])
-    .paddingInner(0.1);
+  const yScale = d3.scaleBand()
+    .domain(groupedData.map(d => d.country))
+    .range([0, maxHeight - 50])
+    .padding(0.2);
 
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(groupedData, d => d.value)])
-    .nice()
-    .range([height, 0]);
+  const xScale = d3.scaleLinear()
+    .domain([0, d3.max(groupedData, d => Math.max(d.events, d.fatalities))])
+    .range([70, maxWidth - 20]);
 
-  const color = d3.scaleOrdinal()
-    .domain(Array.from(fatalities))
-    .range(d3.schemeCategory10);
-
-  svg.append("g")
-    .selectAll("g")
+  const groups = svg.selectAll(".grouped-bar")
     .data(groupedData)
-    .join("g")
-    .attr("transform", d => `translate(${x(d.events)},0)`)
-    .append("rect")
-    .attr("x", d => x(d.fatalities))
-    .attr("y", d => y(d.value))
-    .attr("width", d => x(d.fatalities))
-    .attr("height", )
-    .attr("fill", d => color(d.fatalities));
-    
-  svg.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x));
+    .enter()
+    .append("g")
+    .attr("class", "grouped-bar")
+    .attr("transform", d => `translate(0, ${yScale(d.country)})`);
+
+  groups.on("mouseover", function(event, d) {
+    d3.select(this).selectAll("*")
+      .attr("opacity", 0.7);
+  })
+  .on("mouseout", function(event, d) {
+    d3.select(this).selectAll("rect")
+      .attr("opacity", 1.0);
+  });
+
+  //event bars
+  groups.append("rect")
+    .attr("class", "bar events-bar")
+    .attr("x", xScale(0))
+    .attr("y", 0)
+    .attr("width", d => xScale(d.events) - xScale(0))
+    .attr("height", yScale.bandwidth() / 2)
+    .attr("fill", colors("events"));
+
+  //event labels
+  groups.append("text")
+    .attr("class", "event-label")
+    .attr("x", d => xScale(d.events) + 2)
+    .attr("y", yScale.bandwidth() / 2 - 2)
+    .attr("fill", colors("events"))
+    .attr("text-anchor", "start")
+    .attr("font-size", "10px")
+    .text(d => d.events);
+
+  //fatalities bars
+  groups.append("rect")
+    .attr("class", "bar fatalities-bar")
+    .attr("x", xScale(0))
+    .attr("y", d => yScale.bandwidth() / 2)
+    .attr("width", d => xScale(d.fatalities) - xScale(0))
+    .attr("height", yScale.bandwidth() / 2)
+    .attr("fill", colors("fatalities"));
+
+  //fatalities labels
+  groups.append("text")
+    .attr("class", "fatalities-label")
+    .attr("x", d => xScale(d.fatalities) + 2)
+    .attr("y", yScale.bandwidth() - 2)
+    .attr("fill", colors("fatalities"))
+    .attr("text-anchor", "start")
+    .attr("font-size", "10px")
+    .text(d => d.fatalities);
 
   svg.append("g")
-    .call(d3.axisLeft(y));
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(d3.axisBottom(xScale));
 
-  console.log(svg.node());
+  svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(d3.axisLeft(yScale));
+  
+  const legend = svg.append("g")
+    .attr("transform", `translate(${maxWidth - 100}, ${maxHeight - 100})`);
+
+  legend.append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 12)
+    .attr("height", 12)
+    .attr("fill", colors("events"));
+  legend.append("text")
+    .attr("x", 16)
+    .attr("y", 11)
+    .text("Events")
+    .style("font-size", "14px");
+
+  legend.append("rect")
+    .attr("x", 0)
+    .attr("y", 25)
+    .attr("width", 12)
+    .attr("height", 12)
+    .attr("fill", colors("fatalities"));
+  legend.append("text")
+    .attr("x", 16)
+    .attr("y", 36)
+    .text("Fatalities")
+    .style("font-size", "14px");
+
+  
   return svg.node();
 }
 
