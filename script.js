@@ -3,19 +3,69 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 // --- --- --- Utility --- --- ---
 
 //creates a rectangle of the height of the source html tag and puts it below target
-window.addThumbnail = function (source, target, scale) {
+window.addThumbnail = function (source, target, scale)
+{
   const sourceRect = source.getBoundingClientRect();
-  const thumbnail = document.createElement("div");
-  thumbnail.classList = "rounded bg-[repeating-linear-gradient(0deg,_#dedede_0,_#dedede_7px,_white_5px,_white_10px)] bg-[size:100%_10px]";
-  thumbnail.style.width = "100%";
-  thumbnail.style.height = sourceRect.height * scale + "px";
-  target.appendChild(thumbnail);
+
+  const charts = source.querySelectorAll(".visualization");
+  const chartRects = Array.from(charts).map(chart => {
+    const rect = chart.getBoundingClientRect();
+    const xPercent = (rect.left - sourceRect.left) / sourceRect.width * 100;
+    const widthPerc = rect.width / sourceRect.width * 100;
+    return {
+      height: rect.height,
+      y: rect.top - sourceRect.top,
+      xPerc: xPercent,
+      widthPerc: widthPerc,
+    };
+  });
+
+  const sectionSvg = d3.create("svg")
+    .attr("height", sourceRect.height * scale)
+    .attr("class", "w-full m-auto");
+
+  const defs = sectionSvg.append("defs");
+  const bgGradient = defs.append("linearGradient")
+    .attr("id", "thumbnail_bg_gradient")
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "0%")
+    .attr("y2", "8px")
+    .attr("gradientUnits", "userSpaceOnUse")
+    .attr("spreadMethod", "repeat");
+  
+  bgGradient.append("stop")
+    .attr("offset", "0").attr("stop-color", "#bbbbbb");
+  bgGradient.append("stop")
+    .attr("offset", "0.5").attr("stop-color", "#bbbbbb");
+  bgGradient.append("stop")
+    .attr("offset", "0.5").attr("stop-color", "white");
+  bgGradient.append("stop")
+    .attr("offset", "1").attr("stop-color", "white");
+
+  sectionSvg.append("rect")
+    .attr("width", "100%")
+    .attr("height", sourceRect.height * scale)
+    .attr("fill", "url(#thumbnail_bg_gradient)");
+
+  sectionSvg.selectAll(".chart-thumb")
+    .data(chartRects)
+    .enter()
+    .append("rect")
+    .attr("class", "chart-thumb")
+    .attr("x", (d) => d.xPerc + "%")
+    .attr("y", (d, i) => d.y * scale)
+    .attr("width", d => d.widthPerc +"%")
+    .attr("height", d => d.height * scale)
+    .attr("fill", "aliceblue")
+    .attr("stroke-width", "2px")
+    .attr("stroke", "black")
+    .attr("rx", 1)
+    .attr("ry", 1);
+
+  target.appendChild(sectionSvg.node());
 }
 
-const thumbnailScale = 0.1;
-addThumbnail(intro_id, intro_id_nav, thumbnailScale);
-addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
-addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
 
 window.addEventListener('scroll', () => {
     const main = document.querySelector('main');
@@ -159,7 +209,7 @@ function drawWaffleChart(waffleData) {
   const svg = d3.select("#waffle_id") 
       .append("svg")
       .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
-      .attr("class", "m-auto max-w-[500px]")
+      .attr("class", "visualization m-auto max-w-[500px]")
 
   svg.selectAll(".waffle-cell")
       .data(waffleDataViz)
@@ -198,7 +248,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
-    .attr("class", "m-auto");
+    .attr("class", "visualization m-auto");
 
   const yScale = d3.scaleBand()
     .domain(groupedData.map(d => d.country))
@@ -305,3 +355,8 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
 }
 
 groupedBar_id.appendChild(drawGroupedChart(groupedData));
+
+const thumbnailScale = 0.05;
+addThumbnail(intro_id, intro_id_nav, thumbnailScale);
+addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
+addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
