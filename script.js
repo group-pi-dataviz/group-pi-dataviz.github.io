@@ -356,6 +356,100 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
 
 groupedBar_id.appendChild(drawGroupedChart(groupedData));
 
+// --- --- --- Stacked 100% --- --- ---
+
+const stackedDataSrc = "event_types_percentages.csv";  //TODO: change source
+const data = await d3.dsv(";", "./data/" + stackedDataSrc, d3.autoType);
+
+function drawStackedChart(data, maxWidth=600, maxHeight=600) {
+  const eventTypes = data.columns.filter(d => d !== "COUNTRY");
+
+  const countries = data.map(d => d["COUNTRY"]);
+
+  // color palette = one color per subgroup
+  const color = d3.scaleOrdinal()
+    .domain(eventTypes)
+    .range(eventTypes.map((d, i) => d3.schemeCategory10[i % 10]));
+  
+  // stack the data? --> stack per subgroup
+  const stackedData = d3.stack()
+    .keys(eventTypes)
+    (data);
+
+  console.log(stackedData);
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto");
+
+  const yScale = d3.scaleBand()
+    .domain(countries)
+    .range([100, maxHeight - 50])
+    .padding(0.2);
+
+  const xScale = d3.scaleLinear()
+    .domain([0, 100])  //100% stacked
+    .range([70, maxWidth - 40]);
+
+  const groups = svg.selectAll(".stacked-bar")
+    .data(data)
+    .enter()
+    .append("g")
+    .attr("class", "stacked-bar")
+    .attr("transform", d => `translate(0, ${yScale(d["COUNTRY"])})`);
+
+  // Show the bars
+  svg.append("g")
+    .selectAll("g")
+    // Enter in the stack data
+    .data(stackedData)
+    .enter().append("g")
+      // set the fill on the group using the series key (each series has a .key)
+      .attr("fill", d => color(d.key))
+      .selectAll("rect")
+      .data(d => d)
+      .enter().append("rect")
+        .attr("x", d => xScale(d[0]))
+        .attr("y", d => yScale(d.data.COUNTRY))
+        .attr("width", d => xScale(d[1]) - xScale(d[0]))
+        .attr("height", yScale.bandwidth());
+
+  //axes
+  svg.append("g")
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(d3.axisBottom(xScale));
+
+  svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(d3.axisLeft(yScale));
+
+  // horizontal legend on two rows
+  const legend = svg.append("g")
+    .attr("transform", `translate(${100}, ${50})`);
+
+  eventTypes.forEach((eventType, i) => {
+    var x = (i % 3) * 150;
+    var y = Math.floor(i / 3) * 20;
+    if (i == 1 || i == 4) x -= 60;
+    legend.append("rect")
+      .attr("x", x - 20)
+      .attr("y", y)
+      .attr("width", 12)
+      .attr("height", 12)
+      .attr("fill", color(eventType));
+
+    legend.append("text")
+      .attr("x", 16 + x - 20)
+      .attr("y", 11 + y)
+      .text(eventType)
+      .style("font-size", "13px");
+  });
+
+  return svg.node();
+}
+
+stackedBar_id.appendChild(drawStackedChart(data));
+
 const thumbnailScale = 0.05;
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
