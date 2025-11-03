@@ -50,20 +50,24 @@ window.addThumbnail = function (source, target, scale)
     .attr("height", sourceRect.height * scale)
     .attr("fill", "url(#thumbnail_bg_gradient)");
 
-  sectionSvg.selectAll(".chart-thumb")
+  const thumbnails = sectionSvg.selectAll(".chart-thumb")
     .data(chartRects)
     .enter()
-    .append("rect")
+    .append("g")
     .attr("class", "chart-thumb")
     .attr("x", (d) => d.xPerc + "%")
     .attr("y", (d, i) => d.y * scale)
     .attr("width", d => d.widthPerc +"%")
-    .attr("height", d => d.height * scale)
+    .attr("height", d => d.height * scale);
+
+  thumbnails.append("rect")
     .attr("fill", "aliceblue")
     .attr("stroke-width", "2px")
     .attr("stroke", "black")
     .attr("rx", 1)
-    .attr("ry", 1)
+    .attr("ry", 1);
+  
+  thumbnails
     .append(d => {
       console.log(d.type)
       switch(d.type)
@@ -245,7 +249,7 @@ waffle_id.appendChild(drawWaffleChart(waffleData));
 
 function drawWaffleThumbnail()
 {
-  const svg = d3.create("svg")
+  const svg = d3.create("g")
     .attr("viewBox", [0,0,33,33]);
 
   for (let i = 0; i < 3; ++i)
