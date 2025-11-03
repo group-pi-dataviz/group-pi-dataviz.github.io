@@ -354,10 +354,14 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
 
+  const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
   svg.append("g")
     .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
-  
+    .call(d3.axisLeft(yScale))
+    .selectAll("text")
+    .filter(d => boldCountries.has(d))
+    .attr("font-weight", "bold");
+
   //legend
   const legend = svg.append("g")
     .attr("transform", `translate(${maxWidth - 100}, ${maxHeight - 100})`);
@@ -405,7 +409,7 @@ function drawStackedChart(data, maxWidth=600, maxHeight=600) {
   // color palette = one color per subgroup
   const color = d3.scaleOrdinal()
     .domain(eventTypes)
-    .range(eventTypes.map((d, i) => d3.schemeCategory10[i % 10]));
+    .range(eventTypes.map((d, i) => d3.schemeObservable10[i % 10]));
   
   // stack the data? --> stack per subgroup
   const stackedData = d3.stack()
@@ -455,9 +459,15 @@ function drawStackedChart(data, maxWidth=600, maxHeight=600) {
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
 
-  svg.append("g")
+  const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
+
+  const yAxis = svg.append("g")
     .attr("transform", `translate(70,0)`)
     .call(d3.axisLeft(yScale));
+
+  yAxis.selectAll("text")
+    .filter(d => boldCountries.has(d))
+    .attr("font-weight", "bold");
 
   // horizontal legend on two rows
   const legend = svg.append("g")
