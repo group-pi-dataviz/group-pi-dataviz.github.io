@@ -22,7 +22,7 @@ window.addThumbnail = function (source, target, scale)
 
   const sectionSvg = d3.create("svg")
     .attr("height", sourceRect.height * scale)
-    .attr("class", "w-full m-auto");
+    .attr("class", "w-2/3 mr-auto");
 
   const defs = sectionSvg.append("defs");
   const bgGradient = defs.append("linearGradient")
@@ -349,12 +349,56 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", 36)
     .text("Fatalities")
     .style("font-size", "14px");
-
   
   return svg.node();
 }
 
 groupedBar_id.appendChild(drawGroupedChart(groupedData));
+
+// --- --- --- Bar --- --- ---
+
+const barDataSrc = "bar_data.csv";
+const barData = await d3.dsv(";", "./data/" + barDataSrc, d3.autoType);
+
+function drawBarChart(barData, maxWidth=600, maxHeight=400) {
+  console.log(barData);
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto");
+
+  const xScale = d3.scaleBand()
+    .domain(barData.map(d => d.YEAR))
+    .range([70, maxWidth - 40])
+    .padding(0.2);
+
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(barData, d => d.FATALITIES)])
+    .range([maxHeight - 50, 20]);
+
+  svg.selectAll(".bar")
+    .data(barData)
+    .enter()
+    .append("rect")
+    .attr("class", "bar")
+    .attr("x", d => xScale(d.YEAR))
+    .attr("y", d => yScale(d.FATALITIES))
+    .attr("width", xScale.bandwidth())
+    .attr("height", d => maxHeight - 50 - yScale(d.FATALITIES))
+    .attr("fill", "#ff4d4d");
+
+  //axes
+  svg.append("g")
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+  svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(d3.axisLeft(yScale));
+
+  return svg.node();
+}
+
+bar_id.appendChild(drawBarChart(barData));
 
 const thumbnailScale = 0.05;
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
