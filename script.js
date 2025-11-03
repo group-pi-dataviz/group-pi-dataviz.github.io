@@ -12,11 +12,13 @@ window.addThumbnail = function (source, target, scale)
     const rect = chart.getBoundingClientRect();
     const xPercent = (rect.left - sourceRect.left) / sourceRect.width * 100;
     const widthPerc = rect.width / sourceRect.width * 100;
+    console.log(chart.getAttribute("chartType"));
     return {
       height: rect.height,
       y: rect.top - sourceRect.top,
       xPerc: xPercent,
       widthPerc: widthPerc,
+      type: chart.getAttribute("chartType")
     };
   });
 
@@ -48,20 +50,32 @@ window.addThumbnail = function (source, target, scale)
     .attr("height", sourceRect.height * scale)
     .attr("fill", "url(#thumbnail_bg_gradient)");
 
-  sectionSvg.selectAll(".chart-thumb")
+  const thumbnails = sectionSvg.selectAll(".chart-thumb")
     .data(chartRects)
     .enter()
-    .append("rect")
+    .append("g")
     .attr("class", "chart-thumb")
     .attr("x", (d) => d.xPerc + "%")
     .attr("y", (d, i) => d.y * scale)
     .attr("width", d => d.widthPerc +"%")
-    .attr("height", d => d.height * scale)
+    .attr("height", d => d.height * scale);
+
+  thumbnails.append("rect")
     .attr("fill", "aliceblue")
     .attr("stroke-width", "2px")
     .attr("stroke", "black")
     .attr("rx", 1)
     .attr("ry", 1);
+  
+  thumbnails
+    .append(d => {
+      console.log(d.type)
+      switch(d.type)
+      {
+        case "waffle": return drawWaffleThumbnail();
+      }
+      return d3.create("svg").node();
+    });
 
   target.appendChild(sectionSvg.node());
 }
@@ -210,6 +224,7 @@ function drawWaffleChart(waffleData) {
       .append("svg")
       .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
       .attr("class", "visualization m-auto max-w-[500px]")
+      .attr("chartType", "waffle")
 
   svg.selectAll(".waffle-cell")
       .data(waffleDataViz)
@@ -231,6 +246,27 @@ function drawWaffleChart(waffleData) {
 }
 
 waffle_id.appendChild(drawWaffleChart(waffleData));
+
+function drawWaffleThumbnail()
+{
+  const svg = d3.create("g")
+    .attr("viewBox", [0,0,33,33]);
+
+  for (let i = 0; i < 3; ++i)
+  {
+    for (let j = 0; j < 3; ++j)
+    {
+      svg.append("rect")
+        .attr("x", j * 11)
+        .attr("y", i * 11)
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", "black");
+    }
+  }
+
+  return svg.node();
+}
 
 // --- --- --- Grouped --- --- ---
 
@@ -318,10 +354,14 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
 
+  const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
   svg.append("g")
     .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
-  
+    .call(d3.axisLeft(yScale))
+    .selectAll("text")
+    .filter(d => boldCountries.has(d))
+    .attr("font-weight", "bold");
+
   //legend
   const legend = svg.append("g")
     .attr("transform", `translate(${maxWidth - 100}, ${maxHeight - 100})`);
