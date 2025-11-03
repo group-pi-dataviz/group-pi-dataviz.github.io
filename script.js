@@ -208,7 +208,7 @@ function drawWaffleThumbnail(container)
 
 // --- --- --- Grouped --- --- ---
 
-const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
+const boldCountries = new Set(["Afghanistan", "Philippines", "Myanmar"]);
 
 
 const groupedDataSrc = "event_fatalities.csv";
