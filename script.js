@@ -624,7 +624,7 @@ const HEATMAP_CONFIG = {
   },
 
   // Color scheme (interpolator)
-  colorScheme: d3.interpolatePuRd,
+  colorScheme: d3.interpolateYlOrRd,
 
   // Colorbar settings (for shared bar)
   colorbar: {
