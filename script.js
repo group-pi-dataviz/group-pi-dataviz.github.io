@@ -593,6 +593,7 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
 
 stackedBar_id.appendChild(drawStackedChart(dataPerc, dataCounts));
 
+
 // --- --- --- Heatmap --- --- ---
 
 // some datasources for caucasus and central asia
@@ -649,12 +650,12 @@ const HEATMAP_CONFIG = {
 
   // Category label mapping
   categoryLabels: {
-    "Battles": "⚔️",
-    "Explosions/Remote violence": "💥",
-    "Protests": "✊",
-    "Riots": "🔥",
-    "Strategic developments": "🎯",
-    "Violence against civilians": "👥"
+    "Battles": "⚔️ Battles",
+    "Explosions/Remote violence": "💥 Explosions/Remote violence",
+    "Protests": "✊ Protests",
+    "Riots": "🔥 Riots",
+    "Strategic developments": "🎯 Strategic developments",
+    "Violence against civilians": "👥 Violence against civilians"
   }
 };
 
@@ -685,10 +686,6 @@ function buildSharedColorMapping(datasets) {
 
 const sharedColor = buildSharedColorMapping([afghanistanData, myanmarData, philippinesData]);
 
-// Draw a single shared colorbar in the page. It will be created in a div#shared_heatmap_colorbar
-// (if that div doesn't exist it will be appended to body).
-// Draw a single shared horizontal colorbar at the top of the page
-// Draw a single shared horizontal colorbar at the top of the page
 // Draw a single shared horizontal colorbar at the top of the page
 function drawSharedColorbar(minVal, maxVal, valueToColor) {
   let container = d3.select("#shared_heatmap_colorbar");
@@ -786,12 +783,57 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .call(cbAxis);
 }
 
+// Create a SINGLE shared tooltip for all heatmaps
+d3.select("body").selectAll(".heatmap-tooltip").remove();
+const sharedTooltip = d3.select("body")
+  .append("div")
+  .attr("class", "heatmap-tooltip")
+  .style("position", "absolute")
+  .style("pointer-events", "none")
+  .style("background", "white")
+  .style("border", "2px solid #666")
+  .style("padding", "10px")
+  .style("border-radius", "5px")
+  .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+  .style("font-size", "13px")
+  .style("max-width", "280px")
+  .style("z-index", "1000")
+  .style("opacity", 0);
 
+// Tooltip positioning helper (same as stacked bar)
+function positionTooltip(event, tooltip, offsetX = 12, offsetY = 12) {
+  const pageX = event.pageX;
+  const pageY = event.pageY;
 
+  const node = tooltip.node();
+  if (!node) return;
 
+  // initial position to the right/below the cursor
+  let left = pageX + offsetX;
+  let top = pageY + offsetY;
 
+  // measure tooltip size and viewport scroll
+  const rect = node.getBoundingClientRect();
+  const tw = rect.width;
+  const th = rect.height;
+  const scrollX = window.pageXOffset;
+  const scrollY = window.pageYOffset;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
-// The heatmap draw function uses the shared valueToColor and no longer draws its own colorbar.
+  // clamp horizontally (if it would overflow, try placing left of cursor)
+  if (left + tw > scrollX + vw - 8) {
+    left = pageX - offsetX - tw;
+  }
+  // clamp vertically (if it would overflow, try placing above cursor)
+  if (top + th > scrollY + vh - 8) {
+    top = pageY - offsetY - th;
+  }
+
+  tooltip.style("left", left + "px").style("top", top + "px");
+}
+
+// The heatmap draw function uses the shared tooltip
 function drawHeatmap(data, id = "#heatmap_id") {
   // PREPARE DATA
   const myYears = data.map(d => d.YEAR);
@@ -829,10 +871,7 @@ function drawHeatmap(data, id = "#heatmap_id") {
 
   const svg = d3.select(id)
     .append("svg")
-    .attr("viewBox", [0,0,width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right,height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom])
-    // .attr("width", width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right)
-    // .attr("height", height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom)
-    .attr("chartType", "heatmap")
+    .attr("viewBox", [0, 0, width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right, height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom])
     .append("g")
     .attr("transform", `translate(${HEATMAP_CONFIG.margin.left},${HEATMAP_CONFIG.margin.top})`);
 
@@ -850,41 +889,35 @@ function drawHeatmap(data, id = "#heatmap_id") {
     .style("font-size", HEATMAP_CONFIG.fontSize.categoryLabel)
     .call(d3.axisLeft(y).tickSize(0).tickFormat(d => HEATMAP_CONFIG.categoryLabels[d] || d));
 
-  // TOOLTIP
-const tooltip = d3.select(id)
-    .append("div")
-    .style("opacity", 0)
-    .attr("class", "tooltip")
-    .style("background-color", "white")
-    .style("border", "solid 2px #666")
-    .style("border-radius", "5px")
-    .style("padding", "10px")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("box-shadow", "0 2px 4px rgba(0,0,0,0.2)")
-    .style("font-size", "13px")
-    .style("max-width", "250px")
-    .style("z-index", "1000");  // AGGIUNTO: per assicurarsi che sia sopra tutto
-
-const mouseover = (event, d) => {
-    tooltip.style("opacity", 1);
+  // TOOLTIP INTERACTIONS
+  const mouseover = (event, d) => {
+    const cellColor = sharedColor.valueToColor(d.value);
+    const label = HEATMAP_CONFIG.categoryLabels[d.category] || d.category;
+    
+    sharedTooltip
+      .html(`
+        <div style="display:flex;align-items:center;margin-bottom:6px;">
+          <div style="width:14px;height:14px;background:${cellColor};border:1px solid rgba(0,0,0,0.2);border-radius:2px;margin-right:8px;"></div>
+          <strong style="font-size:14px;">${label}</strong>
+        </div>
+        <div style="color:#555;">Year: <strong>${d.year}</strong></div>
+        <div style="color:#555;">Events: <strong>${d.value.toLocaleString()}</strong></div>
+      `)
+      .style("opacity", 1);
+    
     d3.select(event.currentTarget)
+      .raise()
       .style("stroke", HEATMAP_CONFIG.cellHoverStroke)
       .style("stroke-width", 2)
       .style("opacity", 1);
   };
 
-const mousemove = (event, d) => {
-    const label = HEATMAP_CONFIG.categoryLabels[d.category] || d.category;
-    const [mouseX, mouseY] = d3.pointer(event, document.body);
-    tooltip
-      .html(`<strong>${label}</strong><br>Year: ${d.year}<br>Events: ${d.value.toLocaleString()}`)
-      .style("left", (mouseX + 15) + "px")
-      .style("top", (mouseY - 28) + "px");
+  const mousemove = (event, d) => {
+    positionTooltip(event, sharedTooltip);
   };
 
   const mouseleave = (event, d) => {
-    tooltip.style("opacity", 0);
+    sharedTooltip.style("opacity", 0);
     d3.select(event.currentTarget)
       .style("stroke", "none")
       .style("opacity", HEATMAP_CONFIG.cellOpacity);
@@ -910,16 +943,13 @@ const mousemove = (event, d) => {
     .on("mouseleave", mouseleave);
 }
 
-// draw the three heatmaps (they will use the shared color mapping)
+// draw the three heatmaps (they will use the shared color mapping and tooltip)
 drawHeatmap(afghanistanData, "#heatmap_id");
 drawHeatmap(myanmarData, "#heatmap_id_2");
 drawHeatmap(philippinesData, "#heatmap_id_3");
 
 // draw a single shared logarithmic colorbar
 drawSharedColorbar(sharedColor.minVal, sharedColor.maxVal, sharedColor.valueToColor);
-
-
-
 
 
 // --- --- ---  Bar Chart --- --- ---
