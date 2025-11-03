@@ -617,7 +617,7 @@ const HEATMAP_CONFIG = {
 
   // Margins around the heatmap
   margin: {
-    top: 60,
+    top: 0,
     right: 40,
     bottom: 60,
     left: 160
