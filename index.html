@@ -109,7 +109,7 @@
     <div class="grid lg:grid-cols-[1fr_3fr_1fr] pt-4">
         <main class="col-start-2 w-full">
             <!-- Introduction Section -->
-            <section id="intro_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-4/5">
+            <section id="intro_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full">
                 <div class="bg-white rounded-lg shadow-md p-6 sm:p-8 card">
                     <div class="flex items-center mb-6">
                         <div class="w-1 h-8 bg-brand-red rounded mr-4"></div>
@@ -147,7 +147,7 @@
             </section>
 
             <!-- Section 1 - The not so Pacific South-East Asia-->
-            <section id="sec1_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-4/5 fade-in-up">
+            <section id="sec1_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full fade-in-up">
                 <div class="text-center mb-12">
                     <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">The <i>not so Pacific</i> South-East Asia</h3>
                     <h5 class="font-bold font-heading">Visualizing conflicts in the South-East Pacific Area</h5>
@@ -160,22 +160,28 @@
                 <!-- Waffle -->
                 <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
                     <div class="text-center">
-                        <h5 class="font-heading font-bold">Percentage of events with at least one casualty</h5>
+                        <h5 class="font-heading font-bold">Percentage of violent events in the region</h5>
                     </div>
                     <div id="waffle_id" class="text-center w-full h-full p-4">
                         
                     </div>
                     <p class="text-gray-600 text-sm">
-                        We consider an event to be peaceful if it falls in one of the following categories:
-                        </p>
-                        <ul class="list-disc list-inside text-gray-600 text-sm my-2">
-                            <li>Peaceful protests.</li>
-                            <li>Protests with intervention (e.g. with police involvement but without serious injuries).</li>
-                            <li>Agreements (such as ceasefires or peace treaties).</li>
-                        </ul>
-                        <p class="text-gray-600 text-sm">
-                        Given our definition we can notice how about 58% of events in the SEA region are of violent nature.
-                        </p>
+                        We consider an event to be peaceful (non-violent) if it falls in one of the following categories:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-600 text-sm my-2">
+                        <li>Peaceful protests.</li>
+                        <li>Protests with intervention (e.g. with police involvement but without serious injuries).</li>
+                        <li>Agreements (such as ceasefires or peace treaties).</li>
+                    </ul>
+                    <p class="text-gray-600 text-sm">
+                        All other events are considered violent. Based on such definition we can notice how about 58% of events in the SEA region are of violent nature.
+                        <br><br>
+                        This is an area of the world that is not talked much about, besides some cases such as Afghanistan.
+                        This, however, is one of the most populated regions of the world with countries like Pakistan, Indonesia and Bangladesh with populations in the 100s of millions
+                        and, of course, India with it's 1.4 billion people being the most populated country in the world.
+                        <br><br>
+                        This part of the world, however, is very diverse so to get a more precise picture it's better to focus on individual countries
+                        rather than considering it as a single identity.
                     </p>
                 </div>
 
@@ -193,22 +199,49 @@
                  <!-- 100% Stacked -->
                 <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
                     <div class="text-center">
-                        <h5 class="font-heading font-bold">For the same countries as grouped, zoom on event types</h5>
+                        <h5 class="font-heading font-bold">
+                            Peaceful protests or a war zone?
+                        </h5>
+                        <p class="text-gray-600 text-sm">
+                            Event types distribution by country
+                        </p>
                     </div>
-                    <div id="stacked_id" class="text-center w-full h-full p-4">
+                    <div id="stackedBar_id" class="text-center w-full h-full p-4">
                         
                     </div>
-                    <p class="text-gray-600 text-sm">Comments</p>
+                    <p class="text-gray-600 text-sm">
+                        Most common event types in SEA region are protests, but some countries show a different trend:
+                        <ul class="list-disc list-inside text-gray-600 text-sm my-2">
+                            <li>In Afghanistan, battles are the most common event type, suggesting ongoing armed conflicts.</li>
+                            <li>In the Philippines, violence against civilians is the most frequent event type, indicating a high level of targeted violence.</li>
+                            <li>In Myanmar, battles are the most common event type, suggesting ongoing armed conflicts.</li>
+                        </ul>
+                        <p class="text-gray-600 text-sm">
+                            Looking at the previous grouped bar chart, we can also notice how these three countries are the ones with the highest number of fatalities,
+                            compared to the number of events.
+                        </p>
+                    </p>
                 </div>
 
                 <!-- Heatmap -->
                 <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
                     <div class="text-center">
-                        <h5 class="font-heading font-bold">In a region, sub events (y) over time (x)</h5>
+                        <h5 class="font-heading font-bold">In a region, number of events over time</h5>
                     </div>
-                    <div id="heatmap_id" class="text-center w-full h-full p-4">
-                        
+                    <h6>Caucasus and Central Asia (only one country: Afghanistan)</h6>
+                    <div id="heatmap_id" class="text-center w-full h-full p-0">
                     </div>
+
+                    <div id="heatmap_id_2" class="text-center w-full h-full p-0">
+                    </div>
+
+                    <div id="heatmap_id_3" class="text-center w-full h-full p-0">
+                    </div>
+
+                    <div id="heatmap_id_4" class="text-center w-full h-full p-0">
+                    </div>
+
+
                     <p class="text-gray-600 text-sm">Comments</p>
                 </div>
 
@@ -225,7 +258,7 @@
             </section>
 
             <!-- Section 2-->
-             <section id="sec2_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-4/5 fade-in-up">
+             <section id="sec2_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full fade-in-up">
                 <div class="text-center mb-12">
                     <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">Section 2</h3>
                     <div class="section-divider w-24 mx-auto mb-6"></div>
