@@ -12,11 +12,13 @@ window.addThumbnail = function (source, target, scale)
     const rect = chart.getBoundingClientRect();
     const xPercent = (rect.left - sourceRect.left) / sourceRect.width * 100;
     const widthPerc = rect.width / sourceRect.width * 100;
+    console.log(chart.getAttribute("chartType"));
     return {
       height: rect.height,
       y: rect.top - sourceRect.top,
       xPerc: xPercent,
       widthPerc: widthPerc,
+      type: chart.getAttribute("chartType")
     };
   });
 
@@ -61,7 +63,15 @@ window.addThumbnail = function (source, target, scale)
     .attr("stroke-width", "2px")
     .attr("stroke", "black")
     .attr("rx", 1)
-    .attr("ry", 1);
+    .attr("ry", 1)
+    .append(d => {
+      console.log(d.type)
+      switch(d.type)
+      {
+        case "waffle": return drawWaffleThumbnail();
+      }
+      return d3.create("svg").node();
+    });
 
   target.appendChild(sectionSvg.node());
 }
@@ -210,6 +220,7 @@ function drawWaffleChart(waffleData) {
       .append("svg")
       .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
       .attr("class", "visualization m-auto max-w-[500px]")
+      .attr("chartType", "waffle")
 
   svg.selectAll(".waffle-cell")
       .data(waffleDataViz)
@@ -231,6 +242,27 @@ function drawWaffleChart(waffleData) {
 }
 
 waffle_id.appendChild(drawWaffleChart(waffleData));
+
+function drawWaffleThumbnail()
+{
+  const svg = d3.create("svg")
+    .attr("viewBox", [0,0,33,33]);
+
+  for (let i = 0; i < 3; ++i)
+  {
+    for (let j = 0; j < 3; ++j)
+    {
+      svg.append("rect")
+        .attr("x", j * 11)
+        .attr("y", i * 11)
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", "black");
+    }
+  }
+
+  return svg.node();
+}
 
 // --- --- --- Grouped --- --- ---
 
@@ -560,8 +592,9 @@ function drawHeatmap(data, id="#heatmap_id") {
 
   const svg = d3.select(id)
     .append("svg")
-    .attr("width", width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right)
-    .attr("height", height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom)
+    .attr("viewBox", [0,0,width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right,height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom])
+    // .attr("width", width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right)
+    // .attr("height", height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom)
     .append("g")
     .attr("transform", `translate(${HEATMAP_CONFIG.margin.left},${HEATMAP_CONFIG.margin.top})`);
 
