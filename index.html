@@ -250,23 +250,27 @@
                     <div class="text-center">
                         <h5 class="font-heading font-bold">Three Motivating Examples</h5>
                     </div>
-                    <div id="shared_heatmap_colorbar">
-                    </div>
-                    
-                    <h6>Afghanistan</h6>
-                    <div id="heatmap_id" class="text-center w-full h-full p-0">
-                    </div>
 
-                    <h6>Myanmar</h6>
-                    <div id="heatmap_id_2" class="text-center w-full h-full p-0">
-                    </div>
 
-                    <h6>Philippines</h6>
-                    <div id="heatmap_id_3" class="text-center w-full h-full p-0">
-                    </div>
+    <div class="country-selector mt-8">
+      <button class="country-btn active" data-country="afghanistan">Afghanistan</button>
+      <button class="country-btn" data-country="myanmar">Myanmar</button>
+      <button class="country-btn" data-country="philippines">Philippines</button>
+    </div>
 
-                    <div id="heatmap_id_4" class="text-center w-full h-full p-0">
-                    </div>
+    <div id="shared_heatmap_colorbar"></div>
+
+    <div id="heatmap-afghanistan" class="heatmap-container active">
+        <div id="heatmap_id"></div>
+    </div>
+
+    <div id="heatmap-myanmar" class="heatmap-container">
+        <div id="heatmap_id_2"></div>
+    </div>
+
+    <div id="heatmap-philippines" class="heatmap-container">
+        <div id="heatmap_id_3"></div>
+    </div>
 
 
                     <p class="text-gray-600 text-sm">Comments</p>

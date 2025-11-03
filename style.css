@@ -88,3 +88,89 @@ nav a:hover::after {
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
+
+
+
+
+/* Heatmap Navigation Styles */
+
+.country-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.country-btn {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid #002677; /* brand-blue */
+  background: white;
+  color: #002677;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Fira Sans', sans-serif;
+}
+
+.country-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 38, 119, 0.3);
+  background: #f0f4ff;
+}
+
+.country-btn.active {
+  background: linear-gradient(135deg, #002677 0%, #199BFC 100%);
+  color: white;
+  border-color: #199BFC;
+  box-shadow: 0 4px 12px rgba(0, 38, 119, 0.4);
+}
+
+.country-btn:active {
+  transform: translateY(0);
+}
+
+/* Heatmap Container Visibility */
+.heatmap-container {
+  display: none;
+  animation: fadeIn 0.4s ease-in;
+}
+
+.heatmap-container.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Shared Colorbar */
+#shared_heatmap_colorbar {
+  margin: 30px 0;
+  padding: 20px 0;
+}
+
+/* Heatmap Tooltip Styling */
+.heatmap-tooltip {
+  font-family: 'Fira Sans', sans-serif;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .country-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+  }

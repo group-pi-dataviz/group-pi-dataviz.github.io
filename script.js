@@ -618,13 +618,13 @@ const HEATMAP_CONFIG = {
   // Margins around the heatmap
   margin: {
     top: 60,
-    right: 140,
+    right: 40,
     bottom: 60,
-    left: 80
+    left: 160
   },
 
   // Color scheme (interpolator)
-  colorScheme: d3.interpolateViridis,
+  colorScheme: d3.interpolatePuRd,
 
   // Colorbar settings (for shared bar)
   colorbar: {
@@ -649,18 +649,31 @@ const HEATMAP_CONFIG = {
   cellHoverStroke: "black",
 
   // Category label mapping
+  /*
   categoryLabels: {
-    "Battles": "⚔️ Battles",
-    "Explosions/Remote violence": "💥 Explosions/Remote violence",
-    "Protests": "✊ Protests",
-    "Riots": "🔥 Riots",
-    "Strategic developments": "🎯 Strategic developments",
-    "Violence against civilians": "👥 Violence against civilians"
+    "Battles": "⚔️",
+    "Explosions/Remote violence": "💥",
+    "Protests": "✊",
+    "Riots": "🔥",
+    "Strategic developments": "🎯",
+    "Violence against civilians": "👥"
   }
+    */
+
+  categoryLabels: {
+    "Battles": "Battles",
+    "Explosions/Remote violence": "Explosions/Remote violence",
+    "Protests": "Protests",
+    "Riots": "Riots",
+    "Strategic developments": "Strategic developments",
+    "Violence against civilians": "Violence against civilians"
+  }
+
 };
 
 // Build a single, shared logarithmic color mapping from all heatmap datasets.
 // Use log(v+1) to safely handle zeros.
+// Build shared color mapping
 function buildSharedColorMapping(datasets) {
   const vals = [];
   datasets.forEach(data => {
@@ -670,12 +683,10 @@ function buildSharedColorMapping(datasets) {
 
   const minVal = d3.min(vals);
   const maxVal = d3.max(vals);
-
   const logMin = Math.log(minVal + 1);
   const logMax = Math.log(maxVal + 1);
-  const logRange = (logMax - logMin) || 1; // avoid div by zero
+  const logRange = (logMax - logMin) || 1;
 
-  // valueToColor handles zeros safely via log1p semantics
   const valueToColor = (v) => {
     const t = (Math.log((v || 0) + 1) - logMin) / logRange;
     return HEATMAP_CONFIG.colorScheme(Math.max(0, Math.min(1, t)));
@@ -686,7 +697,7 @@ function buildSharedColorMapping(datasets) {
 
 const sharedColor = buildSharedColorMapping([afghanistanData, myanmarData, philippinesData]);
 
-// Draw a single shared horizontal colorbar at the top of the page
+// Draw shared colorbar
 function drawSharedColorbar(minVal, maxVal, valueToColor) {
   let container = d3.select("#shared_heatmap_colorbar");
   if (container.empty()) {
@@ -713,7 +724,6 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .style("margin", "0 auto");
 
   const gradientId = "shared-colorbar-gradient";
-
   const defs = svg.append("defs");
   const lg = defs.append("linearGradient")
     .attr("id", gradientId)
@@ -736,7 +746,6 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
 
   const g = svg.append("g").attr("transform", `translate(60,30)`);
 
-  // Title
   g.append("text")
     .attr("x", barWidth / 2)
     .attr("y", -15)
@@ -745,7 +754,6 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .style("font-weight", "bold")
     .text(HEATMAP_CONFIG.colorbar.title);
 
-  // colorbar rect (horizontal)
   g.append("rect")
     .attr("width", barWidth)
     .attr("height", barHeight)
@@ -753,12 +761,10 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .style("stroke", "#333")
     .style("stroke-width", 1);
 
-  // colorbar axis using log scale with only powers of 10
   const cbScale = d3.scaleLog()
     .domain([Math.max(1, minVal + 1), Math.max(2, maxVal + 1)])
     .range([0, barWidth]);
 
-  // Generate only powers of 10 within the data range
   const minPower = Math.floor(Math.log10(Math.max(1, minVal + 1)));
   const maxPower = Math.ceil(Math.log10(maxVal + 1));
   const tickValues = [];
@@ -783,7 +789,7 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .call(cbAxis);
 }
 
-// Create a SINGLE shared tooltip for all heatmaps
+// Create shared tooltip
 d3.select("body").selectAll(".heatmap-tooltip").remove();
 const sharedTooltip = d3.select("body")
   .append("div")
@@ -791,28 +797,25 @@ const sharedTooltip = d3.select("body")
   .style("position", "absolute")
   .style("pointer-events", "none")
   .style("background", "white")
-  .style("border", "2px solid #666")
+  .style("border", "2px solid #667eea")
   .style("padding", "10px")
-  .style("border-radius", "5px")
-  .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+  .style("border-radius", "8px")
+  .style("box-shadow", "0 4px 12px rgba(102, 126, 234, 0.3)")
   .style("font-size", "13px")
   .style("max-width", "280px")
   .style("z-index", "1000")
   .style("opacity", 0);
 
-// Tooltip positioning helper (same as stacked bar)
+// Tooltip positioning helper
 function positionTooltip(event, tooltip, offsetX = 12, offsetY = 12) {
   const pageX = event.pageX;
   const pageY = event.pageY;
-
   const node = tooltip.node();
   if (!node) return;
 
-  // initial position to the right/below the cursor
   let left = pageX + offsetX;
   let top = pageY + offsetY;
 
-  // measure tooltip size and viewport scroll
   const rect = node.getBoundingClientRect();
   const tw = rect.width;
   const th = rect.height;
@@ -821,11 +824,9 @@ function positionTooltip(event, tooltip, offsetX = 12, offsetY = 12) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  // clamp horizontally (if it would overflow, try placing left of cursor)
   if (left + tw > scrollX + vw - 8) {
     left = pageX - offsetX - tw;
   }
-  // clamp vertically (if it would overflow, try placing above cursor)
   if (top + th > scrollY + vh - 8) {
     top = pageY - offsetY - th;
   }
@@ -833,13 +834,11 @@ function positionTooltip(event, tooltip, offsetX = 12, offsetY = 12) {
   tooltip.style("left", left + "px").style("top", top + "px");
 }
 
-// The heatmap draw function uses the shared tooltip
+// Draw heatmap function
 function drawHeatmap(data, id = "#heatmap_id") {
-  // PREPARE DATA
   const myYears = data.map(d => d.YEAR);
   const myCategories = data.columns.slice(1);
 
-  // Reshape wide → long
   const longData = [];
   data.forEach(d => {
     myCategories.forEach(cat => {
@@ -851,11 +850,9 @@ function drawHeatmap(data, id = "#heatmap_id") {
     });
   });
 
-  // DIMENSIONS
   const width = myYears.length * HEATMAP_CONFIG.cellWidth;
   const height = myCategories.length * HEATMAP_CONFIG.cellHeight;
 
-  // SCALES
   const x = d3.scaleBand()
     .range([0, width])
     .domain(myYears)
@@ -866,7 +863,6 @@ function drawHeatmap(data, id = "#heatmap_id") {
     .domain(myCategories)
     .padding(HEATMAP_CONFIG.cellPadding);
 
-  // CLEAR and CREATE SVG
   d3.select(id).selectAll("*").remove();
 
   const svg = d3.select(id)
@@ -875,7 +871,6 @@ function drawHeatmap(data, id = "#heatmap_id") {
     .append("g")
     .attr("transform", `translate(${HEATMAP_CONFIG.margin.left},${HEATMAP_CONFIG.margin.top})`);
 
-  // AXES
   svg.append("g")
     .style("font-size", HEATMAP_CONFIG.fontSize.axis)
     .attr("transform", `translate(0,${height})`)
@@ -885,11 +880,10 @@ function drawHeatmap(data, id = "#heatmap_id") {
 
   svg.selectAll(".domain").remove();
 
-  const yAxisGroup = svg.append("g")
+  svg.append("g")
     .style("font-size", HEATMAP_CONFIG.fontSize.categoryLabel)
     .call(d3.axisLeft(y).tickSize(0).tickFormat(d => HEATMAP_CONFIG.categoryLabels[d] || d));
 
-  // TOOLTIP INTERACTIONS
   const mouseover = (event, d) => {
     const cellColor = sharedColor.valueToColor(d.value);
     const label = HEATMAP_CONFIG.categoryLabels[d.category] || d.category;
@@ -923,7 +917,6 @@ function drawHeatmap(data, id = "#heatmap_id") {
       .style("opacity", HEATMAP_CONFIG.cellOpacity);
   };
 
-  // DRAW CELLS using shared color mapping (logarithmic via valueToColor)
   svg.selectAll("rect")
     .data(longData)
     .enter()
@@ -943,13 +936,45 @@ function drawHeatmap(data, id = "#heatmap_id") {
     .on("mouseleave", mouseleave);
 }
 
-// draw the three heatmaps (they will use the shared color mapping and tooltip)
+// Draw all three heatmaps
 drawHeatmap(afghanistanData, "#heatmap_id");
 drawHeatmap(myanmarData, "#heatmap_id_2");
 drawHeatmap(philippinesData, "#heatmap_id_3");
 
-// draw a single shared logarithmic colorbar
+// Draw shared colorbar
 drawSharedColorbar(sharedColor.minVal, sharedColor.maxVal, sharedColor.valueToColor);
+
+// --- Navigation System ---
+// Se esiste un container di navigazione, aggiungi i pulsanti
+const navContainer = document.querySelector('.country-selector');
+if (navContainer) {
+  // I pulsanti dovrebbero già esistere nell'HTML, quindi aggiungiamo solo gli event listener
+  const countryButtons = document.querySelectorAll('.country-btn');
+  const heatmapContainers = document.querySelectorAll('.heatmap-container');
+
+  if (countryButtons.length > 0 && heatmapContainers.length > 0) {
+    countryButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const country = button.getAttribute('data-country');
+        
+        // Update active button
+        countryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        // Show corresponding heatmap
+        heatmapContainers.forEach(container => {
+          container.classList.remove('active');
+        });
+        
+        const targetContainer = document.getElementById(`heatmap-${country}`);
+        if (targetContainer) {
+          targetContainer.classList.add('active');
+        }
+      });
+    });
+  }
+}
+
 
 
 // --- --- ---  Bar Chart --- --- ---
