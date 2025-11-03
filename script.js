@@ -5,6 +5,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 //creates a rectangle of the height of the source html tag and puts it below target
 window.addThumbnail = function (source, target, scale)
 {
+  console.log("addThumbnail", source, target, scale);
   const sourceRect = source.getBoundingClientRect();
 
   const charts = source.querySelectorAll(".visualization");
@@ -13,6 +14,7 @@ window.addThumbnail = function (source, target, scale)
     const xPercent = (rect.left - sourceRect.left) / sourceRect.width * 100;
     const widthPerc = rect.width / sourceRect.width * 100;
     console.log(chart.getAttribute("chartType"));
+
     return {
       height: rect.height,
       y: rect.top - sourceRect.top,
@@ -53,33 +55,40 @@ window.addThumbnail = function (source, target, scale)
   const thumbnails = sectionSvg.selectAll(".chart-thumb")
     .data(chartRects)
     .enter()
-    .append("g")
+    .append("svg")
     .attr("class", "chart-thumb")
     .attr("x", (d) => d.xPerc + "%")
     .attr("y", (d, i) => d.y * scale)
     .attr("width", d => d.widthPerc +"%")
     .attr("height", d => d.height * scale);
 
-  thumbnails.append("rect")
-    .attr("fill", "aliceblue")
-    .attr("stroke-width", "2px")
-    .attr("stroke", "black")
-    .attr("rx", 1)
-    .attr("ry", 1);
+  // thumbnails.append("rect")
+  //   .attr("fill", "aliceblue")
+  //   .attr("stroke-width", "2px")
+  //   .attr("stroke", "black")
+  //   .attr("rx", 1)
+  //   .attr("ry", 1);
   
-  thumbnails
-    .append(d => {
-      console.log(d.type)
-      switch(d.type)
-      {
-        case "waffle": return drawWaffleThumbnail();
-      }
-      return d3.create("svg").node();
-    });
+  //WIP for thumbnails
+  thumbnails.each(function(d) {
+  // console.log(d3.select(this), d);
+  // switch (d.type) {
+  //   case "waffle":
+  //     drawWaffleThumbnail(d3.select(this), d);
+  //     break;
+  //   default:
+  //     drawGenericThumbnail(d3.select(this), d);
+  //     break;
+  // }
+});
 
   target.appendChild(sectionSvg.node());
 }
 
+function drawGenericThumbnail() {
+  console.log("drawGenericThumbnail");
+  return d3.create("g").node();
+}
 
 window.addEventListener('scroll', () => {
     const main = document.querySelector('main');
@@ -104,81 +113,6 @@ window.addEventListener('scroll', () => {
 
 
 // --- --- --- Charts  --- --- ---
-
-// const data = d3.csv("./data/apac_data.csv", function(d) {console.log(d); return d;});
-
-/*
-const csv = d3.dsvFormat(";");
-const data = await d3.text("./data/apac_data.csv").then(function(text) {
-  return csv.parse(text);
-});
-
-console.log(data[0]);
-*/
-
-// const parseDate = d3.timeParse("%d-%B-%Y");
-
-// const monthsMap = {
-//   gennaio: "January",
-//   febbraio: "February",
-//   marzo: "March",
-//   aprile: "April",
-//   maggio: "May",
-//   giugno: "June",
-//   luglio: "July",
-//   agosto: "August",
-//   settembre: "September",
-//   ottobre: "October",
-//   novembre: "November",
-//   dicembre: "December",
-// };
-
-// function parseNumber(str) {
-//   if (!str) return NaN;
-//   return parseFloat(str.replace(",", "."));
-// }
-
-// const dataSource = "event_fatalities.csv";
-
-// const data = await d3.dsv(";", "./data/" + dataSource, (d) => {
-//   // Converte "31-dicembre-2016" → "31-December-2016" e poi in oggetto Date
-//   const weekStr = d["WEEK"]
-//     .toLowerCase()
-//     .replace(
-//       /-(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)-/,
-//       (match, month) => "-" + monthsMap[month] + "-"
-//     );
-
-//   return {
-//     admin1: d["ADMIN1"],
-//     centroid_latitude: parseNumber(d["CENTROID_LATITUDE"]),
-//     centroid_longitude: parseNumber(d["CENTROID_LONGITUDE"]),
-//     country: d["COUNTRY"],
-//     disorder_type: d["DISORDER_TYPE"],
-//     events: parseNumber(d["EVENTS"]),
-//     event_type: d["EVENT_TYPE"],
-//     fatalities: parseNumber(d["FATALITIES"]),
-//     id: parseNumber(d["ID"]),
-//     population_exposure: parseNumber(d["POPULATION_EXPOSURE"]),
-//     region: d["REGION"],
-//     sub_event_type: d["SUB_EVENT_TYPE"],
-//     week: parseDate(weekStr), // <- oggetto Date JS
-//   };
-// });
-
-// console.log(data.length, data[0]);
-
-// const countriesFilter = ['Afghanistan', 'Pakistan'];
-
-// BAR CHART
-// Specify the chart’s dimensions, based on a bar’s height.
-const barHeight = 25;
-const marginTop = 30;
-const marginRight = 0;
-const marginBottom = 10;
-const marginLeft = 30;
-const width = 928;
-const height = 400;
 
 // --- --- --- Waffle --- --- ---
 
@@ -241,34 +175,41 @@ function drawWaffleChart(waffleData) {
       .append("title")
       .text(d => d.index === 1 ? `Violent (${violentPerc}%)` : `Non-Violent (${100 - violentPerc}%)`);
 
-  console.log(svg.node());
   return svg.node();
 }
 
 waffle_id.appendChild(drawWaffleChart(waffleData));
 
-function drawWaffleThumbnail()
+function drawWaffleThumbnail(container)
 {
-  const svg = d3.create("g")
-    .attr("viewBox", [0,0,33,33]);
+  console.log("cont", container);
+
+  container.attr("viewBox", [0,0,39,39])
+
+  container.append("rect")
+    .attr("width", 37)
+    .attr("height", 37)
+    .attr("fill", "white")
+    .attr("stroke", "black");
 
   for (let i = 0; i < 3; ++i)
   {
     for (let j = 0; j < 3; ++j)
     {
-      svg.append("rect")
-        .attr("x", j * 11)
-        .attr("y", i * 11)
+      container.append("rect")
+        .attr("x", j * 11 + 3)
+        .attr("y", i * 11 + 3)
         .attr("width", 10)
         .attr("height", 10)
-        .attr("fill", "black");
+        .attr("fill", (i*3 + j) > 3 ? "#ff4d4d" : "lightgray");
     }
   }
-
-  return svg.node();
 }
 
 // --- --- --- Grouped --- --- ---
+
+const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
+
 
 const groupedDataSrc = "event_fatalities.csv";
 const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
@@ -300,16 +241,92 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .enter()
     .append("g")
     .attr("class", "grouped-bar")
+    .attr("chartType", "groupedBar")
     .attr("transform", d => `translate(0, ${yScale(d.country)})`);
 
-  groups.on("mouseover", function(event, d) {
-    d3.select(this).selectAll("*")
-      .attr("opacity", 0.7);
-  })
-  .on("mouseout", function(event, d) {
-    d3.select(this).selectAll("rect")
-      .attr("opacity", 1.0);
-  });
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".grouped-bar-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "grouped-bar-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // Attach interactivity to rects
+  groups
+    .on("mouseover", function(event, d) { // parent group's datum contains .key
+      const country = d.country;
+
+      // percentage from the stacked (dataPerc) row rounded to 2 decimals
+      const events = +d.events;
+      // absolute count from the dataCounts dataset (match by COUNTRY)
+      const fatalities = +d.fatalities;
+
+      const eventsText = (typeof events === "number") ? `${events}` : `${events}`;
+      const fatalitiesText = (typeof fatalities === "number") ? `${fatalities}` : `${fatalities}`;
+
+      tooltip
+        .html(`
+          <strong>${country}</strong><br>
+          <rect style="display:inline-block;width:12px;height:12px;background:${colors("events")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+          Events: ${eventsText}<br>
+          <rect style="display:inline-block;width:12px;height:12px;background:${colors("fatalities")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+          Fatalities: ${fatalitiesText}
+          `)
+        .style("opacity", 1);
+
+      d3.select(this)
+        .raise()
+        .attr("opacity", 0.7);
+    })
+    .on("mousemove", function(event) {
+      // Use the shared positioning helper to place the tooltip and handle viewport clamping
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      d3.select(this).attr("opacity", 1);
+    });
 
   //event bars
   groups.append("rect")
@@ -354,7 +371,6 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
 
-  const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
   svg.append("g")
     .attr("transform", `translate(70,0)`)
     .call(d3.axisLeft(yScale))
@@ -397,29 +413,33 @@ groupedBar_id.appendChild(drawGroupedChart(groupedData));
 
 // --- --- --- Stacked 100% --- --- ---
 
-const stackedDataSrc = "event_types_percentages.csv";  //TODO: change source
-const data = await d3.dsv(";", "./data/" + stackedDataSrc, d3.autoType);
+const stackedDataPercSrc = "event_types_percentages.csv";
+const dataPerc = await d3.dsv(";", "./data/" + stackedDataPercSrc, d3.autoType);
 
-function drawStackedChart(data, maxWidth=600, maxHeight=600) {
-  const eventTypes = data.columns.filter(d => d !== "COUNTRY");
+const stackedDataCountsSrc = "event_types_counts.csv";
+const dataCounts = await d3.dsv(";", "./data/" + stackedDataCountsSrc, d3.autoType);
 
-  const countries = data.map(d => d["COUNTRY"]);
+function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
+  const eventTypes = dataPerc.columns.filter(d => d !== "COUNTRY");
+
+  const countries = dataPerc.map(d => d["COUNTRY"]);
 
   // color palette = one color per subgroup
   const color = d3.scaleOrdinal()
     .domain(eventTypes)
     .range(eventTypes.map((d, i) => d3.schemeObservable10[i % 10]));
   
-  // stack the data? --> stack per subgroup
+  // stack the dataPerc? --> stack per subgroup
   const stackedData = d3.stack()
     .keys(eventTypes)
-    (data);
+    (dataPerc);
 
   console.log(stackedData);
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
-    .attr("class", "visualization m-auto");
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "stacked100");
 
   const yScale = d3.scaleBand()
     .domain(countries)
@@ -430,16 +450,8 @@ function drawStackedChart(data, maxWidth=600, maxHeight=600) {
     .domain([0, 100])  //100% stacked
     .range([70, maxWidth - 40]);
 
-  const groups = svg.selectAll(".stacked-bar")
-    .data(data)
-    .enter()
-    .append("g")
-    .attr("class", "stacked-bar")
-    .attr("transform", d => `translate(0, ${yScale(d["COUNTRY"])})`);
-
   // Show the bars
-  svg.append("g")
-    .selectAll("g")
+  const groups = svg.selectAll(".stacked-bar")
     // Enter in the stack data
     .data(stackedData)
     .enter().append("g")
@@ -453,12 +465,98 @@ function drawStackedChart(data, maxWidth=600, maxHeight=600) {
         .attr("width", d => xScale(d[1]) - xScale(d[0]))
         .attr("height", yScale.bandwidth());
 
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".stacked-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "stacked-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // Attach interactivity to rects
+  groups
+    .on("mouseover", function(event, d) {
+      const series = d3.select(this.parentNode).datum(); // parent group's datum contains .key
+      const key = series.key;
+      const country = d.data.COUNTRY;
+
+      // percentage from the stacked (dataPerc) row rounded to 2 decimals
+      const perc = +d.data[key].toFixed(2);
+      // absolute count from the dataCounts dataset (match by COUNTRY)
+      const countsRow = dataCounts.find(r => r.COUNTRY === country) || {};
+      const abs = countsRow[key] != null ? countsRow[key] : 0;
+
+      const percText = (typeof perc === "number") ? `${+perc}%` : `${perc}`;
+      const absText = (typeof abs === "number") ? abs.toLocaleString() : abs;
+
+      tooltip
+        .html(`
+          <rect style="display:inline-block;width:12px;height:12px;background:${color(key)};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+          <strong>${key}</strong><br>
+          <em>${country}</em><br>
+          Percentage: ${percText}<br>
+          Count: ${absText}
+          `)
+        .style("opacity", 1);
+
+      d3.select(this)
+        .raise()
+        .attr("stroke", "#222")
+        .attr("stroke-width", 1.5);
+    })
+    .on("mousemove", function(event) {
+      // Use the shared positioning helper to place the tooltip and handle viewport clamping
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      d3.select(this).attr("stroke", "none");
+    });
+
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(d3.axisBottom(xScale));
-
-  const boldCountries = new Set(["Afghanistan", "Indonesia", "Myanmar"]);
 
   const yAxis = svg.append("g")
     .attr("transform", `translate(70,0)`)
@@ -493,7 +591,7 @@ function drawStackedChart(data, maxWidth=600, maxHeight=600) {
   return svg.node();
 }
 
-stackedBar_id.appendChild(drawStackedChart(data));
+stackedBar_id.appendChild(drawStackedChart(dataPerc, dataCounts));
 
 // --- --- --- Heatmap --- --- ---
 
@@ -731,7 +829,10 @@ function drawHeatmap(data, id = "#heatmap_id") {
 
   const svg = d3.select(id)
     .append("svg")
-    .attr("viewBox", [0, 0, width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right, height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom])
+    .attr("viewBox", [0,0,width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right,height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom])
+    // .attr("width", width + HEATMAP_CONFIG.margin.left + HEATMAP_CONFIG.margin.right)
+    // .attr("height", height + HEATMAP_CONFIG.margin.top + HEATMAP_CONFIG.margin.bottom)
+    .attr("chartType", "heatmap")
     .append("g")
     .attr("transform", `translate(${HEATMAP_CONFIG.margin.left},${HEATMAP_CONFIG.margin.top})`);
 
@@ -830,7 +931,8 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   console.log(barData);
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
-    .attr("class", "visualization m-auto");
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "bar");
 
   const xScale = d3.scaleBand()
     .domain(barData.map(d => d.YEAR))
