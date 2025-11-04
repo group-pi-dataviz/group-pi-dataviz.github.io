@@ -125,7 +125,6 @@ const waffleData = (await d3.dsv(";", "./data/" + waffleDataSrc, d3.autoType))
 
 function dataToWaffleData(waffleData) {
   const violentPerc = Math.round(waffleData.find(d => d.event_type === "Violent").percentage);
-  console.log("violentPerc", violentPerc);
 
   const array = [];
   for (let i = 0; i < 100; i++) {
@@ -158,7 +157,7 @@ function drawWaffleChart(waffleData) {
       .append("svg")
       .attr("viewBox", [0, 0, width + margin.left + margin.right, height + margin.top + margin.bottom])
       .attr("class", "visualization m-auto max-w-[500px]")
-      .attr("chartType", "waffle")
+      .attr("chartType", "waffle");
 
   svg.selectAll(".waffle-cell")
       .data(waffleDataViz)
@@ -171,9 +170,86 @@ function drawWaffleChart(waffleData) {
       .attr("y", d => d.y * (SQUARE_SIZE + SQUARE_GAP))
       .attr("width", SQUARE_SIZE)
       .attr("height", SQUARE_SIZE)
-      .attr("fill", d => colorScale(d.index))
-      .append("title")
-      .text(d => d.index === 1 ? `Violent (${violentPerc}%)` : `Non-Violent (${100 - violentPerc}%)`);
+      .attr("fill", d => colorScale(d.index));
+
+    // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".waffle-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "waffle-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // Attach interactivity to violent/non-violent cells
+  svg.selectAll(".waffle-cell")
+    .on("mouseover", function(event, d) {
+      const key = d.index === 1 ? "Violent" : "Non-Violent";
+
+      // percentage from the violent/non-violent
+      const perc = key === "Violent" ? violentPerc : 100 - violentPerc;
+      const percText = (typeof perc === "number") ? `${+perc}%` : `${perc}`;
+
+      tooltip
+        .html(`
+          <rect style="display:inline-block;width:12px;height:12px;background:${colorScale(d.index)};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+          <strong>${key}</strong><br>
+          Percentage: ${percText}
+          `)
+        .style("opacity", 1);
+
+      d3.select(this)
+        .raise()
+        .attr("stroke", "#222")
+        .attr("stroke-width", 1.5);
+    })
+    .on("mousemove", function(event) {
+      // Use the shared positioning helper to place the tooltip and handle viewport clamping
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      d3.select(this).attr("stroke", "none");
+    });
 
   return svg.node();
 }
@@ -433,8 +509,6 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   const stackedData = d3.stack()
     .keys(eventTypes)
     (dataPerc);
-
-  console.log(stackedData);
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
@@ -983,7 +1057,6 @@ const barDataSrc = "bar_data.csv";
 const barData = await d3.dsv(";", "./data/" + barDataSrc, d3.autoType);
 
 function drawBarChart(barData, maxWidth=600, maxHeight=400) {
-  console.log(barData);
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
