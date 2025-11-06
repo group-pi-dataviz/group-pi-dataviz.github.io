@@ -1,3 +1,14 @@
+Correzioni prima parte:
+    1) Ridurre il waffle (in generale tutti i grafici che non stanno in uno schermo)
+    2) Grigio più scuro nel clustered
+    3) Specificare sorting
+    4) Colorini meno gioiosi per stacked
+    5) small multiples per clustered
+    6) togliere asse y e asse x nel bar chart; mettere i valori assoluti in cima o le scanlines
+    7) Discretizzare colorbar della heatmap
+    8) ...
+
+
 Distributions:
 
 1. Ridgeline con 3 Paesi, e lo stesso event_type ('battles') negli anni [violin]
