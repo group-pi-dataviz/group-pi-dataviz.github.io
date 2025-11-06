@@ -503,7 +503,7 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   // color palette = one color per subgroup
   const color = d3.scaleOrdinal()
     .domain(eventTypes)
-    .range(eventTypes.map((d, i) => d3.schemeObservable10[i % 10]));
+    .range(eventTypes.map((d, i) => d3.schemeDark2[(i + 4) % 8])); //offset to avoid similar colors with grouped chart
   
   // stack the dataPerc? --> stack per subgroup
   const stackedData = d3.stack()
