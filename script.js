@@ -1096,6 +1096,58 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
 
 bar_id.appendChild(drawBarChart(barData));
 
+// --- --- --- Histogram --- --- ---
+
+const histogramDataSrc = "afgh_events_by_month.csv";
+const histogramData = await d3.dsv(",", "./data/" + histogramDataSrc, d3.autoType);
+
+function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "histogram");
+
+  const monthNames = histogramData.map(d => d.MONTH);
+
+  const color = "#ff7f0b";
+  
+  const xScale = d3.scaleBand()
+    .domain(monthNames)
+    .range([70, maxWidth - 40])
+    .padding(0.05);
+
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(histogramData, d => d.EVENTS)])
+    .range([maxHeight - 50, 20]);
+
+  svg.selectAll(".bar")
+    .data(histogramData)
+    .enter()
+    .append("rect")
+    .attr("class", "bar")
+    .attr("x", d => xScale(d.MONTH))
+    .attr("y", d => yScale(d.EVENTS))
+    .attr("width", xScale.bandwidth())
+    .attr("height", d => maxHeight - 50 - yScale(d.EVENTS))
+    .attr("fill", color);
+
+  //axes
+  svg.append("g")
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(d3.axisBottom(xScale).tickFormat(d => d))
+    .selectAll("text")
+    .attr("transform", "rotate(-45)")
+    .style("text-anchor", "end");
+
+  svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(d3.axisLeft(yScale));
+
+  return svg.node();
+}
+histogram_id.appendChild(drawHistogram(histogramData));
+
+// --- --- --- Thumbnails --- --- ---
 const thumbnailScale = 0.05;
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
