@@ -263,23 +263,23 @@
                     </div>
 
 
-    <div class="country-selector mt-8">
-      <button class="country-btn active" data-country="afghanistan">Afghanistan</button>
-      <button class="country-btn" data-country="myanmar">Myanmar</button>
-      <button class="country-btn" data-country="philippines">Philippines</button>
+    <div class="selector country mt-8">
+      <button class="btn country active" data-country="afghanistan">Afghanistan</button>
+      <button class="btn country" data-country="myanmar">Myanmar</button>
+      <button class="btn country" data-country="philippines">Philippines</button>
     </div>
 
     <div id="shared_heatmap_colorbar"></div>
 
-    <div id="heatmap-afghanistan" class="heatmap-container active">
+    <div id="heatmap-afghanistan" class="multi-container heatmap active">
         <div id="heatmap_id"></div>
     </div>
 
-    <div id="heatmap-myanmar" class="heatmap-container">
+    <div id="heatmap-myanmar" class="multi-container heatmap">
         <div id="heatmap_id_2"></div>
     </div>
 
-    <div id="heatmap-philippines" class="heatmap-container">
+    <div id="heatmap-philippines" class="multi-container heatmap">
         <div id="heatmap_id_3"></div>
     </div>
 
@@ -336,9 +336,22 @@
                             Monthly distribution of violent events in Afghanistan (2017-2024)
                         </h6>
                     </div>
-                    <div id="histogram_id" class="text-center w-full h-full p-4">
-                        
+                    
+                    <div class="selector histogram-type mt-8">
+                        <button class="btn histogram-type active" data-type="events">Events</button>
+                        <button class="btn histogram-type" data-type="fatalities">Fatalities</button>
                     </div>
+
+                    <div id="shared_histogram_colorbar"></div>
+
+                    <div id="histogram-events" class="multi-container histogram active">
+                        <div id="histogram_id"></div>
+                    </div>
+
+                    <div id="histogram-fatalities" class="multi-container histogram">
+                        <div id="histogram_id_2"></div>
+                    </div>
+                        
                     <p class="text-gray-600 text-sm">
                         Like many conflict zones, Afghanistan has experienced fluctuations in violence throughout the year.
                         The histogram shows a clear seasonal pattern in the occurrence of violent events, with peaks typically observed during the warmer months.

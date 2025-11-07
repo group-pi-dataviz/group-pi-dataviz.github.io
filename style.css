@@ -94,7 +94,7 @@ nav a:hover::after {
 
 /* Heatmap Navigation Styles */
 
-.country-selector {
+.selector {
   display: flex;
   justify-content: center;
   gap: 15px;
@@ -102,7 +102,7 @@ nav a:hover::after {
   flex-wrap: wrap;
 }
 
-.country-btn {
+.btn {
   padding: 12px 32px;
   font-size: 16px;
   font-weight: 600;
@@ -116,30 +116,30 @@ nav a:hover::after {
   font-family: 'Fira Sans', sans-serif;
 }
 
-.country-btn:hover {
+.btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 38, 119, 0.3);
   background: #f0f4ff;
 }
 
-.country-btn.active {
+.btn.active {
   background: linear-gradient(135deg, #002677 0%, #199BFC 100%);
   color: white;
   border-color: #199BFC;
   box-shadow: 0 4px 12px rgba(0, 38, 119, 0.4);
 }
 
-.country-btn:active {
+.btn:active {
   transform: translateY(0);
 }
 
 /* Heatmap Container Visibility */
-.heatmap-container {
+.multi-container {
   display: none;
   animation: fadeIn 0.4s ease-in;
 }
 
-.heatmap-container.active {
+.multi-container.active {
   display: block;
 }
 
@@ -169,7 +169,7 @@ nav a:hover::after {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .country-btn {
+  .btn {
     padding: 10px 24px;
     font-size: 14px;
   }

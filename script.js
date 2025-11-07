@@ -1018,13 +1018,13 @@ drawHeatmap(philippinesData, "#heatmap_id_3");
 // Draw shared colorbar
 drawSharedColorbar(sharedColor.minVal, sharedColor.maxVal, sharedColor.valueToColor);
 
-// --- Navigation System ---
+// --- Navigation System Heatmap ---
 // Se esiste un container di navigazione, aggiungi i pulsanti
-const navContainer = document.querySelector('.country-selector');
+const navContainer = document.querySelector('.selector.country');
 if (navContainer) {
   // I pulsanti dovrebbero già esistere nell'HTML, quindi aggiungiamo solo gli event listener
-  const countryButtons = document.querySelectorAll('.country-btn');
-  const heatmapContainers = document.querySelectorAll('.heatmap-container');
+  const countryButtons = document.querySelectorAll('.btn.country');
+  const heatmapContainers = document.querySelectorAll('.multi-container.heatmap');
 
   if (countryButtons.length > 0 && heatmapContainers.length > 0) {
     countryButtons.forEach(button => {
@@ -1098,14 +1098,19 @@ bar_id.appendChild(drawBarChart(barData));
 
 // --- --- --- Histogram --- --- ---
 
-const histogramDataSrc = "afgh_events_by_month.csv";
-const histogramData = await d3.dsv(",", "./data/" + histogramDataSrc, d3.autoType);
+const histogramEventsDataSrc = "afgh_events_by_month.csv";
+const histogramEventsData = await d3.dsv(",", "./data/" + histogramEventsDataSrc, d3.autoType);
+
+const histogramFatalitiesDataSrc = "afgh_fatalities_by_month.csv";
+const histogramFatalitiesData = await d3.dsv(",", "./data/" + histogramFatalitiesDataSrc, d3.autoType);
 
 function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
     .attr("chartType", "histogram");
+  
+  console.log(histogramData);
 
   const monthNames = histogramData.map(d => d.MONTH);
 
@@ -1117,18 +1122,18 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .padding(0.05);
 
   const yScale = d3.scaleLinear()
-    .domain([0, d3.max(histogramData, d => d.EVENTS)])
+    .domain([0, d3.max(histogramData, d => d.EVENTS || d.FATALITIES)])
     .range([maxHeight - 50, 20]);
 
-  svg.selectAll(".bar")
+  svg.selectAll(".histogram")
     .data(histogramData)
     .enter()
     .append("rect")
-    .attr("class", "bar")
+    .attr("class", "histogram")
     .attr("x", d => xScale(d.MONTH))
-    .attr("y", d => yScale(d.EVENTS))
+    .attr("y", d => yScale(d.EVENTS || d.FATALITIES))
     .attr("width", xScale.bandwidth())
-    .attr("height", d => maxHeight - 50 - yScale(d.EVENTS))
+    .attr("height", d => maxHeight - 50 - yScale(d.EVENTS || d.FATALITIES))
     .attr("fill", color);
 
   //axes
@@ -1145,7 +1150,39 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
 
   return svg.node();
 }
-histogram_id.appendChild(drawHistogram(histogramData));
+
+histogram_id.appendChild(drawHistogram(histogramEventsData));
+histogram_id_2.appendChild(drawHistogram(histogramFatalitiesData));
+
+// --- Navigation System Histogram ---
+const container = document.querySelector('.selector.histogram-type');
+if (container) {
+  // I pulsanti dovrebbero già esistere nell'HTML, quindi aggiungiamo solo gli event listener
+  const typeButtons = document.querySelectorAll('.btn.histogram-type');
+  const histogramContainers = document.querySelectorAll('.multi-container.histogram');
+
+  if (typeButtons.length > 0 && histogramContainers.length > 0) {
+    typeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const type = button.getAttribute('data-type');
+
+        // Update active button
+        typeButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        // Show corresponding histogram
+        histogramContainers.forEach(container => {
+          container.classList.remove('active');
+        });
+
+        const targetContainer = document.getElementById(`histogram-${type}`);
+        if (targetContainer) {
+          targetContainer.classList.add('active');
+        }
+      });
+    });
+  }
+}
 
 // --- --- --- Thumbnails --- --- ---
 const thumbnailScale = 0.05;
