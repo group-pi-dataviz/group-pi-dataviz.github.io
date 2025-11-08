@@ -5,7 +5,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 //creates a rectangle of the height of the source html tag and puts it below target
 window.addThumbnail = function (source, target, scale)
 {
-  console.log("addThumbnail", source, target, scale);
+  // console.log("addThumbnail", source, target, scale);
   const sourceRect = source.getBoundingClientRect();
 
   const charts = source.querySelectorAll(".visualization");
@@ -13,7 +13,7 @@ window.addThumbnail = function (source, target, scale)
     const rect = chart.getBoundingClientRect();
     const xPercent = (rect.left - sourceRect.left) / sourceRect.width * 100;
     const widthPerc = rect.width / sourceRect.width * 100;
-    console.log(chart.getAttribute("chartType"));
+    // console.log(chart.getAttribute("chartType"));
 
     return {
       height: rect.height,
@@ -1183,6 +1183,167 @@ if (container) {
     });
   }
 }
+
+// --- --- --- Box Plot --- --- ---
+
+const boxDataSrc = 'af_battles.csv';
+const boxData = await d3.dsv(';', './data/' + boxDataSrc);
+
+function extractBoxValues(data, distributionLambda, whis=1.5)
+{
+  let values = distributionLambda(data);
+  values.sort();
+  const q1 = d3.quantile(values, 0.25);
+  const median = d3.quantile(values, 0.5);
+  const q3 = d3.quantile(values, 0.75);
+  const interQuantileRange = q3 - q1;
+  const min = Math.max(q1 - whis * interQuantileRange, 0);
+  const max = q3 + whis * interQuantileRange;
+  const outliers = values.filter(v => v < min || v > max);
+  return { min, q1, median, q3, max, outliers };
+}
+
+function drawBoxplot(data, maxWidth=600, maxHeight=400)
+{
+  function drawSingleBoxplot(svg, boxValues, xPos, bandwidth, yScale)
+  {
+    const boxWidth = bandwidth * 0.6;
+
+    const g = svg.append('g')
+      .attr('transform', `translate(0,0)`);
+
+    g.append('rect')
+      .attr('x', xPos - boxWidth / 2)
+      .attr('y', yScale(boxValues.q3))
+      .attr('width', boxWidth)
+      .attr('height', yScale(boxValues.q1) - yScale(boxValues.q3))
+      .attr('fill', '#69b3a2')
+      .attr('stroke', 'black');
+
+    // Median line
+    g.append('line')
+      .attr('x1', xPos - boxWidth / 2)
+      .attr('x2', xPos + boxWidth / 2)
+      .attr('y1', yScale(boxValues.median))
+      .attr('y2', yScale(boxValues.median))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 2);
+
+    //median label
+    g.append('text')
+      .attr('x', xPos + boxWidth / 2 + 5)
+      .attr('y', yScale(boxValues.median) + 4)
+      .text(boxValues.median.toFixed(2))
+      .attr('font-size', '10px')
+      .attr('fill', 'black');
+
+    // Whiskers
+    g.append('line')
+      .attr('x1', xPos)
+      .attr('x2', xPos)
+      .attr('y1', yScale(boxValues.min))
+      .attr('y2', yScale(boxValues.q1))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+    g.append('line')
+      .attr('x1', xPos)
+      .attr('x2', xPos)
+      .attr('y1', yScale(boxValues.q3))
+      .attr('y2', yScale(boxValues.max))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+
+    // Min/Max lines
+    g.append('line')
+      .attr('x1', xPos - boxWidth / 2)
+      .attr('x2', xPos + boxWidth / 2)
+      .attr('y1', yScale(boxValues.min))
+      .attr('y2', yScale(boxValues.min))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+    g.append('line')
+      .attr('x1', xPos - boxWidth / 2)
+      .attr('x2', xPos + boxWidth / 2)
+      .attr('y1', yScale(boxValues.max))
+      .attr('y2', yScale(boxValues.max))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+
+    // Outliers
+    g.selectAll('circle.outlier')
+      .data(boxValues.outliers)
+      .enter()
+      .append('circle')
+      .attr('class', 'outlier')
+      .attr('cx', xPos)
+      .attr('cy', d => yScale(d))
+      .attr('r', 3)
+      .attr('fill', '#ff000088')
+      .attr('stroke', 'black');
+  }
+
+  const years = function(d) { return d.YEAR; };
+  const months = function(d) { return d.MONTH; };
+  const catMap = years;
+
+  const extraFilter = function(d) { return d.FAT_BAT != null && !isNaN(d.FAT_BAT); };
+
+  const categories = Array.from(new Set(data.map(catMap)));
+
+  const svg = d3.create('svg')
+    .attr('viewBox', [0,0,maxWidth,maxHeight]);
+
+  const xScale = d3.scaleBand()
+    .domain(categories)
+    .range([50, maxWidth-50])
+    .padding(0.4);
+
+  const yScale = d3.scaleLinear()
+    .domain([0, 20])
+    .range([maxHeight - 50, 50]);
+
+
+  for (const category of categories) {
+    const catData = data.filter(d => catMap(d) === category).filter(extraFilter);
+    const distr = function(d) { return d.map(dd => dd.FAT_BAT); };
+    const values = extractBoxValues(catData, distr, 1.5);
+    drawSingleBoxplot(svg, values, xScale(category) + xScale.bandwidth() / 2, xScale.bandwidth(), yScale);
+  }
+
+  // Y Axis
+  svg.append('g')
+    .attr('transform', `translate(50,0)`)
+    .call(d3.axisLeft(yScale));
+
+  // X Axis
+  const xLabels = svg.append('g')
+    .attr('transform', `translate(0,${maxHeight - 50})`)
+    .call(d3.axisBottom(xScale));
+    //rotate labels
+  // xLabels.selectAll('text')
+    // .attr('transform', 'rotate(-45)')
+    // .attr('text-anchor', 'end');
+
+  const info = svg.append('text')
+    .attr('x', maxWidth / 2)
+    .attr('y', 80)
+    .attr('font-size', '10px')
+    .attr('text-anchor', 'middle')
+    .append('tspan')
+    .attr('x', maxWidth / 2)
+    .attr('dy', '0em')
+    .text('The year 2021 showed the most variability in fatalities per battle,');
+
+  info.append('tspan')
+    .attr('x', maxWidth / 2)
+    .attr('dy', '1.2em')
+    .text('with an outlier in the month of August reaching 14.54 fatalities per battle.');
+
+
+  return svg.node();
+}
+
+boxplot_id.appendChild(drawBoxplot(boxData));
 
 // --- --- --- Thumbnails --- --- ---
 const thumbnailScale = 0.05;
