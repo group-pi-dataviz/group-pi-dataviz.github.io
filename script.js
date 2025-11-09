@@ -1085,11 +1085,19 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+    .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
+      .call(g => g.select(".domain").remove()); // remove axis line
 
-  svg.append("g")
+  const yAxisG = svg.append("g")
     .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
+    .call(g => g.call(d3.axisLeft(yScale))
+      .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .clone()
+      .attr("x2", maxWidth - 110)
+      .attr("stroke-opacity", 0.5));
+
+  yAxisG.lower();
 
   return svg.node();
 }
@@ -1109,8 +1117,6 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
     .attr("chartType", "histogram");
-  
-  console.log(histogramData);
 
   const monthNames = histogramData.map(d => d.MONTH);
 
@@ -1137,16 +1143,26 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .attr("fill", color);
 
   //axes
+  // X axis with rotated labels and no domain line
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale).tickFormat(d => d))
+    .call(g => g.call(d3.axisBottom(xScale).tickFormat(d => d)) // keep original month names
+      .call(g => g.select(".domain").remove())) // remove axis line
     .selectAll("text")
     .attr("transform", "rotate(-45)")
     .style("text-anchor", "end");
 
-  svg.append("g")
+  // Y axis with no domain line and grid lines behind bars
+  const yAxisG = svg.append("g")
     .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
+    .call(g => g.call(d3.axisLeft(yScale))
+      .call(g => g.select(".domain").remove()))
+    .call(g => g.selectAll(".tick line")
+      .clone()
+      .attr("x2", maxWidth - 110)
+      .attr("stroke-opacity", 0.5));
+
+  yAxisG.lower();
 
   return svg.node();
 }
