@@ -293,7 +293,7 @@ const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
   const colors = function(category) {
     switch(category) {
-      case "events": return "darkgray";
+      case "events": return "#888888";
       case "fatalities": return "#ff4d4d";
       default: return "gray";
     }
@@ -1121,7 +1121,7 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
   const monthNames = histogramData.map(d => d.MONTH);
 
   // one color for events, another for fatalities
-  const color = histogramData[0].EVENTS != null ? "darkgray" : "#ff4d4d";
+  const color = histogramData[0].EVENTS != null ? "#888888" : "#ff4d4d";
   
   const xScale = d3.scaleBand()
     .domain(monthNames)
