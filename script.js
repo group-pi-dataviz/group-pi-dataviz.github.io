@@ -149,8 +149,14 @@ function drawWaffleChart(waffleData) {
   const width = totalSideLength;
   const height = totalSideLength;
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  const maxChartWidth = 400;
+  d3.select("#waffle_id").style("max-width", maxChartWidth + "px");
+  d3.select("#waffle_id").style("margin", "0 auto");
+
+  // color scale for the two cell states (0 = non-violent, 1 = violent)
   const colorScale = d3.scaleOrdinal()
-    .domain(waffleDataViz)
+    .domain([0, 1])
     .range(["lightgray", "#ff4d4d"]);
 
   const svg = d3.select("#waffle_id") 
