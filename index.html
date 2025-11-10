@@ -386,21 +386,47 @@
                 <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
                     <div class="text-center">
                         <h5 class="font-heading font-bold text-2xl">
-                            Ridgeline
+                            The Toll of Conflict on Daily Life
                         </h5>
                         <h6 class="font-heading text-gray-600">
-                            Subtitle
+                            Distributions of essential commodity prices and daily wages in Afghanistan, 2015–2024 (USD)
                         </h6>
+                    </div>
+                    <div id="ridgeline_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
+                        <button 
+                            id="play-button" 
+                            onclick="togglePlay()" 
+                            class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
+                            ▶ Play
+                        </button>
+                        <span 
+                            id="year-label" 
+                            class="text-lg font-bold text-gray-800 min-w-[60px] text-center order-first sm:order-none">
+                        </span>
+                        <input 
+                            type="range" 
+                            id="year-slider" 
+                            class="flex-1 w-full sm:w-auto sm:max-w-[250px] h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 accent-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
                     </div>
                     <div id="ridgeline_id" class="text-center w-full h-full p-4">
                         
                     </div>
                     <p class="text-gray-600 text-sm">
-                        Comments
+                        The ridgeline chart illustrates the distribution of daily wages for unskilled and skilled laborers, 
+                        as well as the daily prices of essential commodities, in Afghanistan from 2015 to 2024. 
+                        <br><br>
+                        As expected, wages vary depending on skill level, with unskilled laborers earning significantly 
+                        less than those qualified for certain jobs. Overall, daily wages remain extremely low, with most of 
+                        the population earning roughly 2-6 USD per day. 
+                        Over the years, wages have remained relatively stable, with minor fluctuations and a slight decrease 
+                        after 2021 following political and economic disruptions.
+                        <br><br>
+                        Commodity prices for staples such as rice, wheat, and sugar have generally remained stable 
+                        during this period, although affordability is still constrained by the very low wages. 
+                        Prices of cooking oil have increased somewhat more noticeably, which may pose challenges 
+                        for households, but these goods remain within reach for many urban households.                    
                     </p>
                 </div>
-
-
             </section>
 
             <section class="mx-auto w-full lg:w-full">

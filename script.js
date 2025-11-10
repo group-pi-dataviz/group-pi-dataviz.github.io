@@ -1369,25 +1369,31 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
 boxplot_id.appendChild(drawBoxplot(boxData));
 
 
-// --- --- --- Ridgeline --- --- ---
+// --- --- --- Ridgeline Chart with Dual Scale Support --- --- ---
 
-const ridgeDataSrc = 'wfp_food_prices_afg_wide.csv';
+const ridgeDataSrc = 'wfp_food_prices_afg_wide_usd_small.csv';
 const rawText = await d3.text('./data_section_2/' + ridgeDataSrc);
 const parsed = d3.csvParseRows(rawText);
 
-// --- header parsing ---
-const headerType = parsed[0];
-const headerCommodity = parsed[1];
+// --- Configuration ---
+const CONFIG = {
+  maxWidth: 800,
+  maxHeight: 500,
+  margin: { top: 40, right: 150, bottom: 60, left: 180 },
+  animationInterval: 800,
+  kdePoints: 150,
+  bandwidthMultiplier: 0.4,
+  curveHeightRatio: 0.75,
+  minCurveHeight: 12
+};
 
-const columnNames = headerType.map((t, i) => {
-  const c = headerCommodity[i];
-  if (t && c) return `${t}_${c}`.replaceAll(' ', '_');
-  else if (t) return t;
-  else if (c) return c;
-  else return `col${i}`;
-});
+// --- Header Parsing ---
+const headerCommodity = parsed[0];
+const columnNames = headerCommodity.map((c, i) => 
+  c ? c.replaceAll(' ', '_') : `col${i}`
+);
 
-// --- data parsing ---
+// --- Data Parsing ---
 const dataRows = parsed.slice(3);
 const data = dataRows.map(r => {
   const obj = {};
@@ -1397,271 +1403,478 @@ const data = dataRows.map(r => {
 
 data.forEach(d => d.year = +d.year);
 
-// Identifica colonne prezzo e categorie (una volta sola)
-const allCols = Object.keys(data[0]);
-const priceCols = allCols.filter(c => c.startsWith('usdprice_'));
-const categories = priceCols.map(c => c.replace(/^usdprice_/, '').replaceAll('_', ' '));
-const categoryMap = Object.fromEntries(priceCols.map((c, i) => [c, categories[i]]));
-
-// Prepara tutti i valori per KDE (su tutti gli anni per scala consistente)
-const allValuesGlobal = priceCols.flatMap(k =>
-  data.map(d => {
-    const v = d[k];
-    // considera anche 0: controlla stringa vuota / null / undefined, poi coercizione numerica
-    return (v !== '' && v != null && !isNaN(+v)) ? +v : NaN;
-  }).filter(v => !isNaN(v))
+const priceCols = columnNames.filter(cn => 
+  cn !== 'year' && cn !== 'month' && cn !== 'date'
 );
 
-// Calcola il massimo globale assoluto per la scala X (gestisci caso array vuoto)
-const globalMax = allValuesGlobal.length > 0 ? d3.max(allValuesGlobal) : 1;
+// --- Category Configuration ---
+const categoryGroups = {
+  'Grains & Flour': {
+    items: ['Wheat', 'Wheat_flour', 'Wheat_flour_(low_quality)', 
+            'Wheat_flour_(high_quality)', 'Bread'],
+    color: '#8B4513'
+  },
+  'Rice': {
+    items: ['Rice_(low_quality)', 'Rice_(high_quality)'],
+    color: '#DEB887'
+  },
+  'Other Foods': {
+    items: ['Oil_(cooking)', 'Pulses', 'Salt', 'Sugar'],
+    color: '#2E8B57'
+  },
+  'Labor': {
+    items: ['Wage_(non-qualified_labour,_non-agricultural)', 
+            'Wage_(qualified_labour)'],
+    color: '#4169E1'
+  },
+  'Energy & Currency': {
+    items: ['Fuel_(diesel)', 'Exchange_rate'],
+    color: '#DC143C'
+  }
+};
 
-// Stato dell'animazione
-let currentYear = 2000;
-let isPlaying = false;
-let intervalId = null;
+const categoryMap = {
+  'Bread': 'Bread',
+  'Fuel_(diesel)': 'Fuel (diesel)',
+  'Wage_(non-qualified_labour,_non-agricultural)': 'Wage (non-qualified)',
+  'Wage_(qualified_labour)': 'Wage (qualified)',
+  'Wheat': 'Wheat',
+  'Wheat_flour': 'Wheat flour',
+  'Rice_(low_quality)': 'Rice (low quality)',
+  'Rice_(high_quality)': 'Rice (high quality)',
+  'Exchange_rate': 'Exchange rate',
+  'Oil_(cooking)': 'Cooking oil',
+  'Pulses': 'Pulses',
+  'Salt': 'Salt',
+  'Sugar': 'Sugar',
+  'Wheat_flour_(high_quality)': 'Wheat flour (high quality)',
+  'Wheat_flour_(low_quality)': 'Wheat flour (low quality)'
+};
 
-// Funzione per preparare i dati per un anno specifico
-function prepareDataForYear(year) {
-  const filtered = data.filter(d => d.year === year);
-
-  // convert numbers per-row (non escludere 0)
-  filtered.forEach(d => {
-    for (const key of priceCols) {
-      const v = d[key];
-      d[key] = (v !== '' && v != null && !isNaN(+v)) ? +v : NaN;
+// Create ordered categories
+const orderedCategories = [];
+const categoryColors = {};
+Object.entries(categoryGroups).forEach(([groupName, groupData]) => {
+  groupData.items.forEach(item => {
+    if (priceCols.includes(item)) {
+      orderedCategories.push(item);
+      categoryColors[item] = groupData.color;
     }
   });
+});
 
-  const std = d3.deviation(allValuesGlobal) || 1;
-  const kde = kernelDensityEstimator(
-    kernelEpanechnikov(std / 3),
-    d3.ticks(0, globalMax * 1.1, 100) // usa il massimo globale per ticks coerenti
+// --- Compute Period-Specific Statistics ---
+function computePeriodStats(yearFilter) {
+  const filtered = data.filter(yearFilter);
+  const values = filtered.flatMap(d => 
+    orderedCategories.map(k => {
+      const v = d[k];
+      return (v !== '' && v != null && !isNaN(+v)) ? +v : NaN;
+    }).filter(v => !isNaN(v))
   );
-
-  // Crea densità per tutte le categorie
-  const allDensity = priceCols.map(key => {
-    const values = filtered.map(d => d[key]).filter(v => !isNaN(v));
-    const density = values.length > 0 ? kde(values) : [];
-    return {
-      key: categoryMap[key],
-      density: density,
-      hasData: values.length > 0
-    };
-  });
-
-  // Se vuoi scala X coerente per tutti gli anni, ritorna globalMax
-  const yearMax = globalMax;
-
-  return { allDensity, yearMax };
+  
+  return {
+    max: values.length > 0 ? d3.max(values) : 1,
+    std: values.length > 0 ? d3.deviation(values) || 1 : 1,
+    count: values.length
+  };
 }
 
+const periodStats = {
+  early: computePeriodStats(d => d.year >= 2000 && d.year <= 2004),
+  late: computePeriodStats(d => d.year >= 2005)
+};
 
-// --- draw ---
-function drawRidgeline(allDensity, yearMax, categories, year, maxWidth=900, maxHeight=600) {
-  const svg = d3.create('svg').attr('viewBox', [0, 0, maxWidth, maxHeight]);
-  const margin = {top: 60, right: 30, bottom: 50, left: 200};
-  const width = maxWidth - margin.left - margin.right;
-  const height = maxHeight - margin.top - margin.bottom;
+// Debug info
+window.__ridgelineStats = periodStats;
 
-  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+// --- Helper Functions ---
+function getStatsForYear(year) {
+  return (year >= 2000 && year <= 2004) ? periodStats.early : periodStats.late;
+}
 
-  // Scala X - MINIMO FISSO A 0, MASSIMO DINAMICO PER ANNO
+function parseValue(value) {
+  return (value !== '' && value != null && !isNaN(+value)) ? +value : NaN;
+}
+
+function kernelEpanechnikov(bandwidth) {
+  return function(v) {
+    const normalized = Math.abs(v / bandwidth);
+    return normalized <= 1 ? 0.75 * (1 - normalized * normalized) / bandwidth : 0;
+  };
+}
+
+function kernelDensityEstimator(kernel, ticks) {
+  return function(values) {
+    return ticks.map(x => [x, d3.mean(values, v => kernel(x - v))]);
+  };
+}
+
+// --- Prepare Data for Specific Year ---
+function prepareDataForYear(year) {
+  const filtered = data.filter(d => d.year === year);
+  const stats = getStatsForYear(year);
+  
+  // Parse values
+  filtered.forEach(d => {
+    orderedCategories.forEach(key => {
+      d[key] = parseValue(d[key]);
+    });
+  });
+  
+  // Use period-specific bandwidth
+  const bandwidth = stats.std * CONFIG.bandwidthMultiplier;
+  const maxRange = stats.max * 1.1;
+  
+  const kde = kernelDensityEstimator(
+    kernelEpanechnikov(bandwidth),
+    d3.ticks(0, maxRange, CONFIG.kdePoints)
+  );
+  
+  const allDensity = orderedCategories.map(key => {
+    const values = filtered
+      .map(d => d[key])
+      .filter(v => !isNaN(v));
+    
+    const density = values.length > 0 ? kde(values) : [];
+    
+    return {
+      key: categoryMap[key],
+      originalKey: key,
+      density: density,
+      hasData: values.length > 0,
+      color: categoryColors[key]
+    };
+  });
+  
+  return { 
+    allDensity, 
+    yearMax: stats.max,
+    bandwidth,
+    stats 
+  };
+}
+
+// --- Draw Function ---
+function drawRidgeline(allDensity, yearMax, year) {
+  const chartContainer = document.getElementById('ridgeline_id');
+  if (!chartContainer) return document.createElement('div');
+  
+  // Set container constraints
+  d3.select(chartContainer)
+    .style("max-width", CONFIG.maxWidth + "px")
+    .style("overflow-x", "hidden")
+    .style("margin", "0 auto");
+  
+  const svg = d3.select(chartContainer)
+    .append("svg")
+    .attr("viewBox", [0, 0, CONFIG.maxWidth, CONFIG.maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "ridgeline")
+    .style("display", "block");
+  
+  const width = CONFIG.maxWidth - CONFIG.margin.left - CONFIG.margin.right;
+  const height = CONFIG.maxHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+  
+  const g = svg.append("g")
+    .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
+  
+  // Handle no data case
+  if (!allDensity || allDensity.length === 0) {
+    svg.append("text")
+      .attr("x", CONFIG.maxWidth / 2)
+      .attr("y", CONFIG.maxHeight / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("fill", "#666")
+      .text("No data available for this year");
+    return svg.node();
+  }
+  
+  // X scale - period-specific range
   const x = d3.scaleLinear()
-    .domain([0, yearMax])
+    .domain([0, yearMax * 1.1])
     .range([0, width]);
-
-  // Asse X
-  g.append("g")
+  
+  // Determine which period we're in
+  const isEarlyPeriod = year >= 2000 && year <= 2004;
+  const periodColor = isEarlyPeriod ? '#3498db' : '#e74c3c';
+  const periodLabel = isEarlyPeriod ? 'Early Period (2000-2004)' : 'Late Period (2005-2024)';
+  
+  // Background highlight for period
+  g.append("rect")
+    .attr("x", -10)
+    .attr("y", -10)
+    .attr("width", width + 10)
+    .attr("height", height + 10)
+    .attr("fill", periodColor)
+    .attr("opacity", 0.03)
+    .attr("rx", 4);
+  
+  // X axis
+  const xAxis = g.append("g")
     .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x).ticks(10));
-
-  // CORREZIONE: Scala Y per le categorie con padding appropriato
+    .call(d3.axisBottom(x).ticks(8));
+  
+  xAxis.selectAll("text")
+    .style("font-size", "11px");
+  
+  // X axis label with period indicator
+  g.append("text")
+    .attr("x", width / 2)
+    .attr("y", height + 45)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("font-weight", "500")
+    .text("US Dollars");
+  
+  /*
+  // Scale change indicator
+  const scaleIndicator = g.append("g")
+    .attr("class", "scale-indicator")
+    .attr("transform", `translate(${width + 10}, 10)`);
+  
+  scaleIndicator.append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 10)
+    .attr("height", 60)
+    .attr("fill", periodColor)
+    .attr("opacity", 0.8)
+    .attr("rx", 2);
+  
+  scaleIndicator.append("text")
+    .attr("x", 18)
+    .attr("y", 15)
+    .style("font-size", "10px")
+    .style("font-weight", "600")
+    .style("fill", periodColor)
+    .text(periodLabel);
+  
+  scaleIndicator.append("text")
+    .attr("x", 18)
+    .attr("y", 30)
+    .style("font-size", "9px")
+    .style("fill", "#666")
+    .text(`Max: ${yearMax.toFixed(2)}`);
+  
+  scaleIndicator.append("text")
+    .attr("x", 18)
+    .attr("y", 43)
+    .style("font-size", "9px")
+    .style("fill", "#666")
+    .text(`Scale adjusted`);
+  
+  // Warning icon for scale change years
+  if (year === 2005 || year === 2004) {
+    const warningGroup = svg.append("g")
+      .attr("transform", `translate(${CONFIG.maxWidth - 80}, ${CONFIG.margin.top - 20})`);
+    
+    warningGroup.append("circle")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("r", 10)
+      .attr("fill", "#f39c12")
+      .attr("opacity", 0.9);
+    
+    warningGroup.append("text")
+      .attr("x", 0)
+      .attr("y", 4)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+      .style("fill", "white")
+      .text("!");
+    
+    warningGroup.append("text")
+      .attr("x", 15)
+      .attr("y", 4)
+      .style("font-size", "10px")
+      .style("font-weight", "600")
+      .style("fill", "#f39c12")
+      .text("Scale change");
+  }
+      */
+  
+  // Y scale
+  const categoryKeys = allDensity.map(d => d.key);
   const yName = d3.scaleBand()
-    .domain(categories)
+    .domain(categoryKeys)
     .range([0, height])
-    .paddingInner(0.3); // Usa padding più piccolo
-
-  // CORREZIONE: Scala per l'altezza delle curve
-  const maxDensity = d3.max(allDensity.filter(d => d.hasData), d => d3.max(d.density, d2 => d2[1])) || 1;
-  const curveHeight = yName.bandwidth() * 0.8; // Altezza massima della curva
+    .paddingInner(0.1);
+  
+  // Curve height scale
+  const maxDensity = d3.max(
+    allDensity.filter(d => d.hasData),
+    s => d3.max(s.density, p => p[1])
+  ) || 1;
+  
+  const curveHeight = Math.max(
+    CONFIG.minCurveHeight,
+    yName.bandwidth() * CONFIG.curveHeightRatio
+  );
   
   const y = d3.scaleLinear()
     .domain([0, maxDensity])
     .range([curveHeight, 0]);
-
-  // Asse Y
-  g.append("g").call(d3.axisLeft(yName).tickSize(0))
+  
+  // Y axis
+  g.append("g")
+    .call(d3.axisLeft(yName).tickSize(0))
     .selectAll("text")
-    .style("font-size", "11px");
-
-  // Disegna le curve
+    .style("font-size", "11px")
+    .style("font-weight", "400");
+  
+  // Draw ridges
   const ridges = g.selectAll("g.ridge")
     .data(allDensity)
     .enter()
     .append("g")
-      .attr("class", "ridge")
-      .attr("transform", d => `translate(0,${yName(d.key)})`);
-
-  // Area per ogni curva
+    .attr("class", "ridge")
+    .attr("transform", d => `translate(0,${yName(d.key)})`);
+  
+  // Draw curves with data
   ridges.filter(d => d.hasData)
     .append("path")
-      .datum(d => d.density)
-      .attr("fill", "#69b3a2")
-      .attr("opacity", 0.6)
-      .attr("stroke", "#000")
-      .attr("stroke-width", 1)
-      .attr("d", d3.area()
-        .curve(d3.curveBasis)
-        .x(d => x(d[0]))
-        .y0(curveHeight)
-        .y1(d => y(d[1]))
-      );
-
-  // Linea di base per categorie senza dati
+    .datum(d => d.density)
+    .attr("fill", (d, i, nodes) => {
+      const parentData = d3.select(nodes[i].parentNode).datum();
+      return parentData.color;
+    })
+    .attr("opacity", 0.65)
+    .attr("stroke", (d, i, nodes) => {
+      const parentData = d3.select(nodes[i].parentNode).datum();
+      return d3.color(parentData.color).darker(1);
+    })
+    .attr("stroke-width", 1.2)
+    .attr("d", d3.area()
+      .curve(d3.curveBasis)
+      .x(d => x(d[0]))
+      .y0(curveHeight)
+      .y1(d => y(d[1]))
+    );
+  
+  // Baseline for missing data
   ridges.filter(d => !d.hasData)
     .append("line")
-      .attr("x1", 0)
-      .attr("x2", width)
-      .attr("y1", curveHeight)
-      .attr("y2", curveHeight)
-      .attr("stroke", "#ccc")
-      .attr("stroke-width", 1)
-      .attr("stroke-dasharray", "3,3");
-
-  // Titolo
-  svg.append("text")
-    .attr("x", maxWidth / 2)
-    .attr("y", 30)
-    .attr("text-anchor", "middle")
-    .style("font-size", "18px")
-    .style("font-weight", "bold")
-    .text(`Ridgeline - ${year}`);
-
-  svg.append("text")
-    .attr("x", maxWidth / 2)
-    .attr("y", 50)
-    .attr("text-anchor", "middle")
-    .style("font-size", "14px")
-    .style("fill", "#666")
-    .text("Subtitle");
-
+    .attr("x1", 0)
+    .attr("x2", width)
+    .attr("y1", curveHeight)
+    .attr("y2", curveHeight)
+    .attr("stroke", "#ccc")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,2");
+  
   return svg.node();
 }
 
-function kernelDensityEstimator(kernel, X) {
-  return function(V) {
-    return X.map(x => [x, d3.mean(V, v => kernel(x - v))]);
-  };
-}
+// --- Animation State ---
+let currentYear = d3.min(data, d => d.year);
+let isPlaying = false;
+let intervalId = null;
 
-function kernelEpanechnikov(k) {
-  return function(v) {
-    return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
-  };
-}
-
-// Funzione per aggiornare il grafico
+// --- Update Chart ---
 function updateChart(year) {
+  const previousYear = currentYear;
+  const previousPeriod = (previousYear >= 2000 && previousYear <= 2004);
+  const newPeriod = (year >= 2000 && year <= 2004);
+  const scaleChanged = previousPeriod !== newPeriod;
+  
   currentYear = year;
   const { allDensity, yearMax } = prepareDataForYear(year);
   
-  // Rimuovi solo il SVG, non i controlli
-  const chartContainer = document.getElementById('chart-container');
+  const chartContainer = document.getElementById('ridgeline_id');
+  
+  // Add transition effect on scale change
+  if (scaleChanged) {
+    d3.select(chartContainer)
+      .transition()
+      .duration(300)
+      .style("opacity", 0.3)
+      .transition()
+      .duration(300)
+      .style("opacity", 1);
+  }
+  
   chartContainer.innerHTML = '';
   
-  // Aggiungi il nuovo grafico
-  chartContainer.appendChild(drawRidgeline(allDensity, yearMax, categories, year));
+  drawRidgeline(allDensity, yearMax, year);
   
-  // Aggiorna lo slider
-  document.getElementById('year-slider').value = year;
-  document.getElementById('year-label').textContent = year;
+  const slider = document.getElementById('year-slider');
+  const label = document.getElementById('year-label');
+  
+  if (slider) slider.value = year;
+  if (label) {
+    label.textContent = year;
+    // Highlight label on scale change
+    if (scaleChanged) {
+      label.style.color = (year >= 2000 && year <= 2004) ? '#3498db' : '#e74c3c';
+      label.style.fontWeight = '700';
+      setTimeout(() => {
+        label.style.color = '';
+        label.style.fontWeight = '';
+      }, 1500);
+    }
+  }
 }
 
-// Funzione play/pause
+// --- Play/Pause Control ---
 function togglePlay() {
   const playButton = document.getElementById('play-button');
   
   if (isPlaying) {
-    // Pausa
     clearInterval(intervalId);
     isPlaying = false;
     playButton.textContent = '▶ Play';
     playButton.style.background = '#4CAF50';
   } else {
-    // Play
     isPlaying = true;
     playButton.textContent = '⏸ Pause';
     playButton.style.background = '#ff9800';
     
     intervalId = setInterval(() => {
+      const minYear = d3.min(data, d => d.year);
+      const maxYear = d3.max(data, d => d.year);
+      
       currentYear++;
-      if (currentYear > 2024) {
-        currentYear = 2000; // Ricomincia dal 2000
+      if (currentYear > maxYear) {
+        currentYear = minYear;
       }
       updateChart(currentYear);
-    }, 800); // Cambia anno ogni 800ms
+    }, CONFIG.animationInterval);
   }
 }
 
-// Ottieni il container
-const ridgecontainer = document.getElementById('ridgeline_id');
+// --- Initialize Controls ---
+const yearSlider = document.getElementById('year-slider');
+const yearLabel = document.getElementById('year-label');
 
-// Crea i controlli
-const controlsDiv = document.createElement('div');
-controlsDiv.style.cssText = 'margin: 20px auto; display: flex; align-items: center; justify-content: center; gap: 15px; font-family: Arial, sans-serif; max-width: 600px;';
+const minYear = d3.min(data, d => d.year);
+const maxYear = d3.max(data, d => d.year);
 
-// Bottone Play/Pause
-const playButton = document.createElement('button');
-playButton.id = 'play-button';
-playButton.textContent = '▶ Play';
-playButton.style.cssText = 'padding: 10px 20px; font-size: 14px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 4px; font-weight: bold; transition: background 0.3s;';
-playButton.onclick = togglePlay;
-
-// Label anno
-const yearLabel = document.createElement('span');
-yearLabel.id = 'year-label';
-yearLabel.textContent = currentYear;
-yearLabel.style.cssText = 'font-size: 18px; font-weight: bold; min-width: 50px; text-align: center; color: #333;';
-
-// Slider
-const yearSlider = document.createElement('input');
-yearSlider.id = 'year-slider';
-yearSlider.type = 'range';
-yearSlider.min = 2000;
-yearSlider.max = 2024;
-yearSlider.value = currentYear;
-yearSlider.style.cssText = 'flex: 1; max-width: 300px; height: 6px; cursor: pointer;';
-
-yearSlider.addEventListener('input', (e) => {
-  const year = +e.target.value;
+if (yearSlider) {
+  yearSlider.min = Number.isFinite(minYear) ? minYear : currentYear;
+  yearSlider.max = Number.isFinite(maxYear) ? maxYear : currentYear;
+  yearSlider.value = currentYear;
   
-  // Se sta riproducendo, ferma l'animazione
-  if (isPlaying) {
-    togglePlay();
-  }
-  
-  updateChart(year);
-});
+  yearSlider.addEventListener('input', (e) => {
+    const year = +e.target.value;
+    if (isPlaying) togglePlay();
+    updateChart(year);
+  });
+} else {
+  console.warn('Year slider (#year-slider) not found in DOM.');
+}
 
-// Container per il grafico
-const chartContainer = document.createElement('div');
-chartContainer.id = 'chart-container';
-chartContainer.style.cssText = 'width: 100%; margin-top: 20px;';
+if (yearLabel) yearLabel.textContent = currentYear;
 
-// Aggiungi i controlli
-controlsDiv.appendChild(playButton);
-controlsDiv.appendChild(yearLabel);
-controlsDiv.appendChild(yearSlider);
+// --- Expose Global Functions ---
+window.togglePlay = togglePlay;
+window.updateChart = updateChart;
+window.prepareDataForYear = prepareDataForYear;
 
-ridgecontainer.appendChild(controlsDiv);
-ridgecontainer.appendChild(chartContainer);
-
-// Disegna il grafico iniziale
+// --- Initialize ---
 updateChart(currentYear);
-
-
-
-
 // --- --- --- Thumbnails --- --- ---
 const thumbnailScale = 0.05;
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
