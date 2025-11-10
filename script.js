@@ -149,8 +149,14 @@ function drawWaffleChart(waffleData) {
   const width = totalSideLength;
   const height = totalSideLength;
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  const maxChartWidth = 400;
+  d3.select("#waffle_id").style("max-width", maxChartWidth + "px");
+  d3.select("#waffle_id").style("margin", "0 auto");
+
+  // color scale for the two cell states (0 = non-violent, 1 = violent)
   const colorScale = d3.scaleOrdinal()
-    .domain(waffleDataViz)
+    .domain([0, 1])
     .range(["lightgray", "#ff4d4d"]);
 
   const svg = d3.select("#waffle_id") 
@@ -293,7 +299,7 @@ const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
   const colors = function(category) {
     switch(category) {
-      case "events": return "darkgray";
+      case "events": return "#888888";
       case "fatalities": return "#ff4d4d";
       default: return "gray";
     }
@@ -1121,7 +1127,7 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
   const monthNames = histogramData.map(d => d.MONTH);
 
   // one color for events, another for fatalities
-  const color = histogramData[0].EVENTS != null ? "darkgray" : "#ff4d4d";
+  const color = histogramData[0].EVENTS != null ? "#888888" : "#ff4d4d";
   
   const xScale = d3.scaleBand()
     .domain(monthNames)
