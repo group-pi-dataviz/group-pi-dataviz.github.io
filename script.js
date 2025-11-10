@@ -1120,7 +1120,8 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
 
   const monthNames = histogramData.map(d => d.MONTH);
 
-  const color = "#ff7f0b";
+  // one color for events, another for fatalities
+  const color = histogramData[0].EVENTS != null ? "darkgray" : "#ff4d4d";
   
   const xScale = d3.scaleBand()
     .domain(monthNames)
