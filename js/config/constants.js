@@ -12,15 +12,28 @@ export const COLORS = {
     brandGray: '#D9D9D6',
     dibris: '#007C58',
 
+    // Ridgeline Category colors
+    grains: '#8B4513',
+    rice: '#DEB887',
+    otherFoods: '#2E8B57',
+    labor: '#4169E1',
+    energyCurrency: '#DC143C',
+
     // Utility colors
-    // in the addThumbnail Function:
-    // #bbbbbb 
-    // 'white'
+    coolGray: '#bbbbbb',
+    lightGray: '#d3d3d3',
+    warmGray: '#888888',
+    white: '#ffffff',
+    gray: '#808080',
+    black: '#000000',
+    warmRed: '#ff4d4d',
+    warmerGray: '#666666',
+    darkerGray: '#222222',
+    darkGray: '#333333',
+    darkCyan: '#69b3a2',
+    green: '#4CAF50',
+    orange: '#ff9800',
     
-    // Waffle chart colors
-    //  'lightgray',
-    // #ff4d4d
-    // Tooltip...
 };
 
 export const DATA_SOURCES = {

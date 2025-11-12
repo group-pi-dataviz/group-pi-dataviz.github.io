@@ -41,13 +41,13 @@ window.addThumbnail = function (source, target, scale)
     .attr("spreadMethod", "repeat");
   
   bgGradient.append("stop")
-    .attr("offset", "0").attr("stop-color", "#bbbbbb");
+    .attr("offset", "0").attr("stop-color", COLORS.coolGray);
   bgGradient.append("stop")
-    .attr("offset", "0.5").attr("stop-color", "#bbbbbb");
+    .attr("offset", "0.5").attr("stop-color", COLORS.coolGray);
   bgGradient.append("stop")
-    .attr("offset", "0.5").attr("stop-color", "white");
+    .attr("offset", "0.5").attr("stop-color", COLORS.white);
   bgGradient.append("stop")
-    .attr("offset", "1").attr("stop-color", "white");
+    .attr("offset", "1").attr("stop-color", COLORS.white);
 
   sectionSvg.append("rect")
     .attr("width", "100%")
@@ -158,7 +158,7 @@ function drawWaffleChart(waffleData) {
   // color scale for the two cell states (0 = non-violent, 1 = violent)
   const colorScale = d3.scaleOrdinal()
     .domain([0, 1])
-    .range(["lightgray", "#ff4d4d"]);
+    .range([COLORS.lightGray, COLORS.warmRed]);
 
   const svg = d3.select("#waffle_id") 
       .append("svg")
@@ -284,7 +284,7 @@ function drawWaffleThumbnail(container)
         .attr("y", i * 11 + 3)
         .attr("width", 10)
         .attr("height", 10)
-        .attr("fill", (i*3 + j) > 3 ? "#ff4d4d" : "lightgray");
+        .attr("fill", (i*3 + j) > 3 ? COLORS.warmRed : COLORS.lightGray);
     }
   }
 }
@@ -298,9 +298,9 @@ const groupedData = await d3.dsv(";", "./data/section_1/" + DATA_SOURCES.grouped
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
   const colors = function(category) {
     switch(category) {
-      case "events": return "#888888";
-      case "fatalities": return "#ff4d4d";
-      default: return "gray";
+      case "events": return COLORS.warmGray;
+      case "fatalities": return COLORS.warmRed;
+      default: return COLORS.gray;
     }
   }
 
@@ -618,7 +618,7 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
 
       d3.select(this)
         .raise()
-        .attr("stroke", "#222")
+        .attr("stroke", COLORS.darkerGray)
         .attr("stroke-width", 1.5);
     })
     .on("mousemove", function(event) {
@@ -829,7 +829,7 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     .attr("width", barWidth)
     .attr("height", barHeight)
     .style("fill", `url(#${gradientId})`)
-    .style("stroke", "#333")
+    .style("stroke", COLORS.darkGray)
     .style("stroke-width", 1);
 
   const cbScale = d3.scaleLog()
@@ -1076,7 +1076,7 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
     .attr("y", d => yScale(d.FATALITIES))
     .attr("width", xScale.bandwidth())
     .attr("height", d => maxHeight - 50 - yScale(d.FATALITIES))
-    .attr("fill", "#ff4d4d");
+    .attr("fill", COLORS.warmRed);
 
   //axes
   svg.append("g")
@@ -1114,7 +1114,7 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
   const monthNames = histogramData.map(d => d.MONTH);
 
   // one color for events, another for fatalities
-  const color = histogramData[0].EVENTS != null ? "#888888" : "#ff4d4d";
+  const color = histogramData[0].EVENTS != null ? COLORS.warmGray : COLORS.warmRed;
   
   const xScale = d3.scaleBand()
     .domain(monthNames)
@@ -1226,8 +1226,8 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
       .attr('y', yScale(boxValues.q3))
       .attr('width', boxWidth)
       .attr('height', yScale(boxValues.q1) - yScale(boxValues.q3))
-      .attr('fill', '#69b3a2')
-      .attr('stroke', 'black');
+      .attr('fill', COLORS.darkCyan)
+      .attr('stroke', COLORS.black);
 
     // Median line
     g.append('line')
@@ -1287,8 +1287,8 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
       .attr('cx', xPos)
       .attr('cy', d => yScale(d))
       .attr('r', 3)
-      .attr('fill', '#ff000088')
-      .attr('stroke', 'black');
+      .attr('fill', COLORS.warmRed)
+      .attr('stroke', COLORS.black);
   }
 
   const years = function(d) { return d.YEAR; };
@@ -1397,24 +1397,24 @@ const categoryGroups = {
   'Grains & Flour': {
     items: ['Wheat', 'Wheat_flour', 'Wheat_flour_(low_quality)', 
             'Wheat_flour_(high_quality)', 'Bread'],
-    color: '#8B4513'
+    color: COLORS.grains
   },
   'Rice': {
     items: ['Rice_(low_quality)', 'Rice_(high_quality)'],
-    color: '#DEB887'
+    color: COLORS.rice
   },
   'Other Foods': {
     items: ['Oil_(cooking)', 'Pulses', 'Salt', 'Sugar'],
-    color: '#2E8B57'
+    color: COLORS.otherFoods
   },
   'Labor': {
     items: ['Wage_(non-qualified_labour,_non-agricultural)', 
             'Wage_(qualified_labour)'],
-    color: '#4169E1'
+    color: COLORS.labor
   },
   'Energy & Currency': {
     items: ['Fuel_(diesel)', 'Exchange_rate'],
-    color: '#DC143C'
+    color: COLORS.energyCurrency
   }
 };
 
@@ -1571,7 +1571,7 @@ function drawRidgeline(allDensity, yearMax, year) {
       .attr("y", CONFIG.maxHeight / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "14px")
-      .style("fill", "#666")
+      .style("fill", COLORS.warmerGray)
       .text("No data available for this year");
     return svg.node();
   }
@@ -1580,22 +1580,7 @@ function drawRidgeline(allDensity, yearMax, year) {
   const x = d3.scaleLinear()
     .domain([0, yearMax * 1.1])
     .range([0, width]);
-  
-  // Determine which period we're in
-  const isEarlyPeriod = year >= 2000 && year <= 2004;
-  const periodColor = isEarlyPeriod ? '#3498db' : '#e74c3c';
-  const periodLabel = isEarlyPeriod ? 'Early Period (2000-2004)' : 'Late Period (2005-2024)';
-  
-  // Background highlight for period
-  g.append("rect")
-    .attr("x", -10)
-    .attr("y", -10)
-    .attr("width", width + 10)
-    .attr("height", height + 10)
-    .attr("fill", periodColor)
-    .attr("opacity", 0.03)
-    .attr("rx", 4);
-  
+    
   // X axis
   const xAxis = g.append("g")
     .attr("transform", `translate(0,${height})`)
@@ -1746,7 +1731,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .attr("x2", width)
     .attr("y1", curveHeight)
     .attr("y2", curveHeight)
-    .attr("stroke", "#ccc")
+    .attr("stroke", COLORS.coolGray)
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "2,2");
   
@@ -1792,14 +1777,6 @@ function updateChart(year) {
   if (label) {
     label.textContent = year;
     // Highlight label on scale change
-    if (scaleChanged) {
-      label.style.color = (year >= 2000 && year <= 2004) ? '#3498db' : '#e74c3c';
-      label.style.fontWeight = '700';
-      setTimeout(() => {
-        label.style.color = '';
-        label.style.fontWeight = '';
-      }, 1500);
-    }
   }
 }
 
@@ -1811,12 +1788,12 @@ function togglePlay() {
     clearInterval(intervalId);
     isPlaying = false;
     playButton.textContent = '▶ Play';
-    playButton.style.background = '#4CAF50';
+    playButton.style.background = COLORS.green;
   } else {
     isPlaying = true;
     playButton.textContent = '⏸ Pause';
-    playButton.style.background = '#ff9800';
-    
+    playButton.style.background = COLORS.orange;
+
     intervalId = setInterval(() => {
       const minYear = d3.min(data, d => d.year);
       const maxYear = d3.max(data, d => d.year);
