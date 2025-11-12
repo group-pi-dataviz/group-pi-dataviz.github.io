@@ -1,6 +1,8 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 import { COLORS, DATA_SOURCES, BOLD_COUNTRIES } from "./config/constants.js";
+import { TooltipManager } from "./utils/tooltip.js";
+
 
 // --- --- --- Utility --- --- ---
 
@@ -179,7 +181,42 @@ function drawWaffleChart(waffleData) {
       .attr("height", SQUARE_SIZE)
       .attr("fill", d => colorScale(d.index));
 
-    // tooltip (remove any existing tooltip first)
+/* Tooltip implementation using TooltipManager class */
+
+    const tooltip = new TooltipManager('waffle-tooltip');
+    tooltip.create();
+    const handlers = tooltip.createHandlers((d) => {
+      const key = d.index === 1 ? "Violent" : "Non-Violent";
+      const perc = key === "Violent" ? violentPerc : 100 - violentPerc;
+      const percText = typeof perc === "number" ? `${perc}%` : `${perc}`;
+      
+      return `
+        <div style="display:inline-block;width:12px;height:12px;background:${colorScale(d.index)};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></div>
+        <strong>${key}</strong><br>
+        Percentage: ${percText}
+      `;
+    });
+
+    svg.selectAll(".waffle-cell")
+      .on("mouseover", function(event, d) {
+        handlers.onMouseOver(event, d);
+        
+        // Highlight cell
+        d3.select(this)
+          .raise()
+          .attr("stroke", "#222")
+          .attr("stroke-width", 1.5);
+      })
+      .on("mousemove", handlers.onMouseMove)
+      .on("mouseout", function(event) {
+        handlers.onMouseOut(); 
+        
+        // Remove highlight
+        d3.select(this).attr("stroke", "none");
+    });
+
+/**/
+/*
   d3.select("body").selectAll(".waffle-tooltip").remove();
   const tooltip = d3.select("body")
     .append("div")
@@ -258,6 +295,7 @@ function drawWaffleChart(waffleData) {
       d3.select(this).attr("stroke", "none");
     });
 
+  */
   return svg.node();
 }
 
@@ -290,8 +328,6 @@ function drawWaffleThumbnail(container)
 }
 
 // --- --- --- Grouped --- --- ---
-
-const boldCountries = new Set(["Afghanistan", "Philippines", "Myanmar"]);
 
 const groupedData = await d3.dsv(";", "./data/section_1/" + DATA_SOURCES.groupedDataSrc, d3.autoType);
 
@@ -456,7 +492,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("transform", `translate(70,0)`)
     .call(d3.axisLeft(yScale))
     .selectAll("text")
-    .filter(d => boldCountries.has(d))
+    .filter(d => BOLD_COUNTRIES.has(d))
     .attr("font-weight", "bold");
 
   //legend
@@ -640,7 +676,7 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
     .call(d3.axisLeft(yScale));
 
   yAxis.selectAll("text")
-    .filter(d => boldCountries.has(d))
+    .filter(d => BOLD_COUNTRIES.has(d))
     .attr("font-weight", "bold");
 
   // horizontal legend on two rows
