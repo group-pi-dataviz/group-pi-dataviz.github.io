@@ -5,33 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Group Pi - Conflict Data Visualization</title>
+    
+    <!-- Favicon and styles -->
+    <link rel="icon" type="image/png" href="./logos/favicon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Import and Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-blue': '#002677',
-                        'brand-yellow': '#F4DA40',
-                        'brand-red': '#C8102E',
-                        'brand-cyan': '#199BFC',
-                        'brand-black': '#25282A',
-                        'brand-gray': '#D9D9D6',
-                        'dibris': '#007C58',                        
-                    },
-                    fontFamily: {
-                        'heading': ['Roboto Slab', 'serif'],
-                        'body': ['Fira Sans', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <script type="module" src="./script.js" defer></script>
+    <script src="./js/tailwind_config.js"></script>
+    <script type="module" src="./js/main.js" defer></script>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
@@ -40,6 +25,7 @@
     <nav class="bg-brand-blue shadow-lg fixed w-full top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
+                
                 <!-- Logo -->
                 <div class="shrink-0">
                     <a href="./index.html" class="flex items-center">
@@ -56,6 +42,9 @@
                     </a>
                     <a href="#sec1_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
                         Section 1
+                    </a>
+                    <a href="#sec2_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
+                        Section 2
                     </a>
                     <a href="#about_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
                         About
@@ -78,7 +67,10 @@
                     Introduction
                 </a>
                 <a href="#sec1_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
-                    Section 1
+                    The not so Pacific SEA
+                </a>
+                <a href="#sec2_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
+                    A country in turmoil
                 </a>
                 <a href="#about_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                     About
@@ -121,6 +113,7 @@
                             This project aims to visualize data related to conflict and human suffering around the world.
                             The data used in this project is sourced from the <em class="text-brand-blue font-semibold">Armed Conflict Location & Event Data Project (ACLED)</em>,
                             which provides detailed information on political violence and protest events across the globe.
+                            We also used data collected by the <em class="text-brand-blue font-semibold">World Food Program (WFP)</em>, in order to understand how prices of food are affected by conflict.
                         </p>
 
 
@@ -139,8 +132,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                 </svg>
                             </a>
-        
-                    <!-- https://acleddata.com/faq/how-are-acled-data-coded     -->
+                            <br />
+                            <a href="https://data.humdata.org/dataset/wfp-food-prices-for-afghanistan" target="_blank" rel="noopener noreferrer" class="text-brand-cyan hover:text-brand-blue font-medium text-sm inline-flex items-center transition-colors">
+                                Visit WFP Data Source
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>        
                 </div>
                     </div>
                 </div>
@@ -158,9 +156,6 @@
                         The following visualizations aim to shed light on the situation in this region by analyzing data on violent events and fatalities from 2017 to 2024.
                     </p>
                     <div class="section-divider w-24 mx-auto mb-6"></div>
-                    <!-- <p class="text-gray-600 max-w-2xl mx-auto">
-                        Explore our interactive data visualizations to gain deeper insights into conflict patterns and their impact on communities worldwide.
-                    </p> -->
                 </div>
 
                 <!-- Waffle -->
@@ -263,25 +258,25 @@
                     </div>
 
 
-    <div class="selector country mt-8">
-      <button class="btn country active" data-country="afghanistan">Afghanistan</button>
-      <button class="btn country" data-country="myanmar">Myanmar</button>
-      <button class="btn country" data-country="philippines">Philippines</button>
-    </div>
+                    <div class="selector country mt-8">
+                    <button class="btn country active" data-country="afghanistan">Afghanistan</button>
+                    <button class="btn country" data-country="myanmar">Myanmar</button>
+                    <button class="btn country" data-country="philippines">Philippines</button>
+                    </div>
 
-    <div id="shared_heatmap_colorbar"></div>
+                    <div id="shared_heatmap_colorbar"></div>
 
-    <div id="heatmap-afghanistan" class="multi-container heatmap active">
-        <div id="heatmap_id"></div>
-    </div>
+                    <div id="heatmap-afghanistan" class="multi-container heatmap active">
+                        <div id="heatmap_id"></div>
+                    </div>
 
-    <div id="heatmap-myanmar" class="multi-container heatmap">
-        <div id="heatmap_id_2"></div>
-    </div>
+                    <div id="heatmap-myanmar" class="multi-container heatmap">
+                        <div id="heatmap_id_2"></div>
+                    </div>
 
-    <div id="heatmap-philippines" class="multi-container heatmap">
-        <div id="heatmap_id_3"></div>
-    </div>
+                    <div id="heatmap-philippines" class="multi-container heatmap">
+                        <div id="heatmap_id_3"></div>
+                    </div>
 
 
                     <p class="text-gray-600 text-sm">
@@ -444,7 +439,7 @@
                     <ol>
                         <li id="intro_id_nav"><a href="#intro_id">Introduction</a></li>
                         <li id="sec1_id_nav"><a href="#sec1_id">The not so Pacific SEA</a></li>
-                        <li id="sec2_id_nav"><a href="#sec2_id">Section 2</a></li>
+                        <li id="sec2_id_nav"><a href="#sec2_id">A country in turmoil</a></li>
                     </ol>
                 </nav>
             </div>
