@@ -117,7 +117,7 @@ window.addEventListener('scroll', () => {
 // --- --- --- Waffle --- --- ---
 
 const waffleDataSrc = "macro_event_type_counts.csv";
-const waffleData = (await d3.dsv(";", "./data/" + waffleDataSrc, d3.autoType))
+const waffleData = (await d3.dsv(";", "./data/section_1/" + waffleDataSrc, d3.autoType))
 .map(d => ({
   event_type: d.MACRO_EVENT_TYPE,
   percentage: d.PERCENTAGE,
@@ -292,9 +292,8 @@ function drawWaffleThumbnail(container)
 
 const boldCountries = new Set(["Afghanistan", "Philippines", "Myanmar"]);
 
-
 const groupedDataSrc = "event_fatalities.csv";
-const groupedData = await d3.dsv(";", "./data/" + groupedDataSrc, d3.autoType);
+const groupedData = await d3.dsv(";", "./data/section_1/" + groupedDataSrc, d3.autoType);
 
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
   const colors = function(category) {
@@ -496,10 +495,10 @@ groupedBar_id.appendChild(drawGroupedChart(groupedData));
 // --- --- --- Stacked 100% --- --- ---
 
 const stackedDataPercSrc = "event_types_percentages.csv";
-const dataPerc = await d3.dsv(";", "./data/" + stackedDataPercSrc, d3.autoType);
+const dataPerc = await d3.dsv(";", "./data/section_1/" + stackedDataPercSrc, d3.autoType);
 
 const stackedDataCountsSrc = "event_types_counts.csv";
-const dataCounts = await d3.dsv(";", "./data/" + stackedDataCountsSrc, d3.autoType);
+const dataCounts = await d3.dsv(";", "./data/section_1/" + stackedDataCountsSrc, d3.autoType);
 
 function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   const eventTypes = dataPerc.columns.filter(d => d !== "COUNTRY");
@@ -682,9 +681,9 @@ const dataSources = ["caucasus_and_central_asia_yearly_events_by_event_type.csv"
                      "caucasus_and_central_asia_yearly_fatalities_by_event_type.csv", 
                      "caucasus_and_central_asia_yearly_fatalities_by_sub_event_type.csv"];
 
-const afghanistanData = await d3.dsv(";", "./data/afghanistan_yearly_events_by_event_type.csv", d3.autoType);
-const myanmarData = await d3.dsv(";", "./data/myanmar_yearly_events_by_event_type.csv", d3.autoType);
-const philippinesData = await d3.dsv(";", "./data/philippines_yearly_events_by_event_type.csv", d3.autoType);
+const afghanistanData = await d3.dsv(";", "./data/section_1/afghanistan_yearly_events_by_event_type.csv", d3.autoType);
+const myanmarData = await d3.dsv(";", "./data/section_1/myanmar_yearly_events_by_event_type.csv", d3.autoType);
+const philippinesData = await d3.dsv(";", "./data/section_1/philippines_yearly_events_by_event_type.csv", d3.autoType);
 
 // Customizable parameters
 
@@ -1060,7 +1059,7 @@ if (navContainer) {
 // --- --- ---  Bar Chart --- --- ---
 
 const barDataSrc = "bar_data.csv";
-const barData = await d3.dsv(";", "./data/" + barDataSrc, d3.autoType);
+const barData = await d3.dsv(";", "./data/section_1/" + barDataSrc, d3.autoType);
 
 function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   const svg = d3.create("svg")
@@ -1113,10 +1112,10 @@ bar_id.appendChild(drawBarChart(barData));
 // --- --- --- Histogram --- --- ---
 
 const histogramEventsDataSrc = "afgh_events_by_month.csv";
-const histogramEventsData = await d3.dsv(",", "./data/" + histogramEventsDataSrc, d3.autoType);
+const histogramEventsData = await d3.dsv(",", "./data/section_2/" + histogramEventsDataSrc, d3.autoType);
 
 const histogramFatalitiesDataSrc = "afgh_fatalities_by_month.csv";
-const histogramFatalitiesData = await d3.dsv(",", "./data/" + histogramFatalitiesDataSrc, d3.autoType);
+const histogramFatalitiesData = await d3.dsv(",", "./data/section_2/" + histogramFatalitiesDataSrc, d3.autoType);
 
 function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
   const svg = d3.create("svg")
@@ -1210,7 +1209,7 @@ if (container) {
 // --- --- --- Box Plot --- --- ---
 
 const boxDataSrc = 'af_battles.csv';
-const boxData = await d3.dsv(';', './data/' + boxDataSrc);
+const boxData = await d3.dsv(';', './data/section_2/' + boxDataSrc);
 
 function extractBoxValues(data, distributionLambda, whis=1.5)
 {
@@ -1372,7 +1371,7 @@ boxplot_id.appendChild(drawBoxplot(boxData));
 // --- --- --- Ridgeline Chart with Dual Scale Support --- --- ---
 
 const ridgeDataSrc = 'wfp_food_prices_afg_wide_usd_small.csv';
-const rawText = await d3.text('./data_section_2/' + ridgeDataSrc);
+const rawText = await d3.text('./data/section_2/' + ridgeDataSrc);
 const parsed = d3.csvParseRows(rawText);
 
 // --- Configuration ---
