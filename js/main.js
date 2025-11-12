@@ -215,92 +215,15 @@ function drawWaffleChart(waffleData) {
         d3.select(this).attr("stroke", "none");
     });
 
-/**/
-/*
-  d3.select("body").selectAll(".waffle-tooltip").remove();
-  const tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "waffle-tooltip")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("background", "white")
-    .style("border", "1px solid #666")
-    .style("padding", "8px")
-    .style("border-radius", "4px")
-    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
-    .style("font-size", "12px")
-    .style("opacity", 0);
-
-  // position helper: offsetX/offsetY adjust relative position
-  function positionTooltip(event, offsetX = 12, offsetY = 12) {
-    const pageX = event.pageX;
-    const pageY = event.pageY;
-
-    const node = tooltip.node();
-    if (!node) return;
-
-    // initial position to the right/below the cursor
-    let left = pageX + offsetX;
-    let top = pageY + offsetY;
-
-    // measure tooltip size and viewport scroll
-    const rect = node.getBoundingClientRect();
-    const tw = rect.width;
-    const th = rect.height;
-    const scrollX = window.pageXOffset;
-    const scrollY = window.pageYOffset;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    // clamp horizontally (if it would overflow, try placing left of cursor)
-    if (left + tw > scrollX + vw - 8) {
-      left = pageX - offsetX - tw;
-    }
-    // clamp vertically (if it would overflow, try placing above cursor)
-    if (top + th > scrollY + vh - 8) {
-      top = pageY - offsetY - th;
-    }
-
-    tooltip.style("left", left + "px").style("top", top + "px");
-  }
-
-  // Attach interactivity to violent/non-violent cells
-  svg.selectAll(".waffle-cell")
-    .on("mouseover", function(event, d) {
-      const key = d.index === 1 ? "Violent" : "Non-Violent";
-
-      // percentage from the violent/non-violent
-      const perc = key === "Violent" ? violentPerc : 100 - violentPerc;
-      const percText = (typeof perc === "number") ? `${+perc}%` : `${perc}`;
-
-      tooltip
-        .html(`
-          <rect style="display:inline-block;width:12px;height:12px;background:${colorScale(d.index)};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
-          <strong>${key}</strong><br>
-          Percentage: ${percText}
-          `)
-        .style("opacity", 1);
-
-      d3.select(this)
-        .raise()
-        .attr("stroke", "#222")
-        .attr("stroke-width", 1.5);
-    })
-    .on("mousemove", function(event) {
-      // Use the shared positioning helper to place the tooltip and handle viewport clamping
-      positionTooltip(event);
-    })
-    .on("mouseout", function() {
-      tooltip.style("opacity", 0);
-      d3.select(this).attr("stroke", "none");
-    });
-
-  */
   return svg.node();
+
 }
 
 waffle_id.appendChild(drawWaffleChart(waffleData));
 
+/* Waffle thumbnail for the section overview */
+/* WIP */
+/*
 function drawWaffleThumbnail(container)
 {
   console.log("cont", container);
@@ -326,6 +249,7 @@ function drawWaffleThumbnail(container)
     }
   }
 }
+*/
 
 // --- --- --- Grouped --- --- ---
 
@@ -361,90 +285,48 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("chartType", "groupedBar")
     .attr("transform", d => `translate(0, ${yScale(d.country)})`);
 
-  // tooltip (remove any existing tooltip first)
-  d3.select("body").selectAll(".grouped-bar-tooltip").remove();
-  const tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "grouped-bar-tooltip")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("background", "white")
-    .style("border", "1px solid #666")
-    .style("padding", "8px")
-    .style("border-radius", "4px")
-    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
-    .style("font-size", "12px")
-    .style("opacity", 0);
+  // Tooltip
 
-  // position helper: offsetX/offsetY adjust relative position
-  function positionTooltip(event, offsetX = 12, offsetY = 12) {
-    const pageX = event.pageX;
-    const pageY = event.pageY;
+  const tooltip = new TooltipManager('grouped-bar-tooltip');
+  tooltip.create();
+  const handlers = tooltip.createHandlers((d) => {
+    const country = d.country;
 
-    const node = tooltip.node();
-    if (!node) return;
+    // percentage from the stacked (dataPerc) row rounded to 2 decimals
+    const events = +d.events;
+    // absolute count from the dataCounts dataset (match by COUNTRY)
+    const fatalities = +d.fatalities;
 
-    // initial position to the right/below the cursor
-    let left = pageX + offsetX;
-    let top = pageY + offsetY;
+    const eventsText = (typeof events === "number") ? `${events}` : `${events}`;
+    const fatalitiesText = (typeof fatalities === "number") ? `${fatalities}` : `${fatalities}`;
+      
+    return `
+        <strong>${country}</strong><br>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("events")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+        Events: ${eventsText}<br>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("fatalities")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+        Fatalities: ${fatalitiesText}
+    `;
+    });
 
-    // measure tooltip size and viewport scroll
-    const rect = node.getBoundingClientRect();
-    const tw = rect.width;
-    const th = rect.height;
-    const scrollX = window.pageXOffset;
-    const scrollY = window.pageYOffset;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    // clamp horizontally (if it would overflow, try placing left of cursor)
-    if (left + tw > scrollX + vw - 8) {
-      left = pageX - offsetX - tw;
-    }
-    // clamp vertically (if it would overflow, try placing above cursor)
-    if (top + th > scrollY + vh - 8) {
-      top = pageY - offsetY - th;
-    }
-
-    tooltip.style("left", left + "px").style("top", top + "px");
-  }
-
-  // Attach interactivity to rects
+  
   groups
-    .on("mouseover", function(event, d) { // parent group's datum contains .key
-      const country = d.country;
-
-      // percentage from the stacked (dataPerc) row rounded to 2 decimals
-      const events = +d.events;
-      // absolute count from the dataCounts dataset (match by COUNTRY)
-      const fatalities = +d.fatalities;
-
-      const eventsText = (typeof events === "number") ? `${events}` : `${events}`;
-      const fatalitiesText = (typeof fatalities === "number") ? `${fatalities}` : `${fatalities}`;
-
-      tooltip
-        .html(`
-          <strong>${country}</strong><br>
-          <rect style="display:inline-block;width:12px;height:12px;background:${colors("events")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
-          Events: ${eventsText}<br>
-          <rect style="display:inline-block;width:12px;height:12px;background:${colors("fatalities")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
-          Fatalities: ${fatalitiesText}
-          `)
-        .style("opacity", 1);
-
+    .on("mouseover", function(event, d) {
+      handlers.onMouseOver(event, d);
+      
+      // Highlight cell
       d3.select(this)
         .raise()
         .attr("opacity", 0.7);
     })
-    .on("mousemove", function(event) {
-      // Use the shared positioning helper to place the tooltip and handle viewport clamping
-      positionTooltip(event);
-    })
-    .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+    .on("mousemove", handlers.onMouseMove)
+    .on("mouseout", function(event) {
+      handlers.onMouseOut(); 
+      
+      // Remove highlight
       d3.select(this).attr("opacity", 1);
-    });
-
+  });
+  
   //event bars
   groups.append("rect")
     .attr("class", "bar events-bar")
@@ -578,55 +460,13 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
         .attr("width", d => xScale(d[1]) - xScale(d[0]))
         .attr("height", yScale.bandwidth());
 
-  // tooltip (remove any existing tooltip first)
-  d3.select("body").selectAll(".stacked-tooltip").remove();
-  const tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "stacked-tooltip")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("background", "white")
-    .style("border", "1px solid #666")
-    .style("padding", "8px")
-    .style("border-radius", "4px")
-    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
-    .style("font-size", "12px")
-    .style("opacity", 0);
+  // Tooltip
 
-  // position helper: offsetX/offsetY adjust relative position
-  function positionTooltip(event, offsetX = 12, offsetY = 12) {
-    const pageX = event.pageX;
-    const pageY = event.pageY;
-
-    const node = tooltip.node();
-    if (!node) return;
-
-    // initial position to the right/below the cursor
-    let left = pageX + offsetX;
-    let top = pageY + offsetY;
-
-    // measure tooltip size and viewport scroll
-    const rect = node.getBoundingClientRect();
-    const tw = rect.width;
-    const th = rect.height;
-    const scrollX = window.pageXOffset;
-    const scrollY = window.pageYOffset;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    // clamp horizontally (if it would overflow, try placing left of cursor)
-    if (left + tw > scrollX + vw - 8) {
-      left = pageX - offsetX - tw;
-    }
-    // clamp vertically (if it would overflow, try placing above cursor)
-    if (top + th > scrollY + vh - 8) {
-      top = pageY - offsetY - th;
-    }
-
-    tooltip.style("left", left + "px").style("top", top + "px");
-  }
+    const tooltip = new TooltipManager('stacked-tooltip');
+    tooltip.create();
 
   // Attach interactivity to rects
+  
   groups
     .on("mouseover", function(event, d) {
       const series = d3.select(this.parentNode).datum(); // parent group's datum contains .key
@@ -643,14 +483,14 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
       const absText = (typeof abs === "number") ? abs.toLocaleString() : abs;
 
       tooltip
-        .html(`
+        .show(`
           <rect style="display:inline-block;width:12px;height:12px;background:${color(key)};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
           <strong>${key}</strong><br>
           <em>${country}</em><br>
           Percentage: ${percText}<br>
           Count: ${absText}
           `)
-        .style("opacity", 1);
+        .position(event);
 
       d3.select(this)
         .raise()
@@ -658,13 +498,13 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
         .attr("stroke-width", 1.5);
     })
     .on("mousemove", function(event) {
-      // Use the shared positioning helper to place the tooltip and handle viewport clamping
-      positionTooltip(event);
+      tooltip.position(event);
     })
     .on("mouseout", function() {
-      tooltip.style("opacity", 0);
+      tooltip.hide();
       d3.select(this).attr("stroke", "none");
     });
+    
 
   //axes
   svg.append("g")
