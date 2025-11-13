@@ -1087,6 +1087,19 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
     .attr("height", d => maxHeight - 50 - yScale(d.FATALITIES))
     .attr("fill", "#ff4d4d");
 
+  
+  svg.selectAll("fatalities-label")
+    .data(barData)
+    .enter()
+    .append("text")
+    .attr("class", "fatalities-label")
+    .attr("x", d => xScale(d.YEAR) + xScale.bandwidth() / 2)
+    .attr("y", d => yScale(d.FATALITIES) - 6)
+    .attr("fill", "#ff4d4d")
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text(d => d.FATALITIES);
+
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
