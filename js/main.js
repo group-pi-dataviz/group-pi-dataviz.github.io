@@ -1714,7 +1714,14 @@ window.prepareDataForYear = prepareDataForYear;
 // --- Initialize ---
 updateChart(currentYear);
 // --- --- --- Thumbnails --- --- ---
-const thumbnailScale = 0.05;
+
+function computeNavScale() {
+  const mainHeight = document.querySelector("main").getBoundingClientRect().height;
+  console.log(mainHeight);
+  return 400 / mainHeight;
+}
+
+const thumbnailScale = computeNavScale();
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
 addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
