@@ -51,6 +51,9 @@
                     <a href="#sec2_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
                         Section 2
                     </a>
+                    <a href="#sec3_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
+                        Section 3
+                    </a>
                     <a href="#about_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
                         About
                     </a>
@@ -76,6 +79,9 @@
                 </a>
                 <a href="#sec2_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                     A country in turmoil
+                </a>
+                <a href="#sec3_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
+                    Afghanistan: the economic side of conflict
                 </a>
                 <a href="#about_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                     About
@@ -118,7 +124,7 @@
                             This project aims to visualize data related to conflict and human suffering around the world.
                             The data used in this project is sourced from the <em class="text-brand-blue font-semibold">Armed Conflict Location & Event Data Project (ACLED)</em>,
                             which provides detailed information on political violence and protest events across the globe.
-                            We also used data collected by the <em class="text-brand-blue font-semibold">World Food Program (WFP)</em>, in order to understand how prices of food are affected by conflict.
+                            We also used data collected by the <em class="text-brand-blue font-semibold">World Food Program (WFP)</em>, in order to understand how prices of food are affected by conflict and data from the <em>World Bank's</em> data portal that provides information on Economic, Social, Environmental, Health, Education, Development and Energy indicators in Afghanistan.
                         </p>
 
 
@@ -143,7 +149,14 @@
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                 </svg>
-                            </a>        
+                            </a>      
+                            <br />  
+                            <a href="https://data.humdata.org/dataset/world-bank-combined-indicators-for-afghanistan" target="_blank" rel="noopener noreferrer" class="text-brand-cyan hover:text-brand-blue font-medium text-sm inline-flex items-center transition-colors">
+                                Visit World Bank Data Source
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>                               
                 </div>
                     </div>
                 </div>
@@ -429,8 +442,42 @@
                 </div>
             </section>
 
-            <section class="mx-auto w-full lg:w-full">
-                <div id="chart" class="w-full"></div>
+            <!-- Section 3-->
+             <section id="sec3_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full fade-in-up">
+                <div class="text-center mb-12">
+                    <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">
+                        Afghanistan: the economic side of conflict
+                    </h3>
+                    <h5 class="font-bold font-heading">
+                        Analyzing government expenditure patterns in Afghanistan
+                    </h5>
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4">
+                        Government expenditure is a crucial aspect of a country's economic and social development,
+                        particularly in conflict-affected regions like Afghanistan. Understanding how government funds are allocated
+                        can provide insights into the priorities and challenges faced by the country.
+                        The following visualization explores the patterns of government expenditure in Afghanistan over the years,
+                        highlighting key areas of spending and their implications for the country's development.
+                    </p>
+                    <div class="section-divider w-24 mx-auto mb-6"></div>
+                </div>
+
+                <!-- Line Chart -->
+                <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
+                    <div class="text-center">
+                        <h5 class="font-heading font-bold text-2xl">
+                            The Economy of War
+                        </h5>
+                        <h6 class="font-heading text-gray-600">
+                            Government expenditure per category per year in Afghanistan (2004-2024)
+                        </h6>
+                    </div>
+                    <div id="linechart_id" class="text-center w-full h-full p-4">
+                        
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        
+                    </p>
+                </div>
             </section>
 
         </main>
@@ -445,6 +492,7 @@
                         <li id="intro_id_nav"><a href="#intro_id">Introduction</a></li>
                         <li id="sec1_id_nav"><a href="#sec1_id">The not so Pacific SEA</a></li>
                         <li id="sec2_id_nav"><a href="#sec2_id">A country in turmoil</a></li>
+                        <li id="sec3_id_nav"><a href="#sec3_id">Afghanistan: the economic side of conflict</a></li>
                     </ol>
                 </nav>
             </div>
