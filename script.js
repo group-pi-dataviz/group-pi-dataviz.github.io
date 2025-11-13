@@ -1878,7 +1878,7 @@ updateChart(currentYear);
 
 function computeNavScale() {
   const mainHeight = document.querySelector("main").getBoundingClientRect().height;
-  console.log(mainHeight);
+  //console.log(mainHeight);
   return 400 / mainHeight;
 }
 
