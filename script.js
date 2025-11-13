@@ -1,6 +1,8 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-// --- --- --- Utility --- --- ---
+// --- --- --- Utility --- --- --
+
+const maxChartWidth = 500; // Max width for responsive charts
 
 //creates a rectangle of the height of the source html tag and puts it below target
 window.addThumbnail = function (source, target, scale)
@@ -150,7 +152,6 @@ function drawWaffleChart(waffleData) {
   const height = totalSideLength;
 
   // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
-  const maxChartWidth = 400;
   d3.select("#waffle_id").style("max-width", maxChartWidth + "px");
   d3.select("#waffle_id").style("margin", "0 auto");
 
@@ -296,6 +297,10 @@ const groupedDataSrc = "event_fatalities.csv";
 const groupedData = await d3.dsv(";", "./data/section_1/" + groupedDataSrc, d3.autoType);
 
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#groupedBar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#groupedBar_id").style("margin", "0 auto");
+
   const colors = function(category) {
     switch(category) {
       case "events": return "#888888";
@@ -504,6 +509,10 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   const eventTypes = dataPerc.columns.filter(d => d !== "COUNTRY");
 
   const countries = dataPerc.map(d => d["COUNTRY"]);
+
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#stackedBar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#stackedBar_id").style("margin", "0 auto");
 
   // color palette = one color per subgroup
   const color = d3.scaleOrdinal()
@@ -791,6 +800,10 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     container.selectAll("*").remove();
   }
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  container.style("max-width", maxChartWidth + "px");
+  container.style("margin", "0 auto");
+
   const barWidth = 400;
   const barHeight = 20;
   const w = barWidth + 120;
@@ -932,6 +945,10 @@ function drawHeatmap(data, id = "#heatmap_id") {
   const width = myYears.length * HEATMAP_CONFIG.cellWidth;
   const height = myCategories.length * HEATMAP_CONFIG.cellHeight;
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select(id).style("max-width", maxChartWidth + "px");
+  d3.select(id).style("margin", "0 auto");
+
   const x = d3.scaleBand()
     .range([0, width])
     .domain(myYears)
@@ -1062,6 +1079,10 @@ const barDataSrc = "bar_data.csv";
 const barData = await d3.dsv(";", "./data/section_1/" + barDataSrc, d3.autoType);
 
 function drawBarChart(barData, maxWidth=600, maxHeight=400) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#bar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#bar_id").style("margin", "0 auto");
+
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
@@ -1131,6 +1152,12 @@ const histogramFatalitiesDataSrc = "afgh_fatalities_by_month.csv";
 const histogramFatalitiesData = await d3.dsv(",", "./data/section_2/" + histogramFatalitiesDataSrc, d3.autoType);
 
 function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#histogram_id").style("max-width", maxChartWidth + "px");
+  d3.select("#histogram_id").style("margin", "0 auto");
+  d3.select("#histogram_id_2").style("max-width", maxChartWidth + "px");
+  d3.select("#histogram_id_2").style("margin", "0 auto");
+
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
@@ -1240,6 +1267,10 @@ function extractBoxValues(data, distributionLambda, whis=1.5)
 
 function drawBoxplot(data, maxWidth=600, maxHeight=400)
 {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#boxplot_id").style("max-width", maxChartWidth + "px");
+  d3.select("#boxplot_id").style("margin", "0 auto");
+
   function drawSingleBoxplot(svg, boxValues, xPos, bandwidth, yScale)
   {
     const boxWidth = bandwidth * 0.6;
