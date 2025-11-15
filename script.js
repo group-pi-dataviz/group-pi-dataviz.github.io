@@ -1940,8 +1940,6 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
     .domain([0, d3.max(data, d => d3.max([d['Military Expenditure'], d['Health Expenditure']]))])
     .range([maxHeight - 50, 20]);
 
-  console.log(d3.max(data, d => d3.max([d['Military Expenditure'], d['Health Expenditure']])));
-
   // Military Expenditure Line
   const lineMilitary = d3.line()
     .x(d => xScale(d['Year']))
@@ -2067,7 +2065,6 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
       // Get mouse position relative to the SVG element (use this to account for viewBox/margins)
       const [mouseX] = d3.pointer(event);
       const x0 = xScale.invert(mouseX);
-      console.log(x0);
       // Find the closest year by rounding and clamping
       const yearClosest = Math.round(x0);
       const yearClamped = Math.max(d3.min(years), Math.min(d3.max(years), yearClosest));
