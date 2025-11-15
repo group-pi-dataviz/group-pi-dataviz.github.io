@@ -1918,9 +1918,13 @@ const lineData = await d3.dsv(',', './data/section_3/' + lineDataSrc, d3.autoTyp
 // Draw Line Chart with 2 lines
 function drawLineChart(data, maxWidth=600, maxHeight=400) {
   const years = data.map(d => d['Year']);
-  const militaryExpenditures = data.map(d => d['Military Expenditure']);
-  const healthExpenditures = data.map(d => d['Health Expenditure']);
-  
+  const colors = (type) => {
+    switch(type) {
+      case 'Military Expenditure': return '#3498db';
+      case 'Health Expenditure': return '#ff4d4d';
+      default: return '#888888';
+    }
+  }
   // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
   d3.select("#linechart_id").style("max-width", maxChartWidth + "px");
   d3.select("#linechart_id").style("margin", "0 auto");
@@ -1933,7 +1937,6 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
   const xScale = d3.scaleLinear()
     .domain([d3.min(years), d3.max(years)])
     .range([70, maxWidth - 40]);
-
 
   // Y scale for max between the two metrics
   const yScale = d3.scaleLinear()
@@ -1970,7 +1973,7 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
   svg.append("text")
     .attr("x", xScale(data[data.length - 1]['Year']))
     .attr("y", yScale(data[data.length - 1]['Military Expenditure']) - 10)
-    .attr("fill", "#3498db")
+    .attr("fill", colors("Military Expenditure"))
     .attr("font-size", "12px")
     .text("Military Expenditure");
 
@@ -1978,7 +1981,7 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
   svg.append("text")
     .attr("x", xScale(data[data.length - 1]['Year']))
     .attr("y", yScale(data[data.length - 1]['Health Expenditure']) - 10)
-    .attr("fill", "#ff4d4d")
+    .attr("fill", colors("Health Expenditure"))
     .attr("font-size", "12px")
     .text("Health Expenditure");
 
@@ -2057,9 +2060,7 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
 
   // If mouse over graph, show tooltip
   svg.on("mouseover", function(event, d) {
-      const lineType = d3.select(this).datum() === data ? "Military Expenditure" : "Health Expenditure";
-      tooltip.html(`<strong>${lineType}</strong><br/>Hover over the line to see values.`)
-        .style("opacity", 1);
+      tooltip.style("opacity", 1);
     })
     .on("mousemove", function(event, d) {
       // Get mouse position relative to the SVG element (use this to account for viewBox/margins)
@@ -2073,7 +2074,9 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
       const militaryValue = dClosest['Military Expenditure'].toFixed(2);
       const healthValue = dClosest['Health Expenditure'].toFixed(2);
       tooltip.html(`<strong>Year: ${dClosest['Year']}</strong><br/>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("Military Expenditure")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
         Military Expenditure: ${militaryValue}%<br/>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("Health Expenditure")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
         Health Expenditure: ${healthValue}%`);
 
       // Draw vertical line long from top to bottom of chart area
