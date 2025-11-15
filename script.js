@@ -1911,6 +1911,202 @@ if (yearSlider) {
 
 if (yearLabel) yearLabel.textContent = currentYear;
 
+// --- --- --- Line Chart --- --- ---
+const lineDataSrc = 'military_health_expenditure_afg.csv';
+const lineData = await d3.dsv(',', './data/section_3/' + lineDataSrc, d3.autoType);
+
+// Draw Line Chart with 2 lines
+function drawLineChart(data, maxWidth=600, maxHeight=400) {
+  const years = data.map(d => d['Year']);
+  const militaryExpenditures = data.map(d => d['Military Expenditure']);
+  const healthExpenditures = data.map(d => d['Health Expenditure']);
+  
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#linechart_id").style("max-width", maxChartWidth + "px");
+  d3.select("#linechart_id").style("margin", "0 auto");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "linechart");
+
+  const xScale = d3.scaleLinear()
+    .domain([d3.min(years), d3.max(years)])
+    .range([70, maxWidth - 40]);
+
+
+  // Y scale for max between the two metrics
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d3.max([d['Military Expenditure'], d['Health Expenditure']]))])
+    .range([maxHeight - 50, 20]);
+
+  console.log(d3.max(data, d => d3.max([d['Military Expenditure'], d['Health Expenditure']])));
+
+  // Military Expenditure Line
+  const lineMilitary = d3.line()
+    .x(d => xScale(d['Year']))
+    .y(d => yScale(d['Military Expenditure']))
+    .curve(d3.curveMonotoneX);
+
+  svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#3498db")
+    .attr("stroke-width", 3)
+    .attr("d", lineMilitary);
+
+  // Health Expenditure Line
+  const lineHealth = d3.line()
+    .x(d => xScale(d['Year']))
+    .y(d => yScale(d['Health Expenditure']))
+    .curve(d3.curveMonotoneX);
+
+  svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#ff4d4d")
+    .attr("stroke-width", 3)
+    .attr("d", lineHealth);
+
+  // Military Expenditure Label
+  svg.append("text")
+    .attr("x", xScale(data[data.length - 1]['Year']))
+    .attr("y", yScale(data[data.length - 1]['Military Expenditure']) - 10)
+    .attr("fill", "#3498db")
+    .attr("font-size", "12px")
+    .text("Military Expenditure");
+
+  // Health Expenditure Label
+  svg.append("text")
+    .attr("x", xScale(data[data.length - 1]['Year']))
+    .attr("y", yScale(data[data.length - 1]['Health Expenditure']) - 10)
+    .attr("fill", "#ff4d4d")
+    .attr("font-size", "12px")
+    .text("Health Expenditure");
+
+  //axes
+  svg.append("g")
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
+      .call(g => g.select(".domain").remove()); // remove axis line
+
+  const yAxisG = svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(g => g.call(d3.axisLeft(yScale))
+      .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .clone()
+      .attr("x2", maxWidth - 110)
+      .attr("stroke-opacity", 0.5));
+  yAxisG.lower();
+
+  // Add a percentage label on Y axis
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -maxHeight / 2)
+    .attr("y", 15)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("Expenditure (% of government spending)");
+
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".linechart-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "linechart-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // If mouse over graph, show tooltip
+  svg.on("mouseover", function(event, d) {
+      const lineType = d3.select(this).datum() === data ? "Military Expenditure" : "Health Expenditure";
+      tooltip.html(`<strong>${lineType}</strong><br/>Hover over the line to see values.`)
+        .style("opacity", 1);
+    })
+    .on("mousemove", function(event, d) {
+      // Get mouse position relative to the SVG element (use this to account for viewBox/margins)
+      const [mouseX] = d3.pointer(event);
+      const x0 = xScale.invert(mouseX);
+      console.log(x0);
+      // Find the closest year by rounding and clamping
+      const yearClosest = Math.round(x0);
+      const yearClamped = Math.max(d3.min(years), Math.min(d3.max(years), yearClosest));
+      const dClosest = data.find(dd => dd['Year'] === yearClamped);
+      // Update tooltip content
+      const militaryValue = dClosest['Military Expenditure'].toFixed(2);
+      const healthValue = dClosest['Health Expenditure'].toFixed(2);
+      tooltip.html(`<strong>Year: ${dClosest['Year']}</strong><br/>
+        Military Expenditure: ${militaryValue}%<br/>
+        Health Expenditure: ${healthValue}%`);
+
+      // Draw vertical line long from top to bottom of chart area
+      svg.selectAll(".tooltip-line").remove();
+      svg.append("line")
+        .attr("class", "tooltip-line")
+        .attr("y1", 20)
+        .attr("y2", maxHeight - 50)
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "4,4");
+        
+      // Update vertical line position
+      const xPos = xScale(dClosest['Year']);
+      svg.selectAll(".tooltip-line")
+        .attr("x1", xPos)
+        .attr("x2", xPos);
+
+      // Update tooltip position
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
+
+  return svg.node();
+}
+
+linechart_id.appendChild(drawLineChart(lineData));
+
 // --- Expose Global Functions ---
 window.togglePlay = togglePlay;
 window.updateChart = updateChart;
