@@ -2126,3 +2126,4 @@ const thumbnailScale = computeNavScale();
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
 addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
+addThumbnail(sec3_id, sec3_id_nav, thumbnailScale);
