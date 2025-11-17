@@ -1,6 +1,8 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-// --- --- --- Utility --- --- ---
+// --- --- --- Utility --- --- --
+
+const maxChartWidth = 500; // Max width for responsive charts
 
 //creates a rectangle of the height of the source html tag and puts it below target
 window.addThumbnail = function (source, target, scale)
@@ -150,7 +152,6 @@ function drawWaffleChart(waffleData) {
   const height = totalSideLength;
 
   // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
-  const maxChartWidth = 400;
   d3.select("#waffle_id").style("max-width", maxChartWidth + "px");
   d3.select("#waffle_id").style("margin", "0 auto");
 
@@ -296,6 +297,10 @@ const groupedDataSrc = "event_fatalities.csv";
 const groupedData = await d3.dsv(";", "./data/section_1/" + groupedDataSrc, d3.autoType);
 
 function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#groupedBar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#groupedBar_id").style("margin", "0 auto");
+
   const colors = function(category) {
     switch(category) {
       case "events": return "#888888";
@@ -504,6 +509,10 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   const eventTypes = dataPerc.columns.filter(d => d !== "COUNTRY");
 
   const countries = dataPerc.map(d => d["COUNTRY"]);
+
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#stackedBar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#stackedBar_id").style("margin", "0 auto");
 
   // color palette = one color per subgroup
   const color = d3.scaleOrdinal()
@@ -791,6 +800,10 @@ function drawSharedColorbar(minVal, maxVal, valueToColor) {
     container.selectAll("*").remove();
   }
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  container.style("max-width", maxChartWidth + "px");
+  container.style("margin", "0 auto");
+
   const barWidth = 400;
   const barHeight = 20;
   const w = barWidth + 120;
@@ -932,6 +945,10 @@ function drawHeatmap(data, id = "#heatmap_id") {
   const width = myYears.length * HEATMAP_CONFIG.cellWidth;
   const height = myCategories.length * HEATMAP_CONFIG.cellHeight;
 
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select(id).style("max-width", maxChartWidth + "px");
+  d3.select(id).style("margin", "0 auto");
+
   const x = d3.scaleBand()
     .range([0, width])
     .domain(myYears)
@@ -1062,6 +1079,10 @@ const barDataSrc = "bar_data.csv";
 const barData = await d3.dsv(";", "./data/section_1/" + barDataSrc, d3.autoType);
 
 function drawBarChart(barData, maxWidth=600, maxHeight=400) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#bar_id").style("max-width", maxChartWidth + "px");
+  d3.select("#bar_id").style("margin", "0 auto");
+
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
@@ -1086,6 +1107,19 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
     .attr("width", xScale.bandwidth())
     .attr("height", d => maxHeight - 50 - yScale(d.FATALITIES))
     .attr("fill", "#ff4d4d");
+
+  
+  svg.selectAll("fatalities-label")
+    .data(barData)
+    .enter()
+    .append("text")
+    .attr("class", "fatalities-label")
+    .attr("x", d => xScale(d.YEAR) + xScale.bandwidth() / 2)
+    .attr("y", d => yScale(d.FATALITIES) - 6)
+    .attr("fill", "#ff4d4d")
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text(d => d.FATALITIES);
 
   //axes
   svg.append("g")
@@ -1118,6 +1152,12 @@ const histogramFatalitiesDataSrc = "afgh_fatalities_by_month.csv";
 const histogramFatalitiesData = await d3.dsv(",", "./data/section_2/" + histogramFatalitiesDataSrc, d3.autoType);
 
 function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#histogram_id").style("max-width", maxChartWidth + "px");
+  d3.select("#histogram_id").style("margin", "0 auto");
+  d3.select("#histogram_id_2").style("max-width", maxChartWidth + "px");
+  d3.select("#histogram_id_2").style("margin", "0 auto");
+
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, maxWidth, maxHeight])
     .attr("class", "visualization m-auto")
@@ -1227,6 +1267,10 @@ function extractBoxValues(data, distributionLambda, whis=1.5)
 
 function drawBoxplot(data, maxWidth=600, maxHeight=400)
 {
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#boxplot_id").style("max-width", maxChartWidth + "px");
+  d3.select("#boxplot_id").style("margin", "0 auto");
+
   function drawSingleBoxplot(svg, boxValues, xPos, bandwidth, yScale)
   {
     const boxWidth = bandwidth * 0.6;
@@ -1867,6 +1911,202 @@ if (yearSlider) {
 
 if (yearLabel) yearLabel.textContent = currentYear;
 
+// --- --- --- Line Chart --- --- ---
+const lineDataSrc = 'military_health_expenditure_afg.csv';
+const lineData = await d3.dsv(',', './data/section_3/' + lineDataSrc, d3.autoType);
+
+// Draw Line Chart with 2 lines
+function drawLineChart(data, maxWidth=600, maxHeight=400) {
+  const years = data.map(d => d['Year']);
+  const colors = (type) => {
+    switch(type) {
+      case 'Military Expenditure': return '#3498db';
+      case 'Health Expenditure': return '#ff4d4d';
+      default: return '#888888';
+    }
+  }
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#linechart_id").style("max-width", maxChartWidth + "px");
+  d3.select("#linechart_id").style("margin", "0 auto");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "linechart");
+
+  const xScale = d3.scaleLinear()
+    .domain([d3.min(years), d3.max(years)])
+    .range([70, maxWidth - 40]);
+
+  // Y scale for max between the two metrics
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d3.max([d['Military Expenditure'], d['Health Expenditure']]))])
+    .range([maxHeight - 50, 20]);
+
+  // Military Expenditure Line
+  const lineMilitary = d3.line()
+    .x(d => xScale(d['Year']))
+    .y(d => yScale(d['Military Expenditure']))
+    .curve(d3.curveMonotoneX);
+
+  svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#3498db")
+    .attr("stroke-width", 3)
+    .attr("d", lineMilitary);
+
+  // Health Expenditure Line
+  const lineHealth = d3.line()
+    .x(d => xScale(d['Year']))
+    .y(d => yScale(d['Health Expenditure']))
+    .curve(d3.curveMonotoneX);
+
+  svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#ff4d4d")
+    .attr("stroke-width", 3)
+    .attr("d", lineHealth);
+
+  // Military Expenditure Label
+  svg.append("text")
+    .attr("x", xScale(data[data.length - 1]['Year']))
+    .attr("y", yScale(data[data.length - 1]['Military Expenditure']) - 10)
+    .attr("fill", colors("Military Expenditure"))
+    .attr("font-size", "12px")
+    .text("Military Expenditure");
+
+  // Health Expenditure Label
+  svg.append("text")
+    .attr("x", xScale(data[data.length - 1]['Year']))
+    .attr("y", yScale(data[data.length - 1]['Health Expenditure']) - 10)
+    .attr("fill", colors("Health Expenditure"))
+    .attr("font-size", "12px")
+    .text("Health Expenditure");
+
+  //axes
+  svg.append("g")
+    .attr("transform", `translate(0,${maxHeight - 50})`)
+    .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
+      .call(g => g.select(".domain").remove()); // remove axis line
+
+  const yAxisG = svg.append("g")
+    .attr("transform", `translate(70,0)`)
+    .call(g => g.call(d3.axisLeft(yScale))
+      .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .clone()
+      .attr("x2", maxWidth - 110)
+      .attr("stroke-opacity", 0.5));
+  yAxisG.lower();
+
+  // Add a percentage label on Y axis
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -maxHeight / 2)
+    .attr("y", 15)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .text("Expenditure (% of government spending)");
+
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".linechart-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "linechart-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // If mouse over graph, show tooltip
+  svg.on("mouseover", function(event, d) {
+      tooltip.style("opacity", 1);
+    })
+    .on("mousemove", function(event, d) {
+      // Get mouse position relative to the SVG element (use this to account for viewBox/margins)
+      const [mouseX] = d3.pointer(event);
+      const x0 = xScale.invert(mouseX);
+      // Find the closest year by rounding and clamping
+      const yearClosest = Math.round(x0);
+      const yearClamped = Math.max(d3.min(years), Math.min(d3.max(years), yearClosest));
+      const dClosest = data.find(dd => dd['Year'] === yearClamped);
+      // Update tooltip content
+      const militaryValue = dClosest['Military Expenditure'].toFixed(2);
+      const healthValue = dClosest['Health Expenditure'].toFixed(2);
+      tooltip.html(`<strong>Year: ${dClosest['Year']}</strong><br/>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("Military Expenditure")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+        Military Expenditure: ${militaryValue}%<br/>
+        <rect style="display:inline-block;width:12px;height:12px;background:${colors("Health Expenditure")};vertical-align:middle;margin-right:8px;border-radius:2px;border:1px solid rgba(0,0,0,0.15)"></rect>
+        Health Expenditure: ${healthValue}%`);
+
+      // Draw vertical line long from top to bottom of chart area
+      svg.selectAll(".tooltip-line").remove();
+      svg.append("line")
+        .attr("class", "tooltip-line")
+        .attr("y1", 20)
+        .attr("y2", maxHeight - 50)
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "4,4");
+        
+      // Update vertical line position
+      const xPos = xScale(dClosest['Year']);
+      svg.selectAll(".tooltip-line")
+        .attr("x1", xPos)
+        .attr("x2", xPos);
+
+      // Update tooltip position
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
+
+  return svg.node();
+}
+
+linechart_id.appendChild(drawLineChart(lineData));
+
 // --- Expose Global Functions ---
 window.togglePlay = togglePlay;
 window.updateChart = updateChart;
@@ -1886,3 +2126,4 @@ const thumbnailScale = computeNavScale();
 addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
 addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
+addThumbnail(sec3_id, sec3_id_nav, thumbnailScale);
