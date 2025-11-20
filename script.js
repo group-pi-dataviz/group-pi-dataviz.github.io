@@ -2112,11 +2112,15 @@ linechart_id.appendChild(drawLineChart(lineData));
 const afGeoDataSrc = 'af.json';
 const afGeoData = await d3.json('./json/' + afGeoDataSrc);
 
-// const symbolMapDataSrc = 'conflict_locations_afg.csv';
-// const symbolMapRawText = await d3.text('./data/section_3/' + symbolMapDataSrc);
-// const symbolMapData = d3.csvParse(symbolMapRawText, d3.autoType);
+const symbolMapDataSrc = 'af_geobat.csv';
+const symbolMapData = (await d3.dsv(";", './data/section_4/' + symbolMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  CENTROID_LATITUDE: +d.CENTROID_LATITUDE.replace(',', '.'),
+  CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE.replace(',', '.'),
+  FATALITIES: +d.FATALITIES
+}));
 
-function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=400)
+function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=450)
 {
   // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
   d3.select("#symbolmap_id").style("max-width", maxChartWidth + "px");
@@ -2144,23 +2148,33 @@ function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=400)
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
+  console.log(pointsData[0].CENTROID_LATITUDE);
+
   // Draw the symbols
   svg.append("g")
     .selectAll("circle")
     .data(pointsData)
     .enter()
     .append("circle")
-    .attr("cx", d => projection([d.longitude, d.latitude])[0])
-    .attr("cy", d => projection([d.longitude, d.latitude])[1])
-    .attr("r", d => Math.sqrt(d.value) * 2) // Scale radius based on value
+    .attr("cx", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[0])
+    .attr("cy", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[1])
+    .attr("r", d => Math.sqrt(d.FATALITIES) * 2) // Scale radius based on value
     .attr("fill", "rgba(255,0,0,0.6)")
     .attr("stroke", "#800000")
     .attr("stroke-width", 0.5)
-    .append("title") // Tooltip
-    .text(d => `Location: (${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)})\nValue: ${d.value}`);
+    // .append("title") // Tooltip
+    // .text(d => `Location: (${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)})\nValue: ${d.value}`);
 
   return svg.node();
 }
+// For demonstration, using random points data
+const symbolMapPointsData = d3.range(50).map(() => ({
+  latitude: 29 + Math.random() * 12, // Approximate lat range for Afghanistan
+  longitude: 60 + Math.random() * 15, // Approximate lon range for Afghanistan
+  value: Math.random() * 100
+}));
+
+symbolMap_id.appendChild(drawSymbolMap(afGeoData, symbolMapData));
 
 // --- Expose Global Functions ---
 window.togglePlay = togglePlay;
