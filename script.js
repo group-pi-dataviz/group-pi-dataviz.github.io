@@ -2107,6 +2107,61 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
 
 linechart_id.appendChild(drawLineChart(lineData));
 
+// --- --- --- Symbol Map --- --- ---
+
+const afGeoDataSrc = 'af.json';
+const afGeoData = await d3.json('./json/' + afGeoDataSrc);
+
+// const symbolMapDataSrc = 'conflict_locations_afg.csv';
+// const symbolMapRawText = await d3.text('./data/section_3/' + symbolMapDataSrc);
+// const symbolMapData = d3.csvParse(symbolMapRawText, d3.autoType);
+
+function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=400)
+{
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#symbolmap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#symbolmap_id").style("margin", "0 auto");
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "symbolmap");
+
+  const projection = d3.geoMercator()
+    .center([67.5, 34.5]) // Center on Afghanistan
+    .scale(2000)
+    .translate([maxWidth / 2, maxHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  // Draw the map
+  svg.append("g")
+    .selectAll("path")
+    .data(geoData.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("fill", "#e0e0e0")
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+
+  // Draw the symbols
+  svg.append("g")
+    .selectAll("circle")
+    .data(pointsData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => projection([d.longitude, d.latitude])[0])
+    .attr("cy", d => projection([d.longitude, d.latitude])[1])
+    .attr("r", d => Math.sqrt(d.value) * 2) // Scale radius based on value
+    .attr("fill", "rgba(255,0,0,0.6)")
+    .attr("stroke", "#800000")
+    .attr("stroke-width", 0.5)
+    .append("title") // Tooltip
+    .text(d => `Location: (${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)})\nValue: ${d.value}`);
+
+  return svg.node();
+}
+
 // --- Expose Global Functions ---
 window.togglePlay = togglePlay;
 window.updateChart = updateChart;
