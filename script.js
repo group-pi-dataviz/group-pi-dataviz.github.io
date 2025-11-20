@@ -1465,14 +1465,14 @@ const categoryGroups = {
     items: ['Oil_(cooking)', 'Pulses', 'Salt', 'Sugar'],
     color: '#2E8B57'
   },
+  'Energy & Currency': {
+    items: ['Fuel_(diesel)', 'Exchange_rate'],
+    color: '#DC143C'
+  },
   'Labor': {
     items: ['Wage_(non-qualified_labour,_non-agricultural)', 
             'Wage_(qualified_labour)'],
     color: '#4169E1'
-  },
-  'Energy & Currency': {
-    items: ['Fuel_(diesel)', 'Exchange_rate'],
-    color: '#DC143C'
   }
 };
 

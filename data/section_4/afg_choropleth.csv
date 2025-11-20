@@ -1,0 +1,205 @@
+ADMIN1,EVENT_TYPE,EVENTS,NORMALIZED_EVENTS
+Badakhshan,Battles,842,0.20441854819130856
+Badakhshan,Explosions/Remote violence,233,0.056567127943675646
+Badakhshan,Protests,49,0.011896091284292304
+Badakhshan,Riots,15,0.003641660597232338
+Badakhshan,Strategic developments,74,0.017965525613012866
+Badakhshan,Violence against civilians,170,0.04127215343529983
+Badghis,Battles,1206,0.29278951201748
+Badghis,Explosions/Remote violence,397,0.09638261714008255
+Badghis,Protests,13,0.0031561058509346927
+Badghis,Riots,4,0.0009711094925952901
+Badghis,Strategic developments,46,0.011167759164845836
+Badghis,Violence against civilians,83,0.02015052197135227
+Baghlan,Battles,1333,0.3236222384073804
+Baghlan,Explosions/Remote violence,351,0.0852148579752367
+Baghlan,Protests,38,0.009225540179655257
+Baghlan,Riots,7,0.0016994416120417577
+Baghlan,Strategic developments,106,0.02573440155377519
+Baghlan,Violence against civilians,211,0.051226025734401555
+Balkh,Battles,1647,0.3998543335761107
+Balkh,Explosions/Remote violence,552,0.13401310997815002
+Balkh,Protests,75,0.01820830298616169
+Balkh,Riots,3,0.0007283321194464676
+Balkh,Strategic developments,114,0.027676620538965767
+Balkh,Violence against civilians,193,0.046856033017722745
+Bamyan,Battles,50,0.012138868657441126
+Bamyan,Explosions/Remote violence,8,0.0019422189851905803
+Bamyan,Protests,18,0.004369992716678805
+Bamyan,Riots,2,0.00048555474629764507
+Bamyan,Strategic developments,19,0.004612770089827628
+Bamyan,Violence against civilians,24,0.005826656955571741
+Daykundi,Battles,194,0.04709881039087157
+Daykundi,Explosions/Remote violence,58,0.014081087642631707
+Daykundi,Protests,10,0.0024277737314882253
+Daykundi,Riots,2,0.00048555474629764507
+Daykundi,Strategic developments,40,0.009711094925952901
+Daykundi,Violence against civilians,64,0.015537751881524642
+Farah,Battles,1190,0.2889050740470988
+Farah,Explosions/Remote violence,596,0.14469531439669822
+Farah,Protests,17,0.004127215343529983
+Farah,Riots,1,0.00024277737314882253
+Farah,Strategic developments,72,0.01747997086671522
+Farah,Violence against civilians,112,0.027191065792668122
+Faryab,Battles,1975,0.4794853119689245
+Faryab,Explosions/Remote violence,571,0.13862588006797766
+Faryab,Protests,42,0.010196649672250545
+Faryab,Riots,9,0.0021849963583394027
+Faryab,Strategic developments,95,0.02306385044913814
+Faryab,Violence against civilians,170,0.04127215343529983
+Ghazni,Battles,3193,0.7751881524641904
+Ghazni,Explosions/Remote violence,1150,0.2791939791211459
+Ghazni,Protests,56,0.013595532896334061
+Ghazni,Riots,10,0.0024277737314882253
+Ghazni,Strategic developments,133,0.032289390628793394
+Ghazni,Violence against civilians,206,0.05001213886865744
+Ghor,Battles,457,0.1109492595290119
+Ghor,Explosions/Remote violence,179,0.04345714979363923
+Ghor,Protests,30,0.007283321194464676
+Ghor,Riots,17,0.004127215343529983
+Ghor,Strategic developments,83,0.02015052197135227
+Ghor,Violence against civilians,132,0.032046613255644577
+Helmand,Battles,4119,1.0
+Helmand,Explosions/Remote violence,1751,0.42510318038358824
+Helmand,Protests,58,0.014081087642631707
+Helmand,Riots,10,0.0024277737314882253
+Helmand,Strategic developments,146,0.03544549647972809
+Helmand,Violence against civilians,159,0.03860160233066278
+Herat,Battles,1600,0.38844379703811605
+Herat,Explosions/Remote violence,475,0.1153192522456907
+Herat,Protests,88,0.021364408837096383
+Herat,Riots,9,0.0021849963583394027
+Herat,Strategic developments,124,0.030104394270453992
+Herat,Violence against civilians,276,0.06700655498907501
+Jowzjan,Battles,702,0.1704297159504734
+Jowzjan,Explosions/Remote violence,197,0.04782714251031804
+Jowzjan,Protests,19,0.004612770089827628
+Jowzjan,Riots,1,0.00024277737314882253
+Jowzjan,Strategic developments,42,0.010196649672250545
+Jowzjan,Violence against civilians,81,0.019664967225054626
+Kabul,Battles,938,0.22772517601359554
+Kabul,Explosions/Remote violence,831,0.20174799708667152
+Kabul,Protests,424,0.10293760621510076
+Kabul,Riots,14,0.0033988832240835153
+Kabul,Strategic developments,307,0.07453265355668852
+Kabul,Violence against civilians,704,0.17091527069677107
+Kandahar,Battles,2829,0.6868171886380189
+Kandahar,Explosions/Remote violence,1524,0.3699927166788055
+Kandahar,Protests,47,0.011410536537994658
+Kandahar,Riots,7,0.0016994416120417577
+Kandahar,Strategic developments,238,0.05778101480941976
+Kandahar,Violence against civilians,300,0.07283321194464676
+Kapisa,Battles,822,0.1995630007283321
+Kapisa,Explosions/Remote violence,242,0.058752124302015055
+Kapisa,Protests,11,0.002670551104637048
+Kapisa,Riots,3,0.0007283321194464676
+Kapisa,Strategic developments,46,0.011167759164845836
+Kapisa,Violence against civilians,90,0.021849963583394028
+Khost,Battles,726,0.17625637290604515
+Khost,Explosions/Remote violence,652,0.15829084729303228
+Khost,Protests,39,0.009468317552804079
+Khost,Riots,8,0.0019422189851905803
+Khost,Strategic developments,63,0.01529497450837582
+Khost,Violence against civilians,144,0.03495994173343044
+Kunar,Battles,1140,0.2767662053896577
+Kunar,Explosions/Remote violence,600,0.14566642388929352
+Kunar,Protests,18,0.004369992716678805
+Kunar,Riots,3,0.0007283321194464676
+Kunar,Strategic developments,63,0.01529497450837582
+Kunar,Violence against civilians,72,0.01747997086671522
+Kunduz,Battles,1632,0.39621267297887836
+Kunduz,Explosions/Remote violence,563,0.1366836610827871
+Kunduz,Protests,35,0.008497208060208788
+Kunduz,Riots,2,0.00048555474629764507
+Kunduz,Strategic developments,77,0.018693857732459334
+Kunduz,Violence against civilians,126,0.03058994901675164
+Laghman,Battles,930,0.22578295702840495
+Laghman,Explosions/Remote violence,357,0.08667152221412965
+Laghman,Protests,6,0.0014566642388929353
+Laghman,Riots,4,0.0009711094925952901
+Laghman,Strategic developments,48,0.011653313911143482
+Laghman,Violence against civilians,84,0.02039329934450109
+Logar,Battles,1310,0.3180383588249575
+Logar,Explosions/Remote violence,597,0.14493809176984704
+Logar,Protests,17,0.004127215343529983
+Logar,Riots,2,0.00048555474629764507
+Logar,Strategic developments,73,0.017722748239864045
+Logar,Violence against civilians,111,0.026948288419519302
+Nangarhar,Battles,2830,0.6870599660111678
+Nangarhar,Explosions/Remote violence,1894,0.45982034474386985
+Nangarhar,Protests,72,0.01747997086671522
+Nangarhar,Riots,24,0.005826656955571741
+Nangarhar,Strategic developments,249,0.06045156591405681
+Nangarhar,Violence against civilians,378,0.09176984705025491
+Nimruz,Battles,413,0.1002670551104637
+Nimruz,Explosions/Remote violence,181,0.04394270453993688
+Nimruz,Protests,19,0.004612770089827628
+Nimruz,Riots,2,0.00048555474629764507
+Nimruz,Strategic developments,42,0.010196649672250545
+Nimruz,Violence against civilians,40,0.009711094925952901
+Nuristan,Battles,251,0.060937120660354456
+Nuristan,Explosions/Remote violence,89,0.021607186210245204
+Nuristan,Protests,8,0.0019422189851905803
+Nuristan,Riots,7,0.0016994416120417577
+Nuristan,Strategic developments,20,0.004855547462976451
+Nuristan,Violence against civilians,12,0.0029133284777858705
+Paktia,Battles,1431,0.34741442097596503
+Paktia,Explosions/Remote violence,548,0.13304200048555476
+Paktia,Protests,33,0.008011653313911144
+Paktia,Riots,2,0.00048555474629764507
+Paktia,Strategic developments,89,0.021607186210245204
+Paktia,Violence against civilians,119,0.02889050740470988
+Paktika,Battles,880,0.21364408837096382
+Paktika,Explosions/Remote violence,349,0.08472930322893907
+Paktika,Protests,21,0.005098324836125273
+Paktika,Riots,5,0.0012138868657441126
+Paktika,Strategic developments,48,0.011653313911143482
+Paktika,Violence against civilians,120,0.029133284777858703
+Panjshir,Battles,272,0.06603544549647973
+Panjshir,Explosions/Remote violence,42,0.010196649672250545
+Panjshir,Protests,22,0.005341102209274096
+Panjshir,Riots,3,0.0007283321194464676
+Panjshir,Strategic developments,86,0.02087885409079874
+Panjshir,Violence against civilians,174,0.04224326292789512
+Parwan,Battles,444,0.10779315367807721
+Parwan,Explosions/Remote violence,291,0.07064821558630735
+Parwan,Protests,23,0.005583879582422918
+Parwan,Riots,8,0.0019422189851905803
+Parwan,Strategic developments,63,0.01529497450837582
+Parwan,Violence against civilians,129,0.031318281136198105
+Samangan,Battles,269,0.06530711337703327
+Samangan,Explosions/Remote violence,54,0.013109978150036417
+Samangan,Protests,13,0.0031561058509346927
+Samangan,Riots,1,0.00024277737314882253
+Samangan,Strategic developments,29,0.007040543821315854
+Samangan,Violence against civilians,54,0.013109978150036417
+Sar-e Pol,Battles,392,0.09516873027433843
+Sar-e Pol,Explosions/Remote violence,120,0.029133284777858703
+Sar-e Pol,Protests,8,0.0019422189851905803
+Sar-e Pol,Strategic developments,48,0.011653313911143482
+Sar-e Pol,Violence against civilians,65,0.015780529254673464
+Takhar,Battles,884,0.21461519786355912
+Takhar,Explosions/Remote violence,260,0.06312211701869386
+Takhar,Protests,75,0.01820830298616169
+Takhar,Riots,12,0.0029133284777858705
+Takhar,Strategic developments,90,0.021849963583394028
+Takhar,Violence against civilians,286,0.06943432872056324
+Urozgan,Battles,1428,0.3466860888565186
+Urozgan,Explosions/Remote violence,589,0.14299587278465647
+Urozgan,Protests,25,0.006069434328720563
+Urozgan,Riots,2,0.00048555474629764507
+Urozgan,Strategic developments,61,0.014809419762078174
+Urozgan,Violence against civilians,59,0.01432386501578053
+Wardak,Battles,1387,0.33673221655741686
+Wardak,Explosions/Remote violence,641,0.15562029618839524
+Wardak,Protests,13,0.0031561058509346927
+Wardak,Riots,4,0.0009711094925952901
+Wardak,Strategic developments,87,0.02112163146394756
+Wardak,Violence against civilians,112,0.027191065792668122
+Zabul,Battles,1478,0.3588249575139597
+Zabul,Explosions/Remote violence,592,0.14372420490410293
+Zabul,Protests,16,0.0038844379703811605
+Zabul,Riots,2,0.00048555474629764507
+Zabul,Strategic developments,44,0.010682204418548192
+Zabul,Violence against civilians,79,0.01917941247875698
+Sar-e Pol,Riots,0,0.0
