@@ -1670,75 +1670,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .style("font-size", "12px")
     .style("font-weight", "500")
     .text("US Dollars");
-  
-  /*
-  // Scale change indicator
-  const scaleIndicator = g.append("g")
-    .attr("class", "scale-indicator")
-    .attr("transform", `translate(${width + 10}, 10)`);
-  
-  scaleIndicator.append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", 10)
-    .attr("height", 60)
-    .attr("fill", periodColor)
-    .attr("opacity", 0.8)
-    .attr("rx", 2);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 15)
-    .style("font-size", "10px")
-    .style("font-weight", "600")
-    .style("fill", periodColor)
-    .text(periodLabel);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 30)
-    .style("font-size", "9px")
-    .style("fill", "#666")
-    .text(`Max: ${yearMax.toFixed(2)}`);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 43)
-    .style("font-size", "9px")
-    .style("fill", "#666")
-    .text(`Scale adjusted`);
-  
-  // Warning icon for scale change years
-  if (year === 2005 || year === 2004) {
-    const warningGroup = svg.append("g")
-      .attr("transform", `translate(${CONFIG.maxWidth - 80}, ${CONFIG.margin.top - 20})`);
     
-    warningGroup.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 10)
-      .attr("fill", "#f39c12")
-      .attr("opacity", 0.9);
-    
-    warningGroup.append("text")
-      .attr("x", 0)
-      .attr("y", 4)
-      .attr("text-anchor", "middle")
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .style("fill", "white")
-      .text("!");
-    
-    warningGroup.append("text")
-      .attr("x", 15)
-      .attr("y", 4)
-      .style("font-size", "10px")
-      .style("font-weight", "600")
-      .style("fill", "#f39c12")
-      .text("Scale change");
-  }
-      */
-  
   // Y scale
   const categoryKeys = allDensity.map(d => d.key);
   const yName = d3.scaleBand()
@@ -1790,13 +1722,18 @@ function drawRidgeline(allDensity, yearMax, year) {
       return d3.color(parentData.color).darker(1);
     })
     .attr("stroke-width", 1.2)
-    .attr("d", d3.area()
-      .curve(d3.curveBasis)
-      .x(d => x(d[0]))
-      .y0(curveHeight)
-      .y1(d => y(d[1]))
-    );
-  
+    .attr("d", (d, i, nodes) => {
+      const parentData = d3.select(nodes[i].parentNode).datum();
+      const isLabor = ['Wage (qualified)', 'Wage (non-qualified)'].includes(parentData.key);
+      
+      return d3.area()
+        .curve(d3.curveBasis)
+        .x(d => x(d[0]))
+        .y0(isLabor ? curveHeight : 0)
+        .y1(isLabor ? d => y(d[1]) : d => curveHeight - y(d[1]))
+        (d);
+    });
+
   // Baseline for missing data
   ridges.filter(d => !d.hasData)
     .append("line")
@@ -1807,7 +1744,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .attr("stroke", "#ccc")
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "2,2");
-  
+
   return svg.node();
 }
 
