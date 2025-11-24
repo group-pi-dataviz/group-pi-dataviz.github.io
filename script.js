@@ -2329,10 +2329,29 @@ function drawChoroplethSmallMultiples(geoData, pointsData, maxWidth=900, eventTy
   return svg.node();
 }
 
-choroplethMap_id.appendChild(drawChoroplethSmallMultiples(afGeoData, choroplethMapData));
+// choroplethMap_id.appendChild(drawChoroplethSmallMultiples(afGeoData, choroplethMapData));
 
 // Single map:
-//choroplethMap_id.appendChild(drawChoroplethMap(afGeoData, choroplethMapData));
+// taking the value from the select-option in the html with id event-type-select  
+const eventTypeSelect = document.getElementById("event-type-select");
+const choroplethContainer = document.getElementById("choroplethMap_id") || choroplethMap_id;
+
+function renderChoropleth(eventType = "Battles") {
+  if (!choroplethContainer) return;
+  choroplethContainer.innerHTML = "";
+  // pass undefined for width/height so defaults are used, provide eventType as last arg
+  choroplethContainer.appendChild(drawChoroplethMap(afGeoData, choroplethMapData, undefined, undefined, eventType));
+}
+
+// initial render and listener to redraw on change
+if (eventTypeSelect) {
+  renderChoropleth(eventTypeSelect.value);
+  eventTypeSelect.addEventListener("change", (e) => {
+    renderChoropleth(e.target.value);
+  });
+} else {
+  renderChoropleth("Battles");
+}
 
 // --- --- ---  FlowMap --- --- ---
 
