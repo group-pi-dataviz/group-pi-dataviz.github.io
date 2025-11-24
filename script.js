@@ -2055,7 +2055,7 @@ linechart_id.appendChild(drawLineChart(lineData));
 
 // --- --- --- Geodata load --- --- ---
 
-const worldDataSrc = 'world.json';
+const worldDataSrc = 'world_50.json';
 const worldGeoData = await d3.json('./json/' + worldDataSrc);
 
 const afGeoDataSrc = 'af.json';
@@ -2359,19 +2359,39 @@ if (eventTypeSelect) {
 // --- --- ---  FlowMap --- --- ---
 
 /*
-const flowMapDataSrc = 'afg_choropleth.csv';
-const flowMapData = (await d3.dsv(",", './data/section_4/' + flowMapDataSrc))
-.map(d => ({ //map lat and lon to numbers with comma separator
-  CENTROID_LATITUDE: +d.CENTROID_LATITUDE,
-  CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE,
-  REGION: d.ADMIN1,
-  EVENT_TYPE: d.EVENT_TYPE,
-  EVENTS: +d.EVENTS,
-  NORMALIZED_EVENTS: +d.NORMALIZED_EVENTS
+const countryCodesSrc = 'countries_codes_and_coordinates.csv';
+const countryCodes = (await d3.dsv(",", './data/section_4/' + countryCodesSrc))
+.map(d => ({
+  // first we should strip the double quoutes from every field: ""
+  code: d["Alpha-3 code"].replace(/"/g, ''),
+  latitude: +d["Latitude (average)"].replace(/"/g, ''),
+  longitude: +d["Longitude (average)"].replace(/"/g, '')
 }));
 */
 
-function drawflowMap(geoData, maxWidth=600, maxHeight=450)
+const countryCodesSrc = 'country-capital-lat-long-population.csv';
+const countryCodes = (await d3.dsv(",", './data/section_4/' + countryCodesSrc))
+.map(d => ({
+  country: d["Country"],
+  capital: d["Capital City"],
+  latitude: +d["Latitude"],
+  longitude: +d["Longitude"]
+}));
+
+
+console.log(countryCodes);
+
+const flowMapDataSrc = 'migration_year_cumulative.csv';
+const flowMapData = (await d3.dsv(",", './data/section_4/' + flowMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  year: +d.year,
+  origin_location_code: d.origin_location_code,
+  asylum_location_code: d.asylum_location_code,
+  population: +d.population,
+}));
+
+
+function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight=450, year=2020)
 {
   // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
   d3.select("#flowMap_id").style("max-width", maxChartWidth + "px");
@@ -2388,6 +2408,56 @@ function drawflowMap(geoData, maxWidth=600, maxHeight=450)
 
   const path = d3.geoPath().projection(projection);
 
+  console.log(geoData)
+
+  // Creating the links
+  /*
+    // FROM THE TUTORIAL
+
+    var link = []
+    data.forEach(function(row){
+      source = [+row.long1, +row.lat1]
+      target = [+row.long2, +row.lat2]
+      topush = {type: "LineString", coordinates: [source, target]}
+      link.push(topush)
+    })
+  */
+  var link = [];
+  flowMapData.forEach(function(d) {
+    if (d.year === year) {
+      var origin = d.origin_location_code;
+      var asylum = d.asylum_location_code;
+      var population = d.population;
+      // Get the feature of the geoData that has the property 'id' matching the origin code
+      var originFeature = geoData.features.find(function(feature) {
+        return feature.properties["ISO3166-1-Alpha-3"] === origin;
+      });
+      var asylumFeature = geoData.features.find(function(feature) {
+        return feature.properties["ISO3166-1-Alpha-3"] === asylum;
+      });
+      // take the property 'name' of those features
+      if (originFeature && asylumFeature) {
+        var originName = originFeature.properties.name;
+        var asylumName = asylumFeature.properties.name;
+        // Now that we have the names, find the latitute and longitude inside countryCodes
+        var originCountry = countryCodes.find(function(c) {
+          return c.country === originName;
+        });
+        var asylumCountry = countryCodes.find(function(c) {
+          return c.country === asylumName;
+        });
+        if (originCountry && asylumCountry) {
+          var source = [originCountry.longitude, originCountry.latitude];
+          var target = [asylumCountry.longitude, asylumCountry.latitude];
+          var topush = {type: "LineString", coordinates: [source, target], population: population};
+          link.push(topush);
+        }
+      } else {
+        console.log("No match for origin or asylum code:", origin, asylum);
+      }
+    }
+  });
+
   // Draw the map
   svg.append("g")
       .selectAll("path")
@@ -2400,10 +2470,53 @@ function drawflowMap(geoData, maxWidth=600, maxHeight=450)
           .style("stroke", "#fff")
           .style("stroke-width", 0)
 
+  // Add the path
+  svg.selectAll("myPath")
+    .data(link)
+    .enter()
+    .append("path")
+      .attr("d", function(d){ return path(d)})
+      .style("fill", "none")
+      .style("stroke", "#69b3a2")
+      .style("stroke-width", 2)
+
+  // Aggiungi pallini nei centroidi
+  /*
+  svg.append("g")
+      .selectAll("circle")
+      .data(geoData.features)
+      .enter().append("circle")
+          .attr("cx", d => {
+            const centroid = d3.geoCentroid(d);
+            return projection(centroid)[0];
+          })
+          .attr("cy", d => {
+            const centroid = d3.geoCentroid(d);
+            return projection(centroid)[1];
+          })
+          .attr("r", 3)
+          .attr("fill", "#ff6b6b")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.5);
+  */
+
+   // Aggiungi pallini usando le coordinate dal CSV [modificare: aggiungere pallini solo per i paesi presenti nei dati di migrazione]
+  svg.append("g")
+      .selectAll("circle")
+      .data(countryCodes)
+      .enter().append("circle")
+          .attr("cx", d => projection([d.longitude, d.latitude])[0])
+          .attr("cy", d => projection([d.longitude, d.latitude])[1])
+          .attr("r", 1)
+          .attr("fill", "#ff6b6b")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.25);
+
+
   return svg.node();
 }
 
-flowMap_id.appendChild(drawflowMap(worldGeoData));
+flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes));
 
 // --- --- --- Thumbnails --- --- ---
 
