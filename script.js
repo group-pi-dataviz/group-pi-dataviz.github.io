@@ -2055,6 +2055,9 @@ linechart_id.appendChild(drawLineChart(lineData));
 
 // --- --- --- Geodata load --- --- ---
 
+const worldDataSrc = 'world.json';
+const worldGeoData = await d3.json('./json/' + worldDataSrc);
+
 const afGeoDataSrc = 'af.json';
 const afGeoData = await d3.json('./json/' + afGeoDataSrc);
 
@@ -2354,6 +2357,53 @@ if (eventTypeSelect) {
 }
 
 // --- --- ---  FlowMap --- --- ---
+
+/*
+const flowMapDataSrc = 'afg_choropleth.csv';
+const flowMapData = (await d3.dsv(",", './data/section_4/' + flowMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  CENTROID_LATITUDE: +d.CENTROID_LATITUDE,
+  CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE,
+  REGION: d.ADMIN1,
+  EVENT_TYPE: d.EVENT_TYPE,
+  EVENTS: +d.EVENTS,
+  NORMALIZED_EVENTS: +d.NORMALIZED_EVENTS
+}));
+*/
+
+function drawflowMap(geoData, maxWidth=600, maxHeight=450)
+{
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#flowMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#flowMap_id").style("margin", "0 auto");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "flowmap");
+
+  const projection = d3.geoMercator()
+    .scale(85)
+    .translate([maxWidth / 2, maxHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  // Draw the map
+  svg.append("g")
+      .selectAll("path")
+      .data(geoData.features)
+      .enter().append("path")
+          .attr("fill", "#b8b8b8")
+          .attr("d", d3.geoPath()
+              .projection(projection)
+          )
+          .style("stroke", "#fff")
+          .style("stroke-width", 0)
+
+  return svg.node();
+}
+
+flowMap_id.appendChild(drawflowMap(worldGeoData));
 
 // --- --- --- Thumbnails --- --- ---
 
