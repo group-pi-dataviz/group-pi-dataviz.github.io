@@ -1848,6 +1848,15 @@ if (yearSlider) {
 
 if (yearLabel) yearLabel.textContent = currentYear;
 
+// --- Expose Global Functions ---
+window.togglePlay = togglePlay;
+window.updateChart = updateChart;
+window.prepareDataForYear = prepareDataForYear;
+
+// --- Initialize ---
+updateChart(currentYear);
+
+
 // --- --- --- Line Chart --- --- ---
 const lineDataSrc = 'military_health_expenditure_afg.csv';
 const lineData = await d3.dsv(',', './data/section_3/' + lineDataSrc, d3.autoType);
@@ -2044,10 +2053,12 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
 
 linechart_id.appendChild(drawLineChart(lineData));
 
-// --- --- --- Symbol Map --- --- ---
+// --- --- --- Geodata load --- --- ---
 
 const afGeoDataSrc = 'af.json';
 const afGeoData = await d3.json('./json/' + afGeoDataSrc);
+
+// --- --- --- Symbol Map --- --- ---
 
 const symbolMapDataSrc = 'af_geobat.csv';
 const symbolMapData = (await d3.dsv(";", './data/section_4/' + symbolMapDataSrc))
@@ -2113,13 +2124,218 @@ const symbolMapPointsData = d3.range(50).map(() => ({
 
 symbolMap_id.appendChild(drawSymbolMap(afGeoData, symbolMapData));
 
-// --- Expose Global Functions ---
-window.togglePlay = togglePlay;
-window.updateChart = updateChart;
-window.prepareDataForYear = prepareDataForYear;
+// --- --- --- Choropleth Map Small Multiples --- --- ---
 
-// --- Initialize ---
-updateChart(currentYear);
+const choroplethMapDataSrc = 'afg_choropleth.csv';
+const choroplethMapData = (await d3.dsv(",", './data/section_4/' + choroplethMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  CENTROID_LATITUDE: +d.CENTROID_LATITUDE,
+  CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE,
+  REGION: d.ADMIN1,
+  EVENT_TYPE: d.EVENT_TYPE,
+  EVENTS: +d.EVENTS,
+  NORMALIZED_EVENTS: +d.NORMALIZED_EVENTS
+}));
+
+function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eventType="Battles")
+{
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#choroplethMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#choroplethMap_id").style("margin", "0 auto");
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "choroplethmap");
+
+  const projection = d3.geoMercator()
+    .center([67.5, 34.5]) // Center on Afghanistan
+    .scale(2000)
+    .translate([maxWidth / 2, maxHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
+
+  // Create color scale based on filtered data
+  const colorScale = d3.scaleSequential()
+    .domain([0, d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1])
+    .interpolator(d3.interpolateReds);
+
+  // Draw the map
+  svg.append("g")
+    .selectAll("path")
+    .data(geoData.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("fill", d => {
+      const geoRegionName = d.properties.name;
+      const regionData = filteredData.find(p => p.REGION === geoRegionName);
+      
+      if (!regionData) {
+        console.log("No match for:", geoRegionName);
+      }
+      
+      return regionData ? colorScale(regionData.NORMALIZED_EVENTS) : "#e0e0e0";
+    })
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+
+  return svg.node();
+}
+
+function drawChoroplethSmallMultiples(geoData, pointsData, maxWidth=900, eventTypes=['Battles', 'Explosions/Remote violence', 'Protests', 'Riots', 'Strategic developments', 'Violence against civilians'])
+{
+  // Calculate grid layout
+  const cols = 3;
+  const rows = Math.ceil(eventTypes.length / cols);
+  const mapWidth = maxWidth / cols - 20; // subtract padding
+  const mapHeight = mapWidth * 0.75; // maintain aspect ratio
+  const totalHeight = rows * (mapHeight + 60); // add space for titles
+  
+  d3.select("#choroplethMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#choroplethMap_id").style("margin", "0 auto");
+  
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, totalHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "choroplethsmallmultiples");
+
+  // Single color scale for all maps (0 to 1 since data is normalized)
+  const colorScale = d3.scaleSequential()
+    .domain([0, 1])
+    .interpolator(d3.interpolateReds);
+
+  const projection = d3.geoMercator()
+    .center([67.5, 34.5])
+    .scale(mapWidth * 3.3);
+
+  const path = d3.geoPath().projection(projection);
+
+  // Create a map for each event type
+  eventTypes.forEach((eventType, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const xOffset = col * (mapWidth + 20);
+    const yOffset = row * (mapHeight + 60) + 40; // leave space for title
+
+    // Create group for this map
+    const mapGroup = svg.append("g")
+      .attr("transform", `translate(${xOffset}, ${yOffset})`);
+
+    // Add title
+    svg.append("text")
+      .attr("x", xOffset + mapWidth / 2)
+      .attr("y", yOffset - 15)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .text(eventType);
+
+    // Filter data for this event type
+    const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
+
+    // Update projection for this map
+    const localProjection = d3.geoMercator()
+      .center([67.5, 34.5])
+      .scale(mapWidth * 3.3)
+      .translate([mapWidth / 2, mapHeight / 2]);
+    
+    const localPath = d3.geoPath().projection(localProjection);
+
+    // Draw the choropleth
+    mapGroup.selectAll("path")
+      .data(geoData.features)
+      .enter()
+      .append("path")
+      .attr("d", localPath)
+      .attr("fill", d => {
+        const geoRegionName = d.properties.name;
+        const regionData = filteredData.find(p => p.REGION === geoRegionName);
+        return regionData ? colorScale(regionData.NORMALIZED_EVENTS) : "#e0e0e0";
+      })
+      .attr("stroke", "#999")
+      .attr("stroke-width", 0.5);
+  });
+
+  // Create shared color bar
+  const colorbarWidth = 200;
+  const colorbarHeight = 10;
+  
+  const colorbarSvg = d3.create("svg")
+    .attr("viewBox", [0, 0, colorbarWidth + 100, colorbarHeight + 40])
+    .style("display", "block")
+    .style("margin", "0 auto");
+
+  // Create gradient
+  const defs = colorbarSvg.append("defs");
+  const gradient = defs.append("linearGradient")
+    .attr("id", "shared-colorbar-gradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%");
+
+  gradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", d3.interpolateReds(0));
+
+  gradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", d3.interpolateReds(1));
+
+  // Draw legend rectangle
+  colorbarSvg.append("rect")
+    .attr("x", 50)
+    .attr("y", 10)
+    .attr("width", colorbarWidth)
+    .attr("height", colorbarHeight)
+    .style("fill", "url(#shared-colorbar-gradient)")
+    .attr("stroke", "#999")
+    .attr("stroke-width", 1);
+
+  // Add labels
+  colorbarSvg.append("text")
+    .attr("x", 50)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("0");
+
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth / 2)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("0.5");
+
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("1.0");
+
+  // Add title to colorbar
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth / 2)
+    .attr("y", 6)
+    .attr("font-size", "7px")
+    .attr("text-anchor", "middle")
+    .attr("font-weight", "bold")
+    .text("Normalized Event Density");
+
+  // Insert colorbar into the div
+  d3.select("#shared_choroplethMap_colorbar").html("").append(() => colorbarSvg.node());
+
+  return svg.node();
+}
+
+choroplethMap_id.appendChild(drawChoroplethSmallMultiples(afGeoData, choroplethMapData));
+
+// Single map:
+//choroplethMap_id.appendChild(drawChoroplethMap(afGeoData, choroplethMapData));
+
+// --- --- ---  FlowMap --- --- ---
+
 // --- --- --- Thumbnails --- --- ---
 
 function computeNavScale() {
