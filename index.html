@@ -16,6 +16,18 @@
     <!-- Tailwind Import and Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./js/tailwind_config.js"></script>
+
+    <!-- from node_modules -->
+    <script
+    type="module"
+    src="node_modules/@material-tailwind/html@latest/scripts/popover.js"
+    ></script>
+    
+    <!-- from cdn -->
+    <script
+    type="module"
+    src="https://unpkg.com/@material-tailwind/html@latest/scripts/popover.js"
+    ></script>
     
     <!-- For the old version decomment the following line--> 
     
@@ -42,22 +54,50 @@
 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex space-x-8">
-                    <a href="#intro_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
+                    <a href="#intro_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                         Introduction
                     </a>
-                    <a href="#sec1_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
-                        Section 1
-                    </a>
-                    <a href="#sec2_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
-                        Section 2
-                    </a>
-                    <a href="#sec3_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
-                        Section 3
-                    </a>
-                    <a href="#sec4_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
-                        Section 4
-                    </a>
-                    <a href="#about_id" class="text-white hover:text-brand-yellow px-3 py-2 text-sm font-medium transition-colors">
+                    <button 
+                        data-popover-target="menu"
+                        class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                        type="button"
+                        onclick="toggleCustomPopover(event)"
+                    >
+                        Sections
+                    </button>
+                    <ul
+                        role="menu"
+                        data-popover="menu"
+                        hidden
+                        data-popover-placement="bottom"
+                        class="absolute z-50 top-full mt-1 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg focus:outline-none"
+                    >
+                        <li
+                            role="menuitem"
+                            class="cursor-pointer text-slate-800 flex w-full text-sm items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100"
+                        >
+                            <a href="#sec1_id" class="w-full h-full">The not so Pacific SEA</a>
+                        </li>
+                        <li
+                            role="menuitem"
+                            class="cursor-pointer text-slate-800 flex w-full text-sm items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100"
+                        >
+                            <a href="#sec2_id" class="w-full h-full">A country in turmoil</a>
+                        </li>
+                        <li
+                            role="menuitem"
+                            class="cursor-pointer text-slate-800 flex w-full text-sm items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100"
+                        >
+                            <a href="#sec3_id" class="w-full h-full">Afghanistan: the economic side of conflict</a>
+                        </li>
+                        <li
+                            role="menuitem"
+                            class="cursor-pointer text-slate-800 flex w-full text-sm items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100"
+                        >
+                            <a href="#sec4_id" class="w-full h-full">The Geography of a Conflict</a>
+                        </li>
+                    </ul>
+                    <a href="#about_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                         About
                     </a>
                 </div>
@@ -629,6 +669,35 @@
     </button>
 
     <script>
+        // Toggle popover menu (renamed to avoid conflict with native HTMLElement.togglePopover)
+        function toggleCustomPopover(event) {
+            const button = event.currentTarget;
+            const popoverId = button.getAttribute('data-popover-target');
+            const popover = document.querySelector(`[data-popover="${popoverId}"]`);
+            if (!popover) return;
+            const isHidden = popover.hasAttribute('hidden');
+
+            console.log(popoverId, popover, isHidden);
+
+            if (isHidden) {
+                popover.removeAttribute('hidden');
+            } else {
+                popover.setAttribute('hidden', '');
+            }
+        }
+
+        // If click outside popover, close it
+        document.addEventListener('click', function(event) {
+            const popovers = document.querySelectorAll('[data-popover]');
+            popovers.forEach(popover => {
+                const popoverId = popover.getAttribute('data-popover');
+                const button = document.querySelector(`[data-popover-target="${popoverId}"]`);
+                if (button && !button.contains(event.target) && !popover.contains(event.target)) {
+                    popover.setAttribute('hidden', '');
+                }
+            });
+        });
+
         // Mobile menu toggle
         function toggleMenu() {
             const menu = document.querySelector('.mobile-menu');
