@@ -1465,14 +1465,14 @@ const categoryGroups = {
     items: ['Oil_(cooking)', 'Pulses', 'Salt', 'Sugar'],
     color: '#2E8B57'
   },
+  'Energy & Currency': {
+    items: ['Fuel_(diesel)', 'Exchange_rate'],
+    color: '#DC143C'
+  },
   'Labor': {
     items: ['Wage_(non-qualified_labour,_non-agricultural)', 
             'Wage_(qualified_labour)'],
     color: '#4169E1'
-  },
-  'Energy & Currency': {
-    items: ['Fuel_(diesel)', 'Exchange_rate'],
-    color: '#DC143C'
   }
 };
 
@@ -1670,75 +1670,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .style("font-size", "12px")
     .style("font-weight", "500")
     .text("US Dollars");
-  
-  /*
-  // Scale change indicator
-  const scaleIndicator = g.append("g")
-    .attr("class", "scale-indicator")
-    .attr("transform", `translate(${width + 10}, 10)`);
-  
-  scaleIndicator.append("rect")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", 10)
-    .attr("height", 60)
-    .attr("fill", periodColor)
-    .attr("opacity", 0.8)
-    .attr("rx", 2);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 15)
-    .style("font-size", "10px")
-    .style("font-weight", "600")
-    .style("fill", periodColor)
-    .text(periodLabel);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 30)
-    .style("font-size", "9px")
-    .style("fill", "#666")
-    .text(`Max: ${yearMax.toFixed(2)}`);
-  
-  scaleIndicator.append("text")
-    .attr("x", 18)
-    .attr("y", 43)
-    .style("font-size", "9px")
-    .style("fill", "#666")
-    .text(`Scale adjusted`);
-  
-  // Warning icon for scale change years
-  if (year === 2005 || year === 2004) {
-    const warningGroup = svg.append("g")
-      .attr("transform", `translate(${CONFIG.maxWidth - 80}, ${CONFIG.margin.top - 20})`);
     
-    warningGroup.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 10)
-      .attr("fill", "#f39c12")
-      .attr("opacity", 0.9);
-    
-    warningGroup.append("text")
-      .attr("x", 0)
-      .attr("y", 4)
-      .attr("text-anchor", "middle")
-      .style("font-size", "14px")
-      .style("font-weight", "bold")
-      .style("fill", "white")
-      .text("!");
-    
-    warningGroup.append("text")
-      .attr("x", 15)
-      .attr("y", 4)
-      .style("font-size", "10px")
-      .style("font-weight", "600")
-      .style("fill", "#f39c12")
-      .text("Scale change");
-  }
-      */
-  
   // Y scale
   const categoryKeys = allDensity.map(d => d.key);
   const yName = d3.scaleBand()
@@ -1790,13 +1722,18 @@ function drawRidgeline(allDensity, yearMax, year) {
       return d3.color(parentData.color).darker(1);
     })
     .attr("stroke-width", 1.2)
-    .attr("d", d3.area()
-      .curve(d3.curveBasis)
-      .x(d => x(d[0]))
-      .y0(curveHeight)
-      .y1(d => y(d[1]))
-    );
-  
+    .attr("d", (d, i, nodes) => {
+      const parentData = d3.select(nodes[i].parentNode).datum();
+      const isLabor = ['Wage (qualified)', 'Wage (non-qualified)'].includes(parentData.key);
+      
+      return d3.area()
+        .curve(d3.curveBasis)
+        .x(d => x(d[0]))
+        .y0(isLabor ? curveHeight : 0)
+        .y1(isLabor ? d => y(d[1]) : d => curveHeight - y(d[1]))
+        (d);
+    });
+
   // Baseline for missing data
   ridges.filter(d => !d.hasData)
     .append("line")
@@ -1807,7 +1744,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .attr("stroke", "#ccc")
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "2,2");
-  
+
   return svg.node();
 }
 
@@ -1910,6 +1847,15 @@ if (yearSlider) {
 }
 
 if (yearLabel) yearLabel.textContent = currentYear;
+
+// --- Expose Global Functions ---
+window.togglePlay = togglePlay;
+window.updateChart = updateChart;
+window.prepareDataForYear = prepareDataForYear;
+
+// --- Initialize ---
+updateChart(currentYear);
+
 
 // --- --- --- Line Chart --- --- ---
 const lineDataSrc = 'military_health_expenditure_afg.csv';
@@ -2107,10 +2053,15 @@ function drawLineChart(data, maxWidth=600, maxHeight=400) {
 
 linechart_id.appendChild(drawLineChart(lineData));
 
-// --- --- --- Symbol Map --- --- ---
+// --- --- --- Geodata load --- --- ---
+
+const worldDataSrc = 'world_50.json';
+const worldGeoData = await d3.json('./json/' + worldDataSrc);
 
 const afGeoDataSrc = 'af.json';
 const afGeoData = await d3.json('./json/' + afGeoDataSrc);
+
+// --- --- --- Symbol Map --- --- ---
 
 const symbolMapDataSrc = 'af_geobat.csv';
 const symbolMapData = (await d3.dsv(";", './data/section_4/' + symbolMapDataSrc))
@@ -2177,13 +2128,397 @@ const symbolMapPointsData = d3.range(50).map(() => ({
 
 symbolMap_id.appendChild(drawSymbolMap(afGeoData, symbolMapData));
 
-// --- Expose Global Functions ---
-window.togglePlay = togglePlay;
-window.updateChart = updateChart;
-window.prepareDataForYear = prepareDataForYear;
+// --- --- --- Choropleth Map Small Multiples --- --- ---
 
-// --- Initialize ---
-updateChart(currentYear);
+const choroplethMapDataSrc = 'afg_choropleth.csv';
+const choroplethMapData = (await d3.dsv(",", './data/section_4/' + choroplethMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  CENTROID_LATITUDE: +d.CENTROID_LATITUDE,
+  CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE,
+  REGION: d.ADMIN1,
+  EVENT_TYPE: d.EVENT_TYPE,
+  EVENTS: +d.EVENTS,
+  NORMALIZED_EVENTS: +d.NORMALIZED_EVENTS
+}));
+
+function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eventType="Battles")
+{
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#choroplethMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#choroplethMap_id").style("margin", "0 auto");
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "choroplethmap");
+
+  const projection = d3.geoMercator()
+    .center([67.5, 34.5]) // Center on Afghanistan
+    .scale(2000)
+    .translate([maxWidth / 2, maxHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
+
+  // Create color scale based on filtered data
+  const colorScale = d3.scaleSequential()
+    .domain([0, d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1])
+    .interpolator(d3.interpolateReds);
+
+  // Draw the map
+  svg.append("g")
+    .selectAll("path")
+    .data(geoData.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("fill", d => {
+      const geoRegionName = d.properties.name;
+      const regionData = filteredData.find(p => p.REGION === geoRegionName);
+      
+      if (!regionData) {
+        console.log("No match for:", geoRegionName);
+      }
+      
+      return regionData ? colorScale(regionData.NORMALIZED_EVENTS) : "#e0e0e0";
+    })
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+
+  return svg.node();
+}
+
+function drawChoroplethSmallMultiples(geoData, pointsData, maxWidth=900, eventTypes=['Battles', 'Explosions/Remote violence', 'Protests', 'Riots', 'Strategic developments', 'Violence against civilians'])
+{
+  // Calculate grid layout
+  const cols = 3;
+  const rows = Math.ceil(eventTypes.length / cols);
+  const mapWidth = maxWidth / cols - 20; // subtract padding
+  const mapHeight = mapWidth * 0.75; // maintain aspect ratio
+  const totalHeight = rows * (mapHeight + 60); // add space for titles
+  
+  d3.select("#choroplethMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#choroplethMap_id").style("margin", "0 auto");
+  
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, totalHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "choroplethsmallmultiples");
+
+  // Single color scale for all maps (0 to 1 since data is normalized)
+  const colorScale = d3.scaleSequential()
+    .domain([0, 1])
+    .interpolator(d3.interpolateReds);
+
+  const projection = d3.geoMercator()
+    .center([67.5, 34.5])
+    .scale(mapWidth * 3.3);
+
+  const path = d3.geoPath().projection(projection);
+
+  // Create a map for each event type
+  eventTypes.forEach((eventType, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const xOffset = col * (mapWidth + 20);
+    const yOffset = row * (mapHeight + 60) + 40; // leave space for title
+
+    // Create group for this map
+    const mapGroup = svg.append("g")
+      .attr("transform", `translate(${xOffset}, ${yOffset})`);
+
+    // Add title
+    svg.append("text")
+      .attr("x", xOffset + mapWidth / 2)
+      .attr("y", yOffset - 15)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .text(eventType);
+
+    // Filter data for this event type
+    const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
+
+    // Update projection for this map
+    const localProjection = d3.geoMercator()
+      .center([67.5, 34.5])
+      .scale(mapWidth * 3.3)
+      .translate([mapWidth / 2, mapHeight / 2]);
+    
+    const localPath = d3.geoPath().projection(localProjection);
+
+    // Draw the choropleth
+    mapGroup.selectAll("path")
+      .data(geoData.features)
+      .enter()
+      .append("path")
+      .attr("d", localPath)
+      .attr("fill", d => {
+        const geoRegionName = d.properties.name;
+        const regionData = filteredData.find(p => p.REGION === geoRegionName);
+        return regionData ? colorScale(regionData.NORMALIZED_EVENTS) : "#e0e0e0";
+      })
+      .attr("stroke", "#999")
+      .attr("stroke-width", 0.5);
+  });
+
+  // Create shared color bar
+  const colorbarWidth = 200;
+  const colorbarHeight = 10;
+  
+  const colorbarSvg = d3.create("svg")
+    .attr("viewBox", [0, 0, colorbarWidth + 100, colorbarHeight + 40])
+    .style("display", "block")
+    .style("margin", "0 auto");
+
+  // Create gradient
+  const defs = colorbarSvg.append("defs");
+  const gradient = defs.append("linearGradient")
+    .attr("id", "shared-colorbar-gradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%");
+
+  gradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", d3.interpolateReds(0));
+
+  gradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", d3.interpolateReds(1));
+
+  // Draw legend rectangle
+  colorbarSvg.append("rect")
+    .attr("x", 50)
+    .attr("y", 10)
+    .attr("width", colorbarWidth)
+    .attr("height", colorbarHeight)
+    .style("fill", "url(#shared-colorbar-gradient)")
+    .attr("stroke", "#999")
+    .attr("stroke-width", 1);
+
+  // Add labels
+  colorbarSvg.append("text")
+    .attr("x", 50)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("0");
+
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth / 2)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("0.5");
+
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth)
+    .attr("y", colorbarHeight + 18)
+    .attr("font-size", "4px")
+    .attr("text-anchor", "middle")
+    .text("1.0");
+
+  // Add title to colorbar
+  colorbarSvg.append("text")
+    .attr("x", 50 + colorbarWidth / 2)
+    .attr("y", 6)
+    .attr("font-size", "7px")
+    .attr("text-anchor", "middle")
+    .attr("font-weight", "bold")
+    .text("Normalized Event Density");
+
+  // Insert colorbar into the div
+  d3.select("#shared_choroplethMap_colorbar").html("").append(() => colorbarSvg.node());
+
+  return svg.node();
+}
+
+// choroplethMap_id.appendChild(drawChoroplethSmallMultiples(afGeoData, choroplethMapData));
+
+// Single map:
+// taking the value from the select-option in the html with id event-type-select  
+const eventTypeSelect = document.getElementById("event-type-select");
+const choroplethContainer = document.getElementById("choroplethMap_id") || choroplethMap_id;
+
+function renderChoropleth(eventType = "Battles") {
+  if (!choroplethContainer) return;
+  choroplethContainer.innerHTML = "";
+  // pass undefined for width/height so defaults are used, provide eventType as last arg
+  choroplethContainer.appendChild(drawChoroplethMap(afGeoData, choroplethMapData, undefined, undefined, eventType));
+}
+
+// initial render and listener to redraw on change
+if (eventTypeSelect) {
+  renderChoropleth(eventTypeSelect.value);
+  eventTypeSelect.addEventListener("change", (e) => {
+    renderChoropleth(e.target.value);
+  });
+} else {
+  renderChoropleth("Battles");
+}
+
+// --- --- ---  FlowMap --- --- ---
+
+/*
+const countryCodesSrc = 'countries_codes_and_coordinates.csv';
+const countryCodes = (await d3.dsv(",", './data/section_4/' + countryCodesSrc))
+.map(d => ({
+  // first we should strip the double quoutes from every field: ""
+  code: d["Alpha-3 code"].replace(/"/g, ''),
+  latitude: +d["Latitude (average)"].replace(/"/g, ''),
+  longitude: +d["Longitude (average)"].replace(/"/g, '')
+}));
+*/
+
+const countryCodesSrc = 'country-capital-lat-long-population.csv';
+const countryCodes = (await d3.dsv(",", './data/section_4/' + countryCodesSrc))
+.map(d => ({
+  country: d["Country"],
+  capital: d["Capital City"],
+  latitude: +d["Latitude"],
+  longitude: +d["Longitude"]
+}));
+
+
+console.log(countryCodes);
+
+const flowMapDataSrc = 'migration_year_cumulative.csv';
+const flowMapData = (await d3.dsv(",", './data/section_4/' + flowMapDataSrc))
+.map(d => ({ //map lat and lon to numbers with comma separator
+  year: +d.year,
+  origin_location_code: d.origin_location_code,
+  asylum_location_code: d.asylum_location_code,
+  population: +d.population,
+}));
+
+
+function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight=450, year=2020)
+{
+  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
+  d3.select("#flowMap_id").style("max-width", maxChartWidth + "px");
+  d3.select("#flowMap_id").style("margin", "0 auto");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "flowmap");
+
+  const projection = d3.geoMercator()
+    .scale(85)
+    .translate([maxWidth / 2, maxHeight / 2]);
+
+  const path = d3.geoPath().projection(projection);
+
+  console.log(geoData)
+
+  // Creating the links
+  /*
+    // FROM THE TUTORIAL
+
+    var link = []
+    data.forEach(function(row){
+      source = [+row.long1, +row.lat1]
+      target = [+row.long2, +row.lat2]
+      topush = {type: "LineString", coordinates: [source, target]}
+      link.push(topush)
+    })
+  */
+  var link = [];
+  flowMapData.forEach(function(d) {
+    if (d.year === year) {
+      var origin = d.origin_location_code;
+      var asylum = d.asylum_location_code;
+      var population = d.population;
+      // Get the feature of the geoData that has the property 'id' matching the origin code
+      var originFeature = geoData.features.find(function(feature) {
+        return feature.properties["ISO3166-1-Alpha-3"] === origin;
+      });
+      var asylumFeature = geoData.features.find(function(feature) {
+        return feature.properties["ISO3166-1-Alpha-3"] === asylum;
+      });
+      // take the property 'name' of those features
+      if (originFeature && asylumFeature) {
+        var originName = originFeature.properties.name;
+        var asylumName = asylumFeature.properties.name;
+        // Now that we have the names, find the latitute and longitude inside countryCodes
+        var originCountry = countryCodes.find(function(c) {
+          return c.country === originName;
+        });
+        var asylumCountry = countryCodes.find(function(c) {
+          return c.country === asylumName;
+        });
+        if (originCountry && asylumCountry) {
+          var source = [originCountry.longitude, originCountry.latitude];
+          var target = [asylumCountry.longitude, asylumCountry.latitude];
+          var topush = {type: "LineString", coordinates: [source, target], population: population};
+          link.push(topush);
+        }
+      } else {
+        console.log("No match for origin or asylum code:", origin, asylum);
+      }
+    }
+  });
+
+  // Draw the map
+  svg.append("g")
+      .selectAll("path")
+      .data(geoData.features)
+      .enter().append("path")
+          .attr("fill", "#b8b8b8")
+          .attr("d", d3.geoPath()
+              .projection(projection)
+          )
+          .style("stroke", "#fff")
+          .style("stroke-width", 0)
+
+  // Add the path
+  svg.selectAll("myPath")
+    .data(link)
+    .enter()
+    .append("path")
+      .attr("d", function(d){ return path(d)})
+      .style("fill", "none")
+      .style("stroke", "#69b3a2")
+      .style("stroke-width", 2)
+
+  // Aggiungi pallini nei centroidi
+  /*
+  svg.append("g")
+      .selectAll("circle")
+      .data(geoData.features)
+      .enter().append("circle")
+          .attr("cx", d => {
+            const centroid = d3.geoCentroid(d);
+            return projection(centroid)[0];
+          })
+          .attr("cy", d => {
+            const centroid = d3.geoCentroid(d);
+            return projection(centroid)[1];
+          })
+          .attr("r", 3)
+          .attr("fill", "#ff6b6b")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.5);
+  */
+
+   // Aggiungi pallini usando le coordinate dal CSV [modificare: aggiungere pallini solo per i paesi presenti nei dati di migrazione]
+  svg.append("g")
+      .selectAll("circle")
+      .data(countryCodes)
+      .enter().append("circle")
+          .attr("cx", d => projection([d.longitude, d.latitude])[0])
+          .attr("cy", d => projection([d.longitude, d.latitude])[1])
+          .attr("r", 1)
+          .attr("fill", "#ff6b6b")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.25);
+
+
+  return svg.node();
+}
+
+flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes));
+
 // --- --- --- Thumbnails --- --- ---
 
 function computeNavScale() {
