@@ -2151,18 +2151,19 @@ function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=450)
   console.log(pointsData[0].CENTROID_LATITUDE);
 
   // Draw the symbols
-  svg.append("g")
-    .selectAll("circle")
-    .data(pointsData)
-    .enter()
-    .append("circle")
-    .attr("cx", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[0])
-    .attr("cy", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[1])
-    .attr("r", d => Math.sqrt(d.FATALITIES) * 2) // Scale radius based on value
-    .attr("fill", "rgba(255,0,0,0.6)")
-    .attr("stroke", "#800000")
-    .attr("stroke-width", 0.5)
-    // .append("title") // Tooltip
+  // svg.append("g")
+  //   .selectAll("circle")
+  //   .data(pointsData)
+  //   .enter()
+  //   .append("circle")
+  //   .attr("cx", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[0])
+  //   .attr("cy", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[1])
+  //   .attr("r", d => Math.sqrt(d.FATALITIES) * 2) // Scale radius based on value
+  //   .attr("fill", "rgba(255,0,0,0.6)")
+  //   .attr("stroke", "#800000")
+  //   .attr("stroke-width", 0.5)
+    
+  // .append("title") // Tooltip
     // .text(d => `Location: (${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)})\nValue: ${d.value}`);
 
   return svg.node();
