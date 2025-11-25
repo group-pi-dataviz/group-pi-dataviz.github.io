@@ -2156,6 +2156,8 @@ const symbolMapPointsData = d3.range(50).map(() => ({
 }));
 
 function animateSymbolData(projection, svg, pointsData) {
+  const multiplier = 25;
+  // --- create circle elements ---
   const circles = svg.append("g")
     .selectAll("circle")
     .data(pointsData)
@@ -2169,22 +2171,42 @@ function animateSymbolData(projection, svg, pointsData) {
     .attr("stroke-width", 0.5)
     .attr("opacity", 0.95);
 
-  circles
-    .transition()
-    .delay(d => (d.DAY || 0) * 50) // stagger by day
-    .on("end", d => {
-      lblSymbolTime.innerText = `Day: ${d.DAY}`;
-    })
+
+  // --- SHARED transitions (Much faster than per-element chains) ---
+  const grow = d3.transition("grow")
     .duration(600)
-    .ease(d3.easeCubicOut)
-    .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2))
-    // after the grow animation, transition to a subtle faded style
-    .transition()
+    .ease(d3.easeCubicOut);
+
+  const fade = d3.transition("fade")
     .duration(800)
-    .ease(d3.easeCubicInOut)
+    .ease(d3.easeCubicInOut);
+
+
+  // --- animate radii ---
+  circles
+    .transition(grow)
+    .delay(d => (d.DAY || 0) * multiplier)
+    .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2));
+
+
+  // --- fade out after growth ---
+  circles
+    .transition(fade)
+    .delay(d => (d.DAY || 0) * multiplier + 600)
     .attr("fill", "rgba(128,128,128,0.07)")
     .attr("stroke", "rgba(128,128,128,0.1)")
-    .attr("opacity", 0.85);
+    .attr("opacity", 0);
+
+
+  // --- single label timer (replaces heavy per-circle on("end")) ---
+  const maxDay = d3.max(pointsData, d => d.DAY || 0);
+
+  d3.timer(elapsed => {
+    const currentDay = Math.min(maxDay, Math.floor(elapsed / multiplier));
+    lblSymbolTime.innerText = `Day: ${currentDay}`;
+    return currentDay === maxDay; // stop timer
+  });
+
 }
 
 const symbolStuff = drawSymbolMap(afGeoData, symbolMapData);
