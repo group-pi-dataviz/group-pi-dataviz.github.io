@@ -2063,13 +2063,31 @@ const afGeoData = await d3.json('./json/' + afGeoDataSrc);
 
 // --- --- --- Symbol Map --- --- ---
 
+class YearMonthDay {
+  constructor(year, month, day) {
+    this.year = year;
+    this.month = month;
+    this.day = day;
+  }
+
+  daysBetween(other) {
+    const thisDate = new Date(this.year, this.month - 1, this.day);
+    const otherDate = new Date(other.year, other.month - 1, other.day);
+    const diffTime = Math.abs(otherDate - thisDate);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+}
+
+const startDate = new YearMonthDay(2016, 12, 31);
 const symbolMapDataSrc = 'af_geobat.csv';
 const symbolMapData = (await d3.dsv(";", './data/section_4/' + symbolMapDataSrc))
 .map(d => ({ //map lat and lon to numbers with comma separator
   CENTROID_LATITUDE: +d.CENTROID_LATITUDE.replace(',', '.'),
   CENTROID_LONGITUDE: +d.CENTROID_LONGITUDE.replace(',', '.'),
-  FATALITIES: +d.FATALITIES
-}));
+  FATALITIES: +d.FATALITIES,
+  DAY: startDate.daysBetween(new YearMonthDay(+d.YEAR, +d.MONTH, +d.DAY))
+})).sort((a, b) => a.DAY - b.DAY); //sort by day
+console.log(symbolMapData.length);
 
 function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=450)
 {
@@ -2099,25 +2117,16 @@ function drawSymbolMap(geoData, pointsData, maxWidth=600, maxHeight=450)
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
-  console.log(pointsData[0].CENTROID_LATITUDE);
+  // pointsData.forEach(d => {
+  //   console.log(d.DAY);  
+  // });
 
   // Draw the symbols
-  // svg.append("g")
-  //   .selectAll("circle")
-  //   .data(pointsData)
-  //   .enter()
-  //   .append("circle")
-  //   .attr("cx", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[0])
-  //   .attr("cy", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[1])
-  //   .attr("r", d => Math.sqrt(d.FATALITIES) * 2) // Scale radius based on value
-  //   .attr("fill", "rgba(255,0,0,0.6)")
-  //   .attr("stroke", "#800000")
-  //   .attr("stroke-width", 0.5)
-    
+  // draw symbols with staggered transitions: grow then fade to subtle background
   // .append("title") // Tooltip
     // .text(d => `Location: (${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)})\nValue: ${d.value}`);
 
-  return svg.node();
+  return { svg: svg, svgNode: svg.node(),  proj: projection };
 }
 // For demonstration, using random points data
 const symbolMapPointsData = d3.range(50).map(() => ({
@@ -2126,7 +2135,44 @@ const symbolMapPointsData = d3.range(50).map(() => ({
   value: Math.random() * 100
 }));
 
-symbolMap_id.appendChild(drawSymbolMap(afGeoData, symbolMapData));
+function animateSymbolData(projection, svg, pointsData) {
+  const circles = svg.append("g")
+    .selectAll("circle")
+    .data(pointsData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[0])
+    .attr("cy", d => projection([d.CENTROID_LONGITUDE, d.CENTROID_LATITUDE])[1])
+    .attr("r", 0)
+    .attr("fill", "rgba(255,0,0,0.6)")
+    .attr("stroke", "#800000")
+    .attr("stroke-width", 0.5)
+    .attr("opacity", 0.95);
+
+  circles
+    .transition()
+    .delay(d => (d.DAY || 0) * 50) // stagger by day
+    .on("end", d => {
+      lblSymbolTime.innerText = `Day: ${d.DAY}`;
+    })
+    .duration(600)
+    .ease(d3.easeCubicOut)
+    .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2))
+    // after the grow animation, transition to a subtle faded style
+    .transition()
+    .duration(800)
+    .ease(d3.easeCubicInOut)
+    .attr("fill", "rgba(128,128,128,0.07)")
+    .attr("stroke", "rgba(128,128,128,0.1)")
+    .attr("opacity", 0.85);
+}
+
+const symbolStuff = drawSymbolMap(afGeoData, symbolMapData);
+console.log(symbolStuff);
+symbolMap_id.appendChild(symbolStuff.svgNode);
+btnSymbolPlay.onclick = () => {
+  animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData);
+};
 
 // --- --- --- Choropleth Map Small Multiples --- --- ---
 
