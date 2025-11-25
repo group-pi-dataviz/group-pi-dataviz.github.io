@@ -2458,18 +2458,11 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
   console.log(geoData)
 
   // Creating the links
-  /*
-    // FROM THE TUTORIAL
+  var outward_link = []; // from Afghanistan to other countries
+  var outward_population = [];
+  var inward_link = []; // from other countries to Afghanistan
+  var inward_population = [];
 
-    var link = []
-    data.forEach(function(row){
-      source = [+row.long1, +row.lat1]
-      target = [+row.long2, +row.lat2]
-      topush = {type: "LineString", coordinates: [source, target]}
-      link.push(topush)
-    })
-  */
-  var link = [];
   flowMapData.forEach(function(d) {
     if (d.year === year) {
       var origin = d.origin_location_code;
@@ -2497,7 +2490,13 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
           var source = [originCountry.longitude, originCountry.latitude];
           var target = [asylumCountry.longitude, asylumCountry.latitude];
           var topush = {type: "LineString", coordinates: [source, target], population: population};
-          link.push(topush);
+          if (origin === "AFG") {
+            outward_link.push(topush);
+            outward_population.push(population);
+          } else if (asylum === "AFG") {
+            inward_link.push(topush);
+            inward_population.push(population);
+          }
         }
       } else {
         console.log("No match for origin or asylum code:", origin, asylum);
@@ -2517,15 +2516,26 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
           .style("stroke", "#fff")
           .style("stroke-width", 0)
 
-  // Add the path
+  // Add the path (red for outward, blue for inward)
+  // Modifying the stroke-width based on population to better represent flows
   svg.selectAll("myPath")
-    .data(link)
+    .data(outward_link)
     .enter()
     .append("path")
       .attr("d", function(d){ return path(d)})
       .style("fill", "none")
-      .style("stroke", "#69b3a2")
+      .style("stroke", "#cf4119ff")
       .style("stroke-width", 2)
+
+  svg.selectAll("myPath")
+    .data(inward_link)
+    .enter()
+    .append("path")
+      .attr("d", function(d){ return path(d)})
+      .style("fill", "none")
+      .style("stroke", "#1f77b4ff")
+      .style("stroke-width", 2)
+
 
   // Aggiungi pallini nei centroidi
   /*
@@ -2563,7 +2573,10 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
   return svg.node();
 }
 
+// Draw the flow map with an animation for every year I have
+// Also animate the outward and inward flows for each year
 flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes));
+
 
 // --- --- --- Thumbnails --- --- ---
 
