@@ -1125,16 +1125,17 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
-      .call(g => g.select(".domain").remove()); // remove axis line
+      .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
 
   const yAxisG = svg.append("g")
     .attr("transform", `translate(70,0)`)
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove())) // remove axis line
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1189,11 +1190,13 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .attr("fill", color);
 
   //axes
-  // X axis with rotated labels and no domain line
+  // X axis with rotated labels and no domain line and no ticks
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d => d)) // keep original month names
       .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
+  svg.selectAll("g")
     .selectAll("text")
     .attr("transform", "rotate(-45)")
     .style("text-anchor", "end");
@@ -1204,9 +1207,9 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove()))
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1379,12 +1382,19 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
   // Y Axis
   svg.append('g')
     .attr('transform', `translate(50,0)`)
-    .call(d3.axisLeft(yScale));
+    .call(d3.axisLeft(yScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .attr("x2", maxWidth - 100)
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   // X Axis
   const xLabels = svg.append('g')
     .attr('transform', `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
     //rotate labels
   // xLabels.selectAll('text')
     // .attr('transform', 'rotate(-45)')
@@ -1396,14 +1406,24 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
     .attr('font-size', '10px')
     .attr('text-anchor', 'middle')
     .append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '0em')
-    .text('The year 2021 showed the most variability in fatalities per battle,');
+    .text('The year 2021 showed the most');
 
   info.append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '1.2em')
-    .text('with an outlier in the month of August reaching 14.54 fatalities per battle.');
+    .text('variability in fatalities per battle,');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('with an outlier in the month of August');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('reaching 14.54 fatalities per battle.');
 
 
   return svg.node();
