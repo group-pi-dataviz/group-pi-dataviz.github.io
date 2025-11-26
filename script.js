@@ -318,9 +318,12 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .range([0, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, d3.max(groupedData, d => Math.max(d.events, d.fatalities))])
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   const groups = svg.selectAll(".grouped-bar")
     .data(groupedData)
@@ -430,7 +433,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() / 2 - 2)
     .attr("fill", colors("events"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.events);
 
   //fatalities bars
@@ -449,18 +452,22 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() - 2)
     .attr("fill", colors("fatalities"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.fatalities);
 
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "11px");
 
+  // translate y-axis by the same leftMargin value so labels are visible inside the svg
   svg.append("g")
-    .attr("transform", `translate(70,0)`)
+    .attr("transform", `translate(${leftMargin},0)`)
     .call(d3.axisLeft(yScale))
     .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -534,9 +541,12 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
     .range([100, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, 100])  //100% stacked
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   // Show the bars
   const groups = svg.selectAll(".stacked-bar")
@@ -644,13 +654,15 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "12px");
 
-  const yAxis = svg.append("g")
-    .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
-
-  yAxis.selectAll("text")
+  svg.append("g")
+    .attr("transform", `translate(100,0)`)
+    .call(d3.axisLeft(yScale))
+    .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -1680,7 +1692,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .call(d3.axisBottom(x).ticks(8));
   
   xAxis.selectAll("text")
-    .style("font-size", "11px");
+    .style("font-size", "13px");
   
   // X axis label with period indicator
   g.append("text")
@@ -1717,7 +1729,7 @@ function drawRidgeline(allDensity, yearMax, year) {
   g.append("g")
     .call(d3.axisLeft(yName).tickSize(0))
     .selectAll("text")
-    .style("font-size", "11px")
+    .style("font-size", "13px")
     .style("font-weight", "400");
   
   // Draw ridges
