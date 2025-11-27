@@ -2352,6 +2352,47 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
+  // Add the color bar legend
+  const legendWidth = 300;
+  const legendHeight = 20;
+  const legendMargin = { top: 20, right: 20, bottom: 30, left: 20 };
+  const legendSvg = svg.append("g")
+    .attr("transform", `translate(${maxWidth - legendWidth - legendMargin.right}, ${maxHeight - legendHeight - legendMargin.bottom})`);
+
+  // Define gradient
+  const defs = svg.append("defs");
+  const gradientId = `legend-gradient-${eventType.replace(/\s+/g, '-')}`;
+  const gradient = defs.append("linearGradient")
+    .attr("id", gradientId)
+    .attr("x1", "0%").attr("y1", "0%")
+    .attr("x2", "100%").attr("y2", "0%");
+  gradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", colorScale(0));
+  gradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", colorScale(d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1));
+
+  // Draw legend rectangle
+  legendSvg.append("rect")
+    .attr("width", legendWidth)
+    .attr("height", legendHeight)
+    .style("fill", `url(#${gradientId})`)
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+  // Legend axis
+  const legendScale = d3.scaleLinear()
+    .domain([0, d3.max(filteredData, d => d.EVENTS)])
+    .range([0, legendWidth]);
+  const legendAxis = d3.axisBottom(legendScale)
+    .ticks(5)
+    .tickFormat(d3.format("d"));
+  legendSvg.append("g")
+    .attr("transform", `translate(0, ${legendHeight})`)
+    .call(legendAxis)
+    .selectAll("text")
+    .style("font-size", "14px");
+
   // tooltip (remove any existing tooltip first)
   d3.select("body").selectAll(".choropleth-tooltip").remove();
   const tooltip = d3.select("body")
