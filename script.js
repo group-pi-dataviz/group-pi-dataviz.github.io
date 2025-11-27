@@ -318,9 +318,12 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .range([0, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, d3.max(groupedData, d => Math.max(d.events, d.fatalities))])
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   const groups = svg.selectAll(".grouped-bar")
     .data(groupedData)
@@ -430,7 +433,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() / 2 - 2)
     .attr("fill", colors("events"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.events);
 
   //fatalities bars
@@ -449,18 +452,22 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() - 2)
     .attr("fill", colors("fatalities"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.fatalities);
 
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "11px");
 
+  // translate y-axis by the same leftMargin value so labels are visible inside the svg
   svg.append("g")
-    .attr("transform", `translate(70,0)`)
+    .attr("transform", `translate(${leftMargin},0)`)
     .call(d3.axisLeft(yScale))
     .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -534,9 +541,12 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
     .range([100, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, 100])  //100% stacked
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   // Show the bars
   const groups = svg.selectAll(".stacked-bar")
@@ -644,13 +654,15 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "12px");
 
-  const yAxis = svg.append("g")
-    .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
-
-  yAxis.selectAll("text")
+  svg.append("g")
+    .attr("transform", `translate(100,0)`)
+    .call(d3.axisLeft(yScale))
+    .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -1125,16 +1137,17 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
-      .call(g => g.select(".domain").remove()); // remove axis line
+      .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
 
   const yAxisG = svg.append("g")
     .attr("transform", `translate(70,0)`)
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove())) // remove axis line
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1189,11 +1202,13 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .attr("fill", color);
 
   //axes
-  // X axis with rotated labels and no domain line
+  // X axis with rotated labels and no domain line and no ticks
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d => d)) // keep original month names
       .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
+  svg.selectAll("g")
     .selectAll("text")
     .attr("transform", "rotate(-45)")
     .style("text-anchor", "end");
@@ -1204,9 +1219,9 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove()))
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1379,12 +1394,19 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
   // Y Axis
   svg.append('g')
     .attr('transform', `translate(50,0)`)
-    .call(d3.axisLeft(yScale));
+    .call(d3.axisLeft(yScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .attr("x2", maxWidth - 100)
+      .attr("stroke-opacity", 0.4))
+      .attr("stroke-width", 1);
 
   // X Axis
   const xLabels = svg.append('g')
     .attr('transform', `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
     //rotate labels
   // xLabels.selectAll('text')
     // .attr('transform', 'rotate(-45)')
@@ -1396,14 +1418,24 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
     .attr('font-size', '10px')
     .attr('text-anchor', 'middle')
     .append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '0em')
-    .text('The year 2021 showed the most variability in fatalities per battle,');
+    .text('The year 2021 showed the most');
 
   info.append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '1.2em')
-    .text('with an outlier in the month of August reaching 14.54 fatalities per battle.');
+    .text('variability in fatalities per battle,');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('with an outlier in the month of August');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('reaching 14.54 fatalities per battle.');
 
 
   return svg.node();
@@ -1660,7 +1692,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .call(d3.axisBottom(x).ticks(8));
   
   xAxis.selectAll("text")
-    .style("font-size", "11px");
+    .style("font-size", "13px");
   
   // X axis label with period indicator
   g.append("text")
@@ -1697,7 +1729,7 @@ function drawRidgeline(allDensity, yearMax, year) {
   g.append("g")
     .call(d3.axisLeft(yName).tickSize(0))
     .selectAll("text")
-    .style("font-size", "11px")
+    .style("font-size", "13px")
     .style("font-weight", "400");
   
   // Draw ridges
@@ -2136,6 +2168,8 @@ const symbolMapPointsData = d3.range(50).map(() => ({
 }));
 
 function animateSymbolData(projection, svg, pointsData) {
+  const multiplier = 25;
+  // --- create circle elements ---
   const circles = svg.append("g")
     .selectAll("circle")
     .data(pointsData)
@@ -2149,22 +2183,42 @@ function animateSymbolData(projection, svg, pointsData) {
     .attr("stroke-width", 0.5)
     .attr("opacity", 0.95);
 
-  circles
-    .transition()
-    .delay(d => (d.DAY || 0) * 50) // stagger by day
-    .on("end", d => {
-      lblSymbolTime.innerText = `Day: ${d.DAY}`;
-    })
+
+  // --- SHARED transitions (Much faster than per-element chains) ---
+  const grow = d3.transition("grow")
     .duration(600)
-    .ease(d3.easeCubicOut)
-    .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2))
-    // after the grow animation, transition to a subtle faded style
-    .transition()
+    .ease(d3.easeCubicOut);
+
+  const fade = d3.transition("fade")
     .duration(800)
-    .ease(d3.easeCubicInOut)
+    .ease(d3.easeCubicInOut);
+
+
+  // --- animate radii ---
+  circles
+    .transition(grow)
+    .delay(d => (d.DAY || 0) * multiplier)
+    .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2));
+
+
+  // --- fade out after growth ---
+  circles
+    .transition(fade)
+    .delay(d => (d.DAY || 0) * multiplier + 600)
     .attr("fill", "rgba(128,128,128,0.07)")
     .attr("stroke", "rgba(128,128,128,0.1)")
-    .attr("opacity", 0.85);
+    .attr("opacity", 0);
+
+
+  // --- single label timer (replaces heavy per-circle on("end")) ---
+  const maxDay = d3.max(pointsData, d => d.DAY || 0);
+
+  d3.timer(elapsed => {
+    const currentDay = Math.min(maxDay, Math.floor(elapsed / multiplier));
+    lblSymbolTime.innerText = `Day: ${currentDay}`;
+    return currentDay === maxDay; // stop timer
+  });
+
 }
 
 const symbolStuff = drawSymbolMap(afGeoData, symbolMapData);
