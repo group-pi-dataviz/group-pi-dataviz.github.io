@@ -17,18 +17,6 @@
     <!-- Tailwind Import and Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./js/tailwind_config.js"></script>
-
-    <!-- from node_modules -->
-    <script
-    type="module"
-    src="node_modules/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
-    
-    <!-- from cdn -->
-    <script
-    type="module"
-    src="https://unpkg.com/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
     
     <!-- For the old version decomment the following line--> 
     
@@ -455,7 +443,7 @@
                     <div id="ridgeline_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
                         <button 
                             id="play-button" 
-                            onclick="togglePlay()" 
+                            onclick="togglePlayRidge()" 
                             class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
                             ▶ Play
                         </button>

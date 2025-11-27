@@ -1786,7 +1786,7 @@ let isPlaying = false;
 let intervalId = null;
 
 // --- Update Chart ---
-function updateChart(year) {
+function updateRidge(year) {
   const previousYear = currentYear;
   const previousPeriod = (previousYear >= 2000 && previousYear <= 2004);
   const newPeriod = (year >= 2000 && year <= 2004);
@@ -1831,7 +1831,7 @@ function updateChart(year) {
 }
 
 // --- Play/Pause Control ---
-function togglePlay() {
+function togglePlayRidge() {
   const playButton = document.getElementById('play-button');
   
   if (isPlaying) {
@@ -1852,7 +1852,7 @@ function togglePlay() {
       if (currentYear > maxYear) {
         currentYear = minYear;
       }
-      updateChart(currentYear);
+      updateRidge(currentYear);
     }, CONFIG.animationInterval);
   }
 }
@@ -1871,8 +1871,8 @@ if (yearSlider) {
   
   yearSlider.addEventListener('input', (e) => {
     const year = +e.target.value;
-    if (isPlaying) togglePlay();
-    updateChart(year);
+    if (isPlaying) togglePlayRidge();
+    updateRidge(year);
   });
 } else {
   console.warn('Year slider (#year-slider) not found in DOM.');
@@ -1881,12 +1881,12 @@ if (yearSlider) {
 if (yearLabel) yearLabel.textContent = currentYear;
 
 // --- Expose Global Functions ---
-window.togglePlay = togglePlay;
-window.updateChart = updateChart;
+window.togglePlayRidge = togglePlayRidge;
+window.updateRidge = updateRidge;
 window.prepareDataForYear = prepareDataForYear;
 
 // --- Initialize ---
-updateChart(currentYear);
+updateRidge(currentYear);
 
 
 // --- --- --- Line Chart --- --- ---
