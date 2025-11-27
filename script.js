@@ -2260,10 +2260,28 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
 
   const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
 
-  // Create color scale based on filtered data
+  // Create color scale based on filtered data divided by eventType
+  const colorGroups = function(eventType) {
+    switch(eventType) {
+      case 'Battles':
+        return d3.interpolateReds;
+      case 'Explosions/Remote violence':
+        return d3.interpolateReds;
+      case 'Violence against civilians':
+        return d3.interpolateReds;
+      case 'Protests':
+        return d3.interpolateBlues;
+      case 'Riots':
+        return d3.interpolateBlues;
+      case 'Strategic developments':
+        return d3.interpolateGreys;
+      default:
+        return d3.interpolateReds;
+    }
+  };
   const colorScale = d3.scaleSequential()
     .domain([0, d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1])
-    .interpolator(d3.interpolateReds);
+    .interpolator(colorGroups(eventType));
 
   // Draw the map
   svg.append("g")
@@ -2285,6 +2303,84 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".choropleth-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "choropleth-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // If mouse over graph, show tooltip
+  svg.on("mouseover", function(event, d) {
+      tooltip.style("opacity", 1);
+    })
+    .on("mousemove", function(event, d) {
+      const [mouseX, mouseY] = d3.pointer(event);
+      // Find the geographic region under the mouse
+      const geoRegion = geoData.features.find(feature => {
+        return d3.geoContains(feature, projection.invert([mouseX, mouseY]));
+      });
+
+
+      // Update tooltip content
+      if (geoRegion) {
+        const geoRegionName = geoRegion.properties.name;
+        const regionData = filteredData.find(p => p.REGION === geoRegionName);
+        const eventCount = regionData ? regionData.EVENTS : 0;
+        tooltip.html(`<strong>Region: ${geoRegionName}</strong><br/>
+          Event Type: ${eventType}<br/>
+          Events: ${eventCount}`);
+      } else {
+        tooltip.html(`No data`);
+      }
+      // Update tooltip position
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
+  
   return svg.node();
 }
 
