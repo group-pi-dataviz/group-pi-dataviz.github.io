@@ -2512,7 +2512,7 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
     .attr("chartType", "flowmap");
 
   const projection = d3.geoMercator()
-    .scale(85)
+    .scale(90)
     .translate([maxWidth / 2, maxHeight / 2]);
 
   const path = d3.geoPath().projection(projection);
@@ -2574,6 +2574,9 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
       }
     }
   });
+
+  console.log("Outward links:", outward_link);
+  console.log("Inward links:", inward_link);
 
   // Calcola totali per le statistiche
   const totalOutward = outward_link.reduce((sum, d) => sum + d.population, 0);
