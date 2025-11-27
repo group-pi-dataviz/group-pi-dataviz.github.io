@@ -12,22 +12,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind Import and Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./js/tailwind_config.js"></script>
-
-    <!-- from node_modules -->
-    <script
-    type="module"
-    src="node_modules/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
-    
-    <!-- from cdn -->
-    <script
-    type="module"
-    src="https://unpkg.com/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
     
     <!-- For the old version decomment the following line--> 
     
@@ -454,7 +442,7 @@
                     <div id="ridgeline_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
                         <button 
                             id="play-button" 
-                            onclick="togglePlay()" 
+                            onclick="togglePlayRidge()" 
                             class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
                             ▶ Play
                         </button>

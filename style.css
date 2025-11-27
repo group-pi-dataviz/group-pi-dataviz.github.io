@@ -57,22 +57,6 @@ nav a {
     position: relative;
 }
 
-nav a::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -2px;
-    left: 50%;
-    background-color: #F4DA40;
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
-}
-
-nav a:hover::after {
-    width: 80%;
-}
-
 .hamburger span {
     transition: all 0.3s ease;
 }
