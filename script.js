@@ -318,9 +318,12 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .range([0, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, d3.max(groupedData, d => Math.max(d.events, d.fatalities))])
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   const groups = svg.selectAll(".grouped-bar")
     .data(groupedData)
@@ -430,7 +433,7 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() / 2 - 2)
     .attr("fill", colors("events"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.events);
 
   //fatalities bars
@@ -449,18 +452,22 @@ function drawGroupedChart(groupedData, maxWidth=600, maxHeight=500) {
     .attr("y", yScale.bandwidth() - 2)
     .attr("fill", colors("fatalities"))
     .attr("text-anchor", "start")
-    .attr("font-size", "10px")
+    .attr("font-size", "12px")
     .text(d => d.fatalities);
 
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "11px");
 
+  // translate y-axis by the same leftMargin value so labels are visible inside the svg
   svg.append("g")
-    .attr("transform", `translate(70,0)`)
+    .attr("transform", `translate(${leftMargin},0)`)
     .call(d3.axisLeft(yScale))
     .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -534,9 +541,12 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
     .range([100, maxHeight - 50])
     .padding(0.2);
 
+  // increase left margin to give longer country labels room (was 70)
+  const leftMargin = 100;
+
   const xScale = d3.scaleLinear()
     .domain([0, 100])  //100% stacked
-    .range([70, maxWidth - 40]);
+    .range([leftMargin, maxWidth - 40]);
 
   // Show the bars
   const groups = svg.selectAll(".stacked-bar")
@@ -644,13 +654,15 @@ function drawStackedChart(dataPerc, dataCounts, maxWidth=600, maxHeight=600) {
   //axes
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .selectAll("text")
+    .attr("font-size", "12px");
 
-  const yAxis = svg.append("g")
-    .attr("transform", `translate(70,0)`)
-    .call(d3.axisLeft(yScale));
-
-  yAxis.selectAll("text")
+  svg.append("g")
+    .attr("transform", `translate(100,0)`)
+    .call(d3.axisLeft(yScale))
+    .selectAll("text")
+    .attr("font-size", "13px")
     .filter(d => boldCountries.has(d))
     .attr("font-weight", "bold");
 
@@ -1125,16 +1137,17 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d3.format("d"))))
-      .call(g => g.select(".domain").remove()); // remove axis line
+      .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
 
   const yAxisG = svg.append("g")
     .attr("transform", `translate(70,0)`)
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove())) // remove axis line
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.2))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1189,11 +1202,13 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .attr("fill", color);
 
   //axes
-  // X axis with rotated labels and no domain line
+  // X axis with rotated labels and no domain line and no ticks
   svg.append("g")
     .attr("transform", `translate(0,${maxHeight - 50})`)
     .call(g => g.call(d3.axisBottom(xScale).tickFormat(d => d)) // keep original month names
       .call(g => g.select(".domain").remove())) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
+  svg.selectAll("g")
     .selectAll("text")
     .attr("transform", "rotate(-45)")
     .style("text-anchor", "end");
@@ -1204,9 +1219,9 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
     .call(g => g.call(d3.axisLeft(yScale))
       .call(g => g.select(".domain").remove()))
     .call(g => g.selectAll(".tick line")
-      .clone()
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.5));
+      .attr("stroke-opacity", 0.2))
+      .attr("stroke-width", 1);
 
   yAxisG.lower();
 
@@ -1379,12 +1394,19 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
   // Y Axis
   svg.append('g')
     .attr('transform', `translate(50,0)`)
-    .call(d3.axisLeft(yScale));
+    .call(d3.axisLeft(yScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line")
+      .attr("x2", maxWidth - 100)
+      .attr("stroke-opacity", 0.2))
+      .attr("stroke-width", 1);
 
   // X Axis
   const xLabels = svg.append('g')
     .attr('transform', `translate(0,${maxHeight - 50})`)
-    .call(d3.axisBottom(xScale));
+    .call(d3.axisBottom(xScale))
+    .call(g => g.select(".domain").remove()) // remove axis line
+    .call(g => g.selectAll(".tick line").remove()); // remove ticks
     //rotate labels
   // xLabels.selectAll('text')
     // .attr('transform', 'rotate(-45)')
@@ -1396,14 +1418,24 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
     .attr('font-size', '10px')
     .attr('text-anchor', 'middle')
     .append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '0em')
-    .text('The year 2021 showed the most variability in fatalities per battle,');
+    .text('The year 2021 showed the most');
 
   info.append('tspan')
-    .attr('x', maxWidth / 2)
+    .attr('x', maxWidth * 5 / 9)
     .attr('dy', '1.2em')
-    .text('with an outlier in the month of August reaching 14.54 fatalities per battle.');
+    .text('variability in fatalities per battle,');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('with an outlier in the month of August');
+
+  info.append('tspan')
+    .attr('x', maxWidth * 5 / 9)
+    .attr('dy', '1.2em')
+    .text('reaching 14.54 fatalities per battle.');
 
 
   return svg.node();
@@ -1452,6 +1484,11 @@ const priceCols = columnNames.filter(cn =>
 
 // --- Category Configuration ---
 const categoryGroups = {
+  'Labor': {
+    items: ['Wage_(non-qualified_labour,_non-agricultural)', 
+            'Wage_(qualified_labour)'],
+    color: '#4169E1'
+  },
   'Grains & Flour': {
     items: ['Wheat', 'Wheat_flour', 'Wheat_flour_(low_quality)', 
             'Wheat_flour_(high_quality)', 'Bread'],
@@ -1468,11 +1505,6 @@ const categoryGroups = {
   'Energy & Currency': {
     items: ['Fuel_(diesel)', 'Exchange_rate'],
     color: '#DC143C'
-  },
-  'Labor': {
-    items: ['Wage_(non-qualified_labour,_non-agricultural)', 
-            'Wage_(qualified_labour)'],
-    color: '#4169E1'
   }
 };
 
@@ -1660,7 +1692,7 @@ function drawRidgeline(allDensity, yearMax, year) {
     .call(d3.axisBottom(x).ticks(8));
   
   xAxis.selectAll("text")
-    .style("font-size", "11px");
+    .style("font-size", "13px");
   
   // X axis label with period indicator
   g.append("text")
@@ -1697,7 +1729,7 @@ function drawRidgeline(allDensity, yearMax, year) {
   g.append("g")
     .call(d3.axisLeft(yName).tickSize(0))
     .selectAll("text")
-    .style("font-size", "11px")
+    .style("font-size", "13px")
     .style("font-weight", "400");
   
   // Draw ridges
@@ -1754,7 +1786,7 @@ let isPlaying = false;
 let intervalId = null;
 
 // --- Update Chart ---
-function updateChart(year) {
+function updateRidge(year) {
   const previousYear = currentYear;
   const previousPeriod = (previousYear >= 2000 && previousYear <= 2004);
   const newPeriod = (year >= 2000 && year <= 2004);
@@ -1799,7 +1831,7 @@ function updateChart(year) {
 }
 
 // --- Play/Pause Control ---
-function togglePlay() {
+function togglePlayRidge() {
   const playButton = document.getElementById('play-button');
   
   if (isPlaying) {
@@ -1820,7 +1852,7 @@ function togglePlay() {
       if (currentYear > maxYear) {
         currentYear = minYear;
       }
-      updateChart(currentYear);
+      updateRidge(currentYear);
     }, CONFIG.animationInterval);
   }
 }
@@ -1839,8 +1871,8 @@ if (yearSlider) {
   
   yearSlider.addEventListener('input', (e) => {
     const year = +e.target.value;
-    if (isPlaying) togglePlay();
-    updateChart(year);
+    if (isPlaying) togglePlayRidge();
+    updateRidge(year);
   });
 } else {
   console.warn('Year slider (#year-slider) not found in DOM.');
@@ -1849,12 +1881,12 @@ if (yearSlider) {
 if (yearLabel) yearLabel.textContent = currentYear;
 
 // --- Expose Global Functions ---
-window.togglePlay = togglePlay;
-window.updateChart = updateChart;
+window.togglePlayRidge = togglePlayRidge;
+window.updateRidge = updateRidge;
 window.prepareDataForYear = prepareDataForYear;
 
 // --- Initialize ---
-updateChart(currentYear);
+updateRidge(currentYear);
 
 
 // --- --- --- Line Chart --- --- ---
@@ -2447,22 +2479,30 @@ const countryCodes = (await d3.dsv(",", './data/section_4/' + countryCodesSrc))
   longitude: +d["Longitude"]
 }));
 
-
-console.log(countryCodes);
-
 const flowMapDataSrc = 'migration_year_cumulative.csv';
 const flowMapData = (await d3.dsv(",", './data/section_4/' + flowMapDataSrc))
-.map(d => ({ //map lat and lon to numbers with comma separator
+.map(d => ({
   year: +d.year,
   origin_location_code: d.origin_location_code,
   asylum_location_code: d.asylum_location_code,
   population: +d.population,
 }));
 
+// Ottieni gli anni disponibili e ordinali
+const availableYears = [...new Set(flowMapData.map(d => d.year))].sort();
+
+// Inizializza lo slider
+const yearSliderFlow = document.getElementById("flowmap_year-slider");
+const yearLabelFlow = document.getElementById("flowmap_year-label");
+if (yearSliderFlow && availableYears.length > 0) {
+  yearSliderFlow.min = 0;
+  yearSliderFlow.max = availableYears.length - 1;
+  yearSliderFlow.value = availableYears.indexOf(2020);
+  yearLabelFlow.textContent = 2020;
+}
 
 function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight=450, year=2020)
 {
-  // limit displayed width of the responsive SVG (viewBox) to maxChartWidth px
   d3.select("#flowMap_id").style("max-width", maxChartWidth + "px");
   d3.select("#flowMap_id").style("margin", "0 auto");
 
@@ -2472,133 +2512,365 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
     .attr("chartType", "flowmap");
 
   const projection = d3.geoMercator()
-    .scale(85)
+    .scale(90)
     .translate([maxWidth / 2, maxHeight / 2]);
 
   const path = d3.geoPath().projection(projection);
 
-  console.log(geoData)
-
   // Creating the links
-  var outward_link = []; // from Afghanistan to other countries
-  var outward_population = [];
-  var inward_link = []; // from other countries to Afghanistan
-  var inward_population = [];
+  var outward_link = [];
+  var inward_link = [];
+  var countryFlows = {}; // Per memorizzare i flussi per paese con dettagli
 
   flowMapData.forEach(function(d) {
     if (d.year === year) {
       var origin = d.origin_location_code;
       var asylum = d.asylum_location_code;
       var population = d.population;
-      // Get the feature of the geoData that has the property 'id' matching the origin code
+      
       var originFeature = geoData.features.find(function(feature) {
         return feature.properties["ISO3166-1-Alpha-3"] === origin;
       });
       var asylumFeature = geoData.features.find(function(feature) {
         return feature.properties["ISO3166-1-Alpha-3"] === asylum;
       });
-      // take the property 'name' of those features
+      
       if (originFeature && asylumFeature) {
         var originName = originFeature.properties.name;
         var asylumName = asylumFeature.properties.name;
-        // Now that we have the names, find the latitute and longitude inside countryCodes
+        
         var originCountry = countryCodes.find(function(c) {
           return c.country === originName;
         });
         var asylumCountry = countryCodes.find(function(c) {
           return c.country === asylumName;
         });
+        
         if (originCountry && asylumCountry) {
           var source = [originCountry.longitude, originCountry.latitude];
           var target = [asylumCountry.longitude, asylumCountry.latitude];
-          var topush = {type: "LineString", coordinates: [source, target], population: population};
+          var topush = {
+            type: "LineString", 
+            coordinates: [source, target], 
+            population: population,
+            originName: originName,
+            asylumName: asylumName,
+            originCode: origin,
+            asylumCode: asylum
+          };
+          
           if (origin === "AFG") {
             outward_link.push(topush);
-            outward_population.push(population);
+            // Memorizza flussi in uscita per paese
+            if (!countryFlows[asylum]) countryFlows[asylum] = { outward: [], inward: [] };
+            countryFlows[asylum].outward.push({from: originName, to: asylumName, pop: population});
           } else if (asylum === "AFG") {
             inward_link.push(topush);
-            inward_population.push(population);
+            // Memorizza flussi in entrata per paese
+            if (!countryFlows[origin]) countryFlows[origin] = { outward: [], inward: [] };
+            countryFlows[origin].inward.push({from: originName, to: asylumName, pop: population});
           }
         }
-      } else {
-        console.log("No match for origin or asylum code:", origin, asylum);
       }
     }
   });
 
-  // Draw the map
+  console.log("Outward links:", outward_link);
+  console.log("Inward links:", inward_link);
+
+  // Calcola totali per le statistiche
+  const totalOutward = outward_link.reduce((sum, d) => sum + d.population, 0);
+  const totalInward = inward_link.reduce((sum, d) => sum + d.population, 0);
+  
+  // Aggiorna statistiche
+  d3.select("#outward-stat").html(`<strong>Outward:</strong> ${totalOutward.toLocaleString()} people`);
+  d3.select("#inward-stat").html(`<strong>Inward:</strong> ${totalInward.toLocaleString()} people`);
+
+  // Calcola il range delle popolazioni per la scala
+  const allPopulations = [...outward_link, ...inward_link].map(d => d.population);
+  const minPop = d3.min(allPopulations);
+  const maxPop = d3.max(allPopulations);
+  
+  // Scala per lo spessore delle linee
+  const strokeScale = d3.scaleSqrt()
+    .domain([minPop, maxPop])
+    .range([0.5, 8]);
+
+  // Scala per l'opacità
+  const opacityScale = d3.scaleLinear()
+    .domain([minPop, maxPop])
+    .range([0.3, 0.8]);
+
+  // Tooltip
+  const tooltip = d3.select("body").select(".flowmap-tooltip").empty() 
+    ? d3.select("body").append("div").attr("class", "flowmap-tooltip")
+    : d3.select("body").select(".flowmap-tooltip");
+    
+  tooltip.style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "rgba(0, 0, 0, 0.9)")
+    .style("color", "white")
+    .style("padding", "10px 14px")
+    .style("border-radius", "6px")
+    .style("font-size", "13px")
+    .style("pointer-events", "none")
+    .style("z-index", "1000")
+    .style("max-width", "300px")
+    .style("line-height", "1.5");
+
+  // Draw the map con tooltip migliorato
   svg.append("g")
       .selectAll("path")
       .data(geoData.features)
       .enter().append("path")
-          .attr("fill", "#b8b8b8")
-          .attr("d", d3.geoPath()
-              .projection(projection)
-          )
+          .attr("class", "country-path")
+          .attr("fill", d => {
+            const code = d.properties["ISO3166-1-Alpha-3"];
+            if (code === "AFG") return "#ffd700";
+            return "#e8e8e8";
+          })
+          .attr("d", d3.geoPath().projection(projection))
           .style("stroke", "#fff")
-          .style("stroke-width", 0)
+          .style("stroke-width", 0.5)
+          .style("cursor", "pointer")
+          .on("mouseover", function(event, d) {
+            const code = d.properties["ISO3166-1-Alpha-3"];
+            const countryName = d.properties.name;
+            
+            // Evidenzia i flussi correlati
+            svg.selectAll(".inward-flow, .outward-flow").style("opacity", 0.1);
+            
+            if (countryFlows[code]) {
+              const flows = countryFlows[code];
+              let tooltipText = `<strong>${countryName}</strong><br/><br/>`;
+              
+              if (flows.outward.length > 0) {
+                flows.outward.forEach(flow => {
+                  tooltipText += `${flow.from} → ${flow.to}: ${flow.pop.toLocaleString()}<br/>`;
+                  // Evidenzia il flusso
+                  svg.selectAll(".outward-flow").filter(function(flowData) {
+                    return flowData.asylumCode === code;
+                  }).style("opacity", 1).style("stroke-width", function(flowData) {
+                    return strokeScale(flowData.population) * 1.5;
+                  });
+                });
+              }
+              
+              if (flows.inward.length > 0) {
+                flows.inward.forEach(flow => {
+                  tooltipText += `${flow.from} → ${flow.to}: ${flow.pop.toLocaleString()}<br/>`;
+                  // Evidenzia il flusso
+                  svg.selectAll(".inward-flow").filter(function(flowData) {
+                    return flowData.originCode === code;
+                  }).style("opacity", 1).style("stroke-width", function(flowData) {
+                    return strokeScale(flowData.population) * 1.5;
+                  });
+                });
+              }
+              
+              tooltip.style("visibility", "visible").html(tooltipText);
+              d3.select(this).attr("fill", "#ffeb99");
+            } else if (code === "AFG") {
+              tooltip.style("visibility", "visible")
+                .html(`<strong>${countryName}</strong><br/><br/>Origin country (focal point)`);
+              // Mostra tutti i flussi per Afghanistan
+              svg.selectAll(".inward-flow, .outward-flow").style("opacity", d => opacityScale(d.population));
+            } else {
+              tooltip.style("visibility", "visible")
+                .html(`<strong>${countryName}</strong><br/><br/>No migration flows with Afghanistan in ${year}`);
+              d3.select(this).attr("fill", "#d0d0d0");
+            }
+          })
+          .on("mousemove", function(event) {
+            tooltip.style("top", (event.pageY - 10) + "px")
+              .style("left", (event.pageX + 10) + "px");
+          })
+          .on("mouseout", function(event, d) {
+            const code = d.properties["ISO3166-1-Alpha-3"];
+            tooltip.style("visibility", "hidden");
+            d3.select(this).attr("fill", code === "AFG" ? "#ffd700" : "#e8e8e8");
+            
+            // Ripristina opacità e spessore dei flussi
+            svg.selectAll(".inward-flow").style("opacity", d => opacityScale(d.population))
+              .style("stroke-width", d => strokeScale(d.population));
+            svg.selectAll(".outward-flow").style("opacity", d => opacityScale(d.population))
+              .style("stroke-width", d => strokeScale(d.population));
+          });
 
-  // Add the path (red for outward, blue for inward)
-  // Modifying the stroke-width based on population to better represent flows
-  svg.selectAll("myPath")
-    .data(outward_link)
-    .enter()
-    .append("path")
-      .attr("d", function(d){ return path(d)})
-      .style("fill", "none")
-      .style("stroke", "#cf4119ff")
-      .style("stroke-width", 2)
-
-  svg.selectAll("myPath")
+  // Disegna i flussi in entrata con animazione
+  const inwardPaths = svg.selectAll(".inward-flow")
     .data(inward_link)
     .enter()
     .append("path")
+      .attr("class", "inward-flow")
       .attr("d", function(d){ return path(d)})
       .style("fill", "none")
-      .style("stroke", "#1f77b4ff")
-      .style("stroke-width", 2)
+      .style("stroke", "#1f77b4")
+      .style("stroke-width", d => strokeScale(d.population))
+      .style("opacity", 0)
+      .style("stroke-linecap", "round")
+      .style("stroke-dasharray", function() {
+        const length = this.getTotalLength();
+        return length + " " + length;
+      })
+      .style("stroke-dashoffset", function() {
+        return this.getTotalLength();
+      })
+      .on("mouseover", function(event, d) {
+        svg.selectAll(".inward-flow, .outward-flow").style("opacity", 0.1);
+        d3.select(this)
+          .style("opacity", 1)
+          .style("stroke-width", strokeScale(d.population) * 1.5);
+        tooltip.style("visibility", "visible")
+          .html(`<strong>${d.originName} → ${d.asylumName}</strong><br/><br/>Population: ${d.population.toLocaleString()}`);
+      })
+      .on("mousemove", function(event) {
+        tooltip.style("top", (event.pageY - 10) + "px")
+          .style("left", (event.pageX + 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        svg.selectAll(".inward-flow, .outward-flow").style("opacity", d => opacityScale(d.population));
+        d3.select(this).style("stroke-width", strokeScale(d.population));
+        tooltip.style("visibility", "hidden");
+      });
 
+  // Disegna i flussi in uscita con animazione
+  const outwardPaths = svg.selectAll(".outward-flow")
+    .data(outward_link)
+    .enter()
+    .append("path")
+      .attr("class", "outward-flow")
+      .attr("d", function(d){ return path(d)})
+      .style("fill", "none")
+      .style("stroke", "#cf4119")
+      .style("stroke-width", d => strokeScale(d.population))
+      .style("opacity", 0)
+      .style("stroke-linecap", "round")
+      .style("stroke-dasharray", function() {
+        const length = this.getTotalLength();
+        return length + " " + length;
+      })
+      .style("stroke-dashoffset", function() {
+        return this.getTotalLength();
+      })
+      .on("mouseover", function(event, d) {
+        svg.selectAll(".inward-flow, .outward-flow").style("opacity", 0.1);
+        d3.select(this)
+          .style("opacity", 1)
+          .style("stroke-width", strokeScale(d.population) * 1.5);
+        tooltip.style("visibility", "visible")
+          .html(`<strong>${d.originName} → ${d.asylumName}</strong><br/><br/>Population: ${d.population.toLocaleString()}`);
+      })
+      .on("mousemove", function(event) {
+        tooltip.style("top", (event.pageY - 10) + "px")
+          .style("left", (event.pageX + 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        svg.selectAll(".inward-flow, .outward-flow").style("opacity", d => opacityScale(d.population));
+        d3.select(this).style("stroke-width", strokeScale(d.population));
+        tooltip.style("visibility", "hidden");
+      });
 
-  // Aggiungi pallini nei centroidi
-  /*
+  // Animazione sequenziale: prima inward, poi outward
+  inwardPaths.transition()
+    .duration(1500)
+    .ease(d3.easeLinear)
+    .style("stroke-dashoffset", 0)
+    .style("opacity", d => opacityScale(d.population))
+    .on("end", function() {
+      // Dopo che l'animazione inward finisce, inizia quella outward
+      outwardPaths.transition()
+        .duration(1500)
+        .ease(d3.easeLinear)
+        .style("stroke-dashoffset", 0)
+        .style("opacity", d => opacityScale(d.population));
+    });
+
+  // Pallini solo per i paesi coinvolti nei flussi
+  const involvedCountries = new Set();
+  [...outward_link, ...inward_link].forEach(link => {
+    involvedCountries.add(link.originName);
+    involvedCountries.add(link.asylumName);
+  });
+
+  const involvedCountryCodes = countryCodes.filter(c => 
+    involvedCountries.has(c.country)
+  );
+
   svg.append("g")
       .selectAll("circle")
-      .data(geoData.features)
-      .enter().append("circle")
-          .attr("cx", d => {
-            const centroid = d3.geoCentroid(d);
-            return projection(centroid)[0];
-          })
-          .attr("cy", d => {
-            const centroid = d3.geoCentroid(d);
-            return projection(centroid)[1];
-          })
-          .attr("r", 3)
-          .attr("fill", "#ff6b6b")
-          .attr("stroke", "#fff")
-          .attr("stroke-width", 0.5);
-  */
-
-   // Aggiungi pallini usando le coordinate dal CSV [modificare: aggiungere pallini solo per i paesi presenti nei dati di migrazione]
-  svg.append("g")
-      .selectAll("circle")
-      .data(countryCodes)
+      .data(involvedCountryCodes)
       .enter().append("circle")
           .attr("cx", d => projection([d.longitude, d.latitude])[0])
           .attr("cy", d => projection([d.longitude, d.latitude])[1])
-          .attr("r", 1)
-          .attr("fill", "#ff6b6b")
+          .attr("r", 2)
+          .attr("fill", "#333")
           .attr("stroke", "#fff")
-          .attr("stroke-width", 0.25);
-
+          .attr("stroke-width", 0.5)
+          .style("opacity", 0.6);
 
   return svg.node();
 }
 
-// Draw the flow map with an animation for every year I have
-// Also animate the outward and inward flows for each year
-flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes));
+// Funzione per aggiornare la mappa
+function updateMap(year) {
+  d3.select("#flowMap_id").selectAll("*").remove();
+  flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600, 450, year));
+}
 
+// Gestione animazione con play/pause e slider
+let isPlayingFlow = false;
+let animationInterval;
+
+window.togglePlay = function() {
+  const playButton = document.getElementById("flowmap_play-button");
+  if (!playButton) return;
+  
+  if (isPlayingFlow) {
+    // Pause
+    isPlayingFlow = false;
+    playButton.textContent = "▶ Play";
+    playButton.classList.remove("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    playButton.classList.add("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    if (animationInterval) clearInterval(animationInterval);
+  } else {
+    // Play
+    isPlayingFlow = true;
+    playButton.textContent = "⏸ Pause";
+    playButton.classList.remove("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    playButton.classList.add("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    
+    animationInterval = setInterval(() => {
+      let currentIndex = parseInt(yearSliderFlow.value);
+      currentIndex = (currentIndex + 1) % availableYears.length;
+      yearSliderFlow.value = currentIndex;
+      const year = availableYears[currentIndex];
+      yearLabelFlow.textContent = year;
+      updateMap(year);
+    }, 4000);
+  }
+}
+
+// Event listener per lo slider
+if (yearSliderFlow) {
+  yearSliderFlow.addEventListener("input", function() {
+    const year = availableYears[parseInt(this.value)];
+    yearLabelFlow.textContent = year;
+    updateMap(year);
+    
+    // Ferma l'animazione quando l'utente muove lo slider manualmente
+    if (isPlayingFlow) {
+      togglePlay();
+    }
+  });
+}
+
+// Draw the flow map iniziale
+const initialYear = 2001;
+const initialIndex = availableYears.indexOf(initialYear);
+if (yearSliderFlow) yearSliderFlow.value = initialIndex;
+if (yearLabelFlow) yearLabelFlow.textContent = initialYear;
+flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600, 450, initialYear));
 
 // --- --- --- Thumbnails --- --- ---
 

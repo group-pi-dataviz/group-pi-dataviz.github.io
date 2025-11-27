@@ -12,22 +12,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=zoom_out_map" />
+
     <!-- Tailwind Import and Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./js/tailwind_config.js"></script>
-
-    <!-- from node_modules -->
-    <script
-    type="module"
-    src="node_modules/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
-    
-    <!-- from cdn -->
-    <script
-    type="module"
-    src="https://unpkg.com/@material-tailwind/html@latest/scripts/popover.js"
-    ></script>
     
     <!-- For the old version decomment the following line--> 
     
@@ -155,7 +144,7 @@
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-[1fr_3fr_1fr] pt-4">
+    <div class="grid pt-4 lg:grid-cols-[1fr_2fr_1fr] xl:grid-cols-[2fr_3fr_2fr] gap-4 max-w-7xl mx-auto w-full flex-grow">
         <main class="col-start-2 w-full">
             <!-- Introduction Section -->
             <section id="intro_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full">
@@ -213,7 +202,7 @@
                 <div class="text-center mb-12">
                     <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">The <i>not so Pacific</i> South-East Asia</h3>
                     <h5 class="font-bold font-heading">Visualizing recent conflicts in the South-East Pacific Area</h5>
-                    <p class="text-gray-600 max-w-2xl mx-auto my-4">
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4 text-left">
                         Contrary to what the name suggests, the Pacific South-East Asia (SEA) region has seen his fair share of conflicts and violence in recent years.
                         This is particularly true in countries such as Afghanistan, Pakistan, Myanmar and the Philippines,
                         where ongoing conflicts and political instability have led to significant human suffering.
@@ -377,7 +366,7 @@
                 <div class="text-center mb-12">
                     <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">Afghanistan: a country in turmoil</h3>
                     <h5 class="font-bold font-heading">Exploring the aftermath of conflict in Afghanistan</h5>
-                    <p class="text-gray-600 max-w-2xl mx-auto my-4">
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4 text-left">
                         Afghanistan has been a focal point of conflict and political instability for decades.
                         The country's recent history has been marked by the US-led invasion in 2001, the subsequent establishment of a democratic government,
                         and the eventual withdrawal of international forces in 2021, leading to the Taliban's return to power.
@@ -454,7 +443,7 @@
                     <div id="ridgeline_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
                         <button 
                             id="play-button" 
-                            onclick="togglePlay()" 
+                            onclick="togglePlayRidge()" 
                             class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
                             ▶ Play
                         </button>
@@ -497,7 +486,7 @@
                     <h5 class="font-bold font-heading">
                         Analyzing government expenditure patterns in Afghanistan
                     </h5>
-                    <p class="text-gray-600 max-w-2xl mx-auto my-4">
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4 text-left">
                         Government expenditure is a crucial aspect of a country's economic and social development,
                         particularly in conflict-affected regions like Afghanistan. Understanding how government funds are allocated
                         can provide insights into the priorities and challenges faced by the country.
@@ -539,7 +528,7 @@
                     <h5 class="font-bold font-heading">
                         Mapping violent events in Afghanistan
                     </h5>
-                    <p class="text-gray-600 max-w-2xl mx-auto my-4">
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4 text-left">
                         Geographical analysis of conflict events can provide valuable insights into the spatial distribution and intensity of violence within a country.
                         In Afghanistan, understanding where violent events occur can help identify hotspots of conflict, assess the impact on local communities,
                         and inform strategies for peacebuilding and development.
@@ -613,24 +602,79 @@
                     </p>
                 </div>
 
-                <!-- Flow Map -->
-                <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
-                    <div class="text-center">
-                        <h5 class="font-heading font-bold text-2xl">
-                            Afghanistan Migration Flows
-                        </h5>
-                        <h6 class="font-heading text-gray-600">
-                            subtitle
-                        </h6>
-                    </div>
-                    <div id="flowMap_id" class="text-center w-full h-full p-4">
-                        
-                    </div>
-                    <p class="text-gray-600 text-sm">
-                        comments
-                    </p>
-                </div>
+    <!-- Flow Map -->
+    <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
+        <div class="text-center mb-4">
+            <h5 class="font-heading font-bold text-2xl">
+                Afghanistan Migration Flows
+            </h5>
+            <h6 class="font-heading text-gray-600">
+                Refugee and asylum seeker movements over time
+            </h6>
+        </div>
 
+        <!-- Controls: Play button, Year label, and Slider -->
+        <div id="flowmap_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
+            <button 
+                id="flowmap_play-button" 
+                onclick="togglePlay()" 
+                class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
+                ▶ Play
+            </button>
+            <span 
+                id="flowmap_year-label" 
+                class="text-lg font-bold text-gray-800 min-w-[60px] text-center order-first sm:order-none">
+            </span>
+            <input 
+                type="range" 
+                id="flowmap_year-slider" 
+                class="flex-1 w-full sm:w-auto sm:max-w-[250px] h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 accent-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
+        </div>
+
+        <!-- Legend -->
+        <div class="flex justify-center items-center gap-6 mb-4 text-sm flex-wrap">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-0.5" style="background-color: #cf4119;"></div>
+                <span>Outward flows (from Afghanistan)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-0.5" style="background-color: #1f77b4;"></div>
+                <span>Inward flows (to Afghanistan)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full" style="background-color: #ffd700; border: 1px solid #ff8c00;"></div>
+                <span>Afghanistan</span>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="flowMap_id" class="text-center w-full h-full p-4">
+
+
+            <!-- Zoom Button: a round button -->
+            <!---
+             <button id="zoom_in_button" 
+             class="absolute top-6 right-16 z-10 bg-white border border-gray-300 rounded-full p-2 shadow-md hover:bg-gray-100 active:bg-gray-200 transition-colors duration-300">
+             <span class="material-symbols-outlined">
+                 zoom_out_map
+                </span>
+            </button>        
+            -->
+
+        </div>
+
+        <!-- Statistics -->
+        <div id="flow-stats" class="text-center text-sm text-gray-600 mt-4">
+            <span id="outward-stat" class="mr-4"></span>
+            <span id="inward-stat"></span>
+        </div>
+
+        <p class="text-gray-600 text-sm mt-4">
+            Line thickness represents migration volume. Hover over countries or flows for detailed information.
+            Data shows cumulative refugee and asylum seeker populations by destination country.
+        </p>
+    </div>
+</section>
 
             </section>
         </main>
@@ -640,7 +684,7 @@
             <div class="shadow-md rounded p-8 mx-auto sticky w-full top-36 my-16 grid grid-cols-[10px_1fr] gap-2">
                 <div id="progressBar_id" class="hero-gradient w-full col-start-1 rounded">
                 </div>
-                <nav class=" ">
+                <nav class="col-start-2">
                     <ol>
                         <li id="intro_id_nav"><a href="#intro_id">Introduction</a></li>
                         <li id="sec1_id_nav"><a href="#sec1_id">The not so Pacific SEA</a></li>
