@@ -1146,7 +1146,7 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
       .call(g => g.select(".domain").remove())) // remove axis line
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   yAxisG.lower();
@@ -1220,7 +1220,7 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
       .call(g => g.select(".domain").remove()))
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   yAxisG.lower();
@@ -1398,7 +1398,7 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
     .call(g => g.select(".domain").remove()) // remove axis line
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 100)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   // X Axis
