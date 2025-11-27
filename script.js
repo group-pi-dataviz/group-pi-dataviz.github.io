@@ -2167,9 +2167,11 @@ const symbolMapPointsData = d3.range(50).map(() => ({
   value: Math.random() * 100
 }));
 
-function animateSymbolData(projection, svg, pointsData) {
+function animateSymbolData(projection, svg, pointsData, startDay=500) {
   const multiplier = 25;
   // --- create circle elements ---
+  svg.selectAll("circle").remove(); // clear previous circles
+
   const circles = svg.append("g")
     .selectAll("circle")
     .data(pointsData)
@@ -2194,17 +2196,24 @@ function animateSymbolData(projection, svg, pointsData) {
     .ease(d3.easeCubicInOut);
 
 
+  function getDelay(d)
+  {
+    return (d.DAY - startDay) > 0 ? (d.DAY - startDay) * multiplier : 0;
+  }
+
   // --- animate radii ---
   circles
     .transition(grow)
-    .delay(d => (d.DAY || 0) * multiplier)
+    .filter(d => getDelay(d) > 0)
+    .delay(d => getDelay(d))
     .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2));
 
 
   // --- fade out after growth ---
   circles
     .transition(fade)
-    .delay(d => (d.DAY || 0) * multiplier + 600)
+    .filter(d => getDelay(d) > 0)
+    .delay(d => getDelay(d) + 600)
     .attr("fill", "rgba(128,128,128,0.07)")
     .attr("stroke", "rgba(128,128,128,0.1)")
     .attr("opacity", 0);
@@ -2213,19 +2222,59 @@ function animateSymbolData(projection, svg, pointsData) {
   // --- single label timer (replaces heavy per-circle on("end")) ---
   const maxDay = d3.max(pointsData, d => d.DAY || 0);
 
-  d3.timer(elapsed => {
-    const currentDay = Math.min(maxDay, Math.floor(elapsed / multiplier));
-    lblSymbolTime.innerText = `Day: ${currentDay}`;
+  function mapDayToDateString(day) {
+    const baseDate = new Date(2016, 11, 31);
+    baseDate.setDate(baseDate.getDate() + day);
+    const year = baseDate.getFullYear();
+    const month = String(baseDate.getMonth() + 1).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthName = monthNames[baseDate.getMonth()];
+    // const month = monthNames[baseDate.getMonth()];
+    // const date = String(baseDate.getDate()).padStart(2, '0');
+    return `${monthName} ${year}`;
+  }
+
+  const timer = d3.timer(elapsed => {
+    const currentDay = startDay + Math.floor(elapsed / multiplier);
+    symbolDay = currentDay;
+    lblSymbolTime.innerText = `${mapDayToDateString(currentDay)}`;
     return currentDay === maxDay; // stop timer
   });
 
+  return { grow: grow, fade: fade, timer: timer };
 }
+
 
 const symbolStuff = drawSymbolMap(afGeoData, symbolMapData);
 console.log(symbolStuff);
 symbolMap_id.appendChild(symbolStuff.svgNode);
+let isSybmolPlaying = false;
+let symbolTransitions = null;
+let symbolDay = 0;
 btnSymbolPlay.onclick = () => {
-  animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData);
+  if (!isSybmolPlaying) {
+    isSybmolPlaying = true;
+    symbolTransitions = animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData, symbolDay);
+
+    btnSymbolPlay.innerText = "⏸ Pause";
+    btnSymbolPlay.classList.remove("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    btnSymbolPlay.classList.add("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+  }
+  else
+  {
+    btnSymbolPlay.innerText = "▶ Play";
+    btnSymbolPlay.classList.remove("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    btnSymbolPlay.classList.add("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+
+    isSybmolPlaying = false;
+    // stop transitions
+    // console.log(symbolTransitions);
+    symbolStuff.svg.selectAll("circle").interrupt("grow").interrupt("fade");
+    if (symbolTransitions && symbolTransitions.timer) {
+      symbolTransitions.timer.stop();
+    }
+    symbolTransitions = null;
+  }
 };
 
 // --- --- --- Choropleth Map Small Multiples --- --- ---
