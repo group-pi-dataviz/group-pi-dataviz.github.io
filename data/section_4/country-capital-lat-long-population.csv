@@ -1,4 +1,5 @@
 Country,Capital City,Latitude,Longitude,Population,Capital Type
+eSwatini,Mbabane,-26.3167,31.1333,68010,Capital
 Afghanistan,Kabul,34.5289,69.1725,4011770,Capital
 Albania,Tiranë (Tirana),41.3275,19.8189,475577,Capital
 Algeria,El Djazaïr  (Algiers),36.7525,3.0420,2693542,Capital
@@ -44,7 +45,7 @@ Channel Islands,St. Helier,49.1880,-2.1049,34386,Capital
 Channel Islands,St. Peter Port,49.4598,-2.5353,16271,Capital
 Chile,Santiago,-33.4569,-70.6483,6680371,Capital
 China,Beijing,39.9075,116.3972,19617963,Capital
-"China, Hong Kong SAR",Hong Kong,22.2796,114.1887,7428887,Capital
+"Hong Kong S.A.R.",Hong Kong,22.2796,114.1887,7428887,Capital
 "China, Macao SAR",Macao,22.2006,113.5461,632418,Capital
 "China, Taiwan Province of China",Taibei,25.0470,121.5457,2705791,Others
 Colombia,Bogotá,4.6097,-74.0818,10574409,Capital
@@ -52,13 +53,13 @@ Comoros,Moroni,-11.7022,43.2551,62351,Capital
 Congo,Brazzaville,-4.2658,15.2832,2229693,Capital
 Cook Islands,Rarotonga,-21.2300,-159.7600,13067,Capital
 Costa Rica,San José,9.9278,-84.0807,1357745,Capital
-Côte d'Ivoire,Abidjan,5.3453,-4.0268,4920776,Administrative Capital
+Ivory Coast,Abidjan,5.3453,-4.0268,4920776,Administrative Capital
 Croatia,Zagreb,45.8144,15.9780,685587,Capital
 Cuba,La Habana (Havana),23.1195,-82.3785,2136468,Capital
 Curaçao,Willemstad,12.1084,-68.9335,144037,Capital
 Cyprus,Lefkosia (Nicosia),35.1595,33.3669,269469,Capital
 Czechia,Praha (Prague),50.0880,14.4208,1291552,Capital
-Dem. People's Republic of Korea,P'yongyang,39.0339,125.7543,3037862,Capital
+North Korea,P'yongyang,39.0339,125.7543,3037862,Capital
 Democratic Republic of the Congo,Kinshasa,-4.3276,15.3136,13171256,Capital
 Denmark,København (Copenhagen),55.6759,12.5655,1320826,Capital
 Djibouti,Djibouti,11.5877,43.1447,561564,Capital
@@ -100,7 +101,7 @@ Hungary,Budapest,47.4980,19.0399,1759497,Capital
 Iceland,Reykjavík,64.1355,-21.8954,216364,Capital
 India,Delhi,28.6667,77.2167,28513682,Capital
 Indonesia,Jakarta,-6.2118,106.8416,10516927,Capital
-Iran (Islamic Republic of),Tehran,35.6944,51.4215,8895947,Capital
+Iran,Tehran,35.6944,51.4215,8895947,Capital
 Iraq,Baghdad,33.3406,44.4009,6811955,Capital
 Ireland,Dublin,53.3331,-6.2489,1201426,Capital
 Isle of Man,Douglas,54.1500,-4.4833,27171,Capital
@@ -167,11 +168,11 @@ Poland,Warszawa (Warsaw),52.2298,21.0118,1767798,Capital
 Portugal,Lisboa (Lisbon),38.7169,-9.1399,2927316,Capital
 Puerto Rico,San Juan,18.4663,-66.1057,2454337,Capital
 Qatar,Ad-Dawhah (Doha),25.2747,51.5245,633401,Capital
-Republic of Korea,Seoul,37.5683,126.9778,9963497,Capital
-Republic of Moldova,Chişinău,47.0056,28.8575,509707,Capital
+South Korea,Seoul,37.5683,126.9778,9963497,Capital
+Moldova,Chişinău,47.0056,28.8575,509707,Capital
 Réunion,Saint-Denis,-20.8823,55.4504,147209,Capital
 Romania,Bucuresti (Bucharest),44.4328,26.1043,1821380,Capital
-Russian Federation,Moskva (Moscow),55.7550,37.6218,12409738,Capital
+Russia,Moskva (Moscow),55.7550,37.6218,12409738,Capital
 Rwanda,Kigali,-1.9474,30.0579,1057836,Capital
 Saint Helena,Jamestown,-15.9387,-5.7168,603,Capital
 Saint Kitts and Nevis,Basseterre,17.2948,-62.7261,14434,Capital
@@ -183,7 +184,7 @@ San Marino,San Marino,43.9333,12.4500,4465,Capital
 Sao Tome and Principe,São Tomé,0.3365,6.7273,80099,Capital
 Saudi Arabia,Ar-Riyadh (Riyadh),24.6905,46.7096,6906595,Capital
 Senegal,Dakar,14.6937,-17.4441,2978419,Capital
-Serbia,Beograd (Belgrade),44.8176,20.4633,1389351,Capital
+Republic of Serbia,Beograd (Belgrade),44.8176,20.4633,1389351,Capital
 Seychelles,Victoria,-4.6167,55.4500,28091,Capital
 Sierra Leone,Freetown,8.4840,-13.2299,1135949,Capital
 Singapore,Singapore,1.2897,103.8501,5791901,Capital
@@ -196,15 +197,15 @@ South Africa,Cape Town,-33.9258,18.4232,4430367,Legislative Capital
 South Sudan,Juba,4.8517,31.5825,368914,Capital
 Spain,Madrid,40.4165,-3.7026,6497124,Capital
 Sri Lanka,Colombo,6.9319,79.8478,599821,Capital
-State of Palestine,Al-Quds[East Jerusalem],31.7834,35.2339,275086,Capital
+Palestine,Al-Quds[East Jerusalem],31.7834,35.2339,275086,Capital
 Sudan,Al-Khartum (Khartoum),15.5518,32.5324,5534079,Capital
 Suriname,Paramaribo,5.8664,-55.1668,239457,Capital
 Swaziland,Mbabane,-26.3167,31.1333,68010,Capital
 Sweden,Stockholm,59.3326,18.0649,1582968,Capital
 Switzerland,Bern,46.9481,7.4474,422153,Capital
-Syrian Arab Republic,Dimashq (Damascus),33.5086,36.3084,2319545,Capital
+Syria,Dimashq (Damascus),33.5086,36.3084,2319545,Capital
 Tajikistan,Dushanbe,38.5358,68.7791,872653,Capital
-TFYR Macedonia,Skopje,42.0000,21.4333,584208,Capital
+North Macedonia,Skopje,42.0000,21.4333,584208,Capital
 Thailand,Krung Thep (Bangkok),13.7220,100.5252,10156316,Capital
 Timor-Leste,Dili,-8.5601,125.5668,281135,Capital
 Togo,Lomé,6.1375,1.2123,1745744,Capital
@@ -226,7 +227,7 @@ United States Virgin Islands,Charlotte Amalie,18.3419,-64.9307,52322,Capital
 Uruguay,Montevideo,-34.8335,-56.1674,1736989,Capital
 Uzbekistan,Tashkent,41.2647,69.2163,2463969,Capital
 Vanuatu,Port Vila,-17.7338,168.3219,52690,Capital
-Venezuela (Bolivarian Republic of),Caracas,10.4880,-66.8792,2934560,Capital
+Venezuela,Caracas,10.4880,-66.8792,2934560,Capital
 Viet Nam,Hà Noi,21.0245,105.8412,4282738,Capital
 Wallis and Futuna Islands,Matu-Utu,-13.2816,-176.1745,1025,Capital
 Western Sahara,El Aaiún,27.1532,-13.2014,232388,Capital

@@ -1146,7 +1146,7 @@ function drawBarChart(barData, maxWidth=600, maxHeight=400) {
       .call(g => g.select(".domain").remove())) // remove axis line
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   yAxisG.lower();
@@ -1220,7 +1220,7 @@ function drawHistogram(histogramData, maxWidth=600, maxHeight=400) {
       .call(g => g.select(".domain").remove()))
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 110)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   yAxisG.lower();
@@ -1398,7 +1398,7 @@ function drawBoxplot(data, maxWidth=600, maxHeight=400)
     .call(g => g.select(".domain").remove()) // remove axis line
     .call(g => g.selectAll(".tick line")
       .attr("x2", maxWidth - 100)
-      .attr("stroke-opacity", 0.4))
+      .attr("stroke-opacity", 0.2))
       .attr("stroke-width", 1);
 
   // X Axis
@@ -2167,9 +2167,11 @@ const symbolMapPointsData = d3.range(50).map(() => ({
   value: Math.random() * 100
 }));
 
-function animateSymbolData(projection, svg, pointsData) {
+function animateSymbolData(projection, svg, pointsData, startDay=500) {
   const multiplier = 25;
   // --- create circle elements ---
+  svg.selectAll("circle").remove(); // clear previous circles
+
   const circles = svg.append("g")
     .selectAll("circle")
     .data(pointsData)
@@ -2194,17 +2196,24 @@ function animateSymbolData(projection, svg, pointsData) {
     .ease(d3.easeCubicInOut);
 
 
+  function getDelay(d)
+  {
+    return (d.DAY - startDay) > 0 ? (d.DAY - startDay) * multiplier : 0;
+  }
+
   // --- animate radii ---
   circles
     .transition(grow)
-    .delay(d => (d.DAY || 0) * multiplier)
+    .filter(d => getDelay(d) > 0)
+    .delay(d => getDelay(d))
     .attr("r", d => Math.max(1, Math.sqrt(d.FATALITIES || 0) * 2));
 
 
   // --- fade out after growth ---
   circles
     .transition(fade)
-    .delay(d => (d.DAY || 0) * multiplier + 600)
+    .filter(d => getDelay(d) > 0)
+    .delay(d => getDelay(d) + 600)
     .attr("fill", "rgba(128,128,128,0.07)")
     .attr("stroke", "rgba(128,128,128,0.1)")
     .attr("opacity", 0);
@@ -2213,19 +2222,59 @@ function animateSymbolData(projection, svg, pointsData) {
   // --- single label timer (replaces heavy per-circle on("end")) ---
   const maxDay = d3.max(pointsData, d => d.DAY || 0);
 
-  d3.timer(elapsed => {
-    const currentDay = Math.min(maxDay, Math.floor(elapsed / multiplier));
-    lblSymbolTime.innerText = `Day: ${currentDay}`;
+  function mapDayToDateString(day) {
+    const baseDate = new Date(2016, 11, 31);
+    baseDate.setDate(baseDate.getDate() + day);
+    const year = baseDate.getFullYear();
+    const month = String(baseDate.getMonth() + 1).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthName = monthNames[baseDate.getMonth()];
+    // const month = monthNames[baseDate.getMonth()];
+    // const date = String(baseDate.getDate()).padStart(2, '0');
+    return `${monthName} ${year}`;
+  }
+
+  const timer = d3.timer(elapsed => {
+    const currentDay = startDay + Math.floor(elapsed / multiplier);
+    symbolDay = currentDay;
+    lblSymbolTime.innerText = `${mapDayToDateString(currentDay)}`;
     return currentDay === maxDay; // stop timer
   });
 
+  return { grow: grow, fade: fade, timer: timer };
 }
+
 
 const symbolStuff = drawSymbolMap(afGeoData, symbolMapData);
 console.log(symbolStuff);
 symbolMap_id.appendChild(symbolStuff.svgNode);
+let isSybmolPlaying = false;
+let symbolTransitions = null;
+let symbolDay = 0;
 btnSymbolPlay.onclick = () => {
-  animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData);
+  if (!isSybmolPlaying) {
+    isSybmolPlaying = true;
+    symbolTransitions = animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData, symbolDay);
+
+    btnSymbolPlay.innerText = "⏸ Pause";
+    btnSymbolPlay.classList.remove("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    btnSymbolPlay.classList.add("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+  }
+  else
+  {
+    btnSymbolPlay.innerText = "▶ Play";
+    btnSymbolPlay.classList.remove("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    btnSymbolPlay.classList.add("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+
+    isSybmolPlaying = false;
+    // stop transitions
+    // console.log(symbolTransitions);
+    symbolStuff.svg.selectAll("circle").interrupt("grow").interrupt("fade");
+    if (symbolTransitions && symbolTransitions.timer) {
+      symbolTransitions.timer.stop();
+    }
+    symbolTransitions = null;
+  }
 };
 
 // --- --- --- Choropleth Map Small Multiples --- --- ---
@@ -2260,10 +2309,28 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
 
   const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
 
-  // Create color scale based on filtered data
+  // Create color scale based on filtered data divided by eventType
+  const colorGroups = function(eventType) {
+    switch(eventType) {
+      case 'Battles':
+        return d3.interpolateReds;
+      case 'Explosions/Remote violence':
+        return d3.interpolateReds;
+      case 'Violence against civilians':
+        return d3.interpolateReds;
+      case 'Protests':
+        return d3.interpolateBlues;
+      case 'Riots':
+        return d3.interpolateBlues;
+      case 'Strategic developments':
+        return d3.interpolateGreys;
+      default:
+        return d3.interpolateReds;
+    }
+  };
   const colorScale = d3.scaleSequential()
     .domain([0, d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1])
-    .interpolator(d3.interpolateReds);
+    .interpolator(colorGroups(eventType));
 
   // Draw the map
   svg.append("g")
@@ -2285,6 +2352,125 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
+  // Add the color bar legend
+  const legendWidth = 300;
+  const legendHeight = 20;
+  const legendMargin = { top: 20, right: 20, bottom: 30, left: 20 };
+  const legendSvg = svg.append("g")
+    .attr("transform", `translate(${maxWidth - legendWidth - legendMargin.right}, ${maxHeight - legendHeight - legendMargin.bottom})`);
+
+  // Define gradient
+  const defs = svg.append("defs");
+  const gradientId = `legend-gradient-${eventType.replace(/\s+/g, '-')}`;
+  const gradient = defs.append("linearGradient")
+    .attr("id", gradientId)
+    .attr("x1", "0%").attr("y1", "0%")
+    .attr("x2", "100%").attr("y2", "0%");
+  gradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", colorScale(0));
+  gradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", colorScale(d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1));
+
+  // Draw legend rectangle
+  legendSvg.append("rect")
+    .attr("width", legendWidth)
+    .attr("height", legendHeight)
+    .style("fill", `url(#${gradientId})`)
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+  // Legend axis
+  const legendScale = d3.scaleLinear()
+    .domain([0, d3.max(filteredData, d => d.EVENTS)])
+    .range([0, legendWidth]);
+  const legendAxis = d3.axisBottom(legendScale)
+    .ticks(5)
+    .tickFormat(d3.format("d"));
+  legendSvg.append("g")
+    .attr("transform", `translate(0, ${legendHeight})`)
+    .call(legendAxis)
+    .selectAll("text")
+    .style("font-size", "14px");
+
+  // tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".choropleth-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "choropleth-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // position helper: offsetX/offsetY adjust relative position
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    // initial position to the right/below the cursor
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    // measure tooltip size and viewport scroll
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // clamp horizontally (if it would overflow, try placing left of cursor)
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    // clamp vertically (if it would overflow, try placing above cursor)
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // If mouse over graph, show tooltip
+  svg.on("mouseover", function(event, d) {
+      tooltip.style("opacity", 1);
+    })
+    .on("mousemove", function(event, d) {
+      const [mouseX, mouseY] = d3.pointer(event);
+      // Find the geographic region under the mouse
+      const geoRegion = geoData.features.find(feature => {
+        return d3.geoContains(feature, projection.invert([mouseX, mouseY]));
+      });
+
+
+      // Update tooltip content
+      if (geoRegion) {
+        const geoRegionName = geoRegion.properties.name;
+        const regionData = filteredData.find(p => p.REGION === geoRegionName);
+        const eventCount = regionData ? regionData.EVENTS : 0;
+        tooltip.html(`<strong>Region: ${geoRegionName}</strong><br/>
+          Event Type: ${eventType}<br/>
+          Events: ${eventCount}`);
+      } else {
+        tooltip.html(`No data`);
+      }
+      // Update tooltip position
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+    });
+  
   return svg.node();
 }
 
@@ -2539,6 +2725,7 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
         var originName = originFeature.properties.name;
         var asylumName = asylumFeature.properties.name;
         
+        
         var originCountry = countryCodes.find(function(c) {
           return c.country === originName;
         });
@@ -2575,9 +2762,6 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
     }
   });
 
-  console.log("Outward links:", outward_link);
-  console.log("Inward links:", inward_link);
-
   // Calcola totali per le statistiche
   const totalOutward = outward_link.reduce((sum, d) => sum + d.population, 0);
   const totalInward = inward_link.reduce((sum, d) => sum + d.population, 0);
@@ -2592,7 +2776,7 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
   const maxPop = d3.max(allPopulations);
   
   // Scala per lo spessore delle linee
-  const strokeScale = d3.scaleSqrt()
+  const strokeScale = d3.scaleLog()
     .domain([minPop, maxPop])
     .range([0.5, 8]);
 
