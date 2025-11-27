@@ -2221,6 +2221,7 @@ function animateSymbolData(projection, svg, pointsData, startDay=500) {
 
   // --- single label timer (replaces heavy per-circle on("end")) ---
   const maxDay = d3.max(pointsData, d => d.DAY || 0);
+  const minDay = d3.min(pointsData, d => d.DAY || 0);
 
   function mapDayToDateString(day) {
     const baseDate = new Date(2016, 11, 31);
@@ -2238,7 +2239,19 @@ function animateSymbolData(projection, svg, pointsData, startDay=500) {
     const currentDay = startDay + Math.floor(elapsed / multiplier);
     symbolDay = currentDay;
     lblSymbolTime.innerText = `${mapDayToDateString(currentDay)}`;
-    return currentDay === maxDay; // stop timer
+
+      if (currentDay >= maxDay) {
+        timer.stop();
+        // Riavvia automaticamente solo se l'animazione è ancora in play
+        if (isSybmolPlaying) {
+          symbolDay = 0;
+          symbolTransitions = animateSymbolData(symbolStuff.proj, symbolStuff.svg, symbolMapData, 0);
+        }
+        return true;
+      }
+      return false;
+
+
   });
 
   return { grow: grow, fade: fade, timer: timer };
@@ -2957,14 +2970,14 @@ function drawflowMap(flowMapData, geoData, countryCodes, maxWidth=600, maxHeight
 
   // Animazione sequenziale: prima inward, poi outward
   inwardPaths.transition()
-    .duration(1500)
+    .duration(1000)
     .ease(d3.easeLinear)
     .style("stroke-dashoffset", 0)
     .style("opacity", d => opacityScale(d.population))
     .on("end", function() {
       // Dopo che l'animazione inward finisce, inizia quella outward
       outwardPaths.transition()
-        .duration(1500)
+        .duration(1000)
         .ease(d3.easeLinear)
         .style("stroke-dashoffset", 0)
         .style("opacity", d => opacityScale(d.population));

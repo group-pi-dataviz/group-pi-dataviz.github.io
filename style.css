@@ -160,3 +160,46 @@ nav a {
   }
 
 
+/* Responsive Visualizations: Fullscreen */
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    animation: fadeInViz 0.3s ease-out;
+}
+@keyframes fadeInViz {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.modal-content {
+    animation: scaleInViz 0.3s ease-out;
+}
+@keyframes scaleInViz {
+    from { 
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+@keyframes rotatePhone {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-90deg); }
+    75% { transform: rotate(-90deg); }
+}
+.rotate-animation {
+    animation: rotatePhone 3s ease-in-out infinite;
+}
+
+/* Stili per assicurare che l'SVG si ridimensioni correttamente */
+#flowMap_id svg,
+#flowMap_fullscreen_id svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Migliora la leggibilità del contenuto fullscreen */
+.fullscreen-container {
+    max-height: 90vh;
+    overflow-y: auto;
+}
