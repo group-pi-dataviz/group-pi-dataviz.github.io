@@ -3069,6 +3069,72 @@ if (yearSliderFlow) yearSliderFlow.value = initialIndex;
 if (yearLabelFlow) yearLabelFlow.textContent = initialYear;
 flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600, 450, initialYear));
 
+
+// --- --- ---  Sankey --- --- ---
+
+const sankeyDataPopSrc = 'migration_year_cumulative.csv';
+const sankeyDataPop = (await d3.dsv(",", './data/section_4/' + sankeyDataPopSrc))
+.map(d => ({
+  year: +d.year,
+  origin_location_code: d.origin_location_code,
+  asylum_location_code: d.asylum_location_code,
+  population: +d.population,
+}));
+
+const sankeyDataGenderSrc = 'migration_year_gender.csv';
+const sankeyDataGender = (await d3.dsv(",", './data/section_4/' + sankeyDataGenderSrc))
+.map(d => ({
+  year: +d.year,
+  origin_location_code: d.origin_location_code,
+  asylum_location_code: d.asylum_location_code,
+  population: +d.population,
+  gender: d.gender,
+}));
+
+const sankeyDataAgeSrc = 'migration_year_age.csv';
+const sankeyDataAge = (await d3.dsv(",", './data/section_4/' + sankeyDataAgeSrc))
+.map(d => ({
+  year: +d.year,
+  origin_location_code: d.origin_location_code,
+  asylum_location_code: d.asylum_location_code,
+  population: +d.population,
+  age_range: d.age_range,
+}));
+
+const sankeyData = [sankeyDataPop, sankeyDataGender, sankeyDataAge];
+
+// Ottieni gli anni disponibili e ordinali: we already have the constant: `availableYears `
+// Inizializza lo slider
+const yearSliderSankey = document.getElementById("sankey_year-slider");
+const yearLabelSankey = document.getElementById("sankey_year-label");
+if (yearSliderSankey && availableYears.length > 0) {
+  yearSliderSankey.min = 0;
+  yearSliderSankey.max = availableYears.length - 1;
+  yearSliderSankey.value = availableYears.indexOf(2020);
+  yearLabelSankey.textContent = 2020;
+}
+
+function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
+{
+  d3.select("#sankey_id").style("max-width", maxChartWidth + "px");
+  d3.select("#sankey_id").style("margin", "0 auto");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, maxWidth, maxHeight])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "sankey");
+
+  // Set the sankey diagram properties
+  var sankey = d3.sankey()
+      .nodeWidth(36)
+      .nodePadding(40)
+      .size([width, height]);
+
+  var path = sankey.link();
+
+  return svg.node();
+}
+
 // --- --- --- Thumbnails --- --- ---
 
 function computeNavScale() {
