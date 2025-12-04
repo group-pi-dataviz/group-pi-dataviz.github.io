@@ -2379,12 +2379,22 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("id", gradientId)
     .attr("x1", "0%").attr("y1", "0%")
     .attr("x2", "100%").attr("y2", "0%");
-  gradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", colorScale(0));
-  gradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", colorScale(d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1));
+
+  const maxNormalizedEvents = d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1;
+  const stops = d3.range(0, maxNormalizedEvents, maxNormalizedEvents / 10).concat([maxNormalizedEvents]);
+
+  stops.forEach(t => {
+    gradient.append("stop")
+      .attr("offset", `${(t / maxNormalizedEvents) * 100}%`)
+      .attr("stop-color", colorScale(t));  // use SAME scale
+  });
+
+  // gradient.append("stop")
+  //   .attr("offset", "0%")
+  //   .attr("stop-color", colorScale(0));
+  // gradient.append("stop")
+  //   .attr("offset", "100%")
+    // .attr("stop-color", colorScale(1));
 
   // Draw legend rectangle
   legendSvg.append("rect")
@@ -2571,20 +2581,20 @@ function drawChoroplethSmallMultiples(geoData, pointsData, maxWidth=900, eventTy
     .style("margin", "0 auto");
 
   // Create gradient
-  const defs = colorbarSvg.append("defs");
-  const gradient = defs.append("linearGradient")
+const defs = colorbarSvg.append("defs");
+const gradient = defs.append("linearGradient")
     .attr("id", "shared-colorbar-gradient")
     .attr("x1", "0%")
     .attr("x2", "100%");
 
-  gradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", d3.interpolateReds(0));
+// Create multiple stops for smoother & accurate coloring
+const stops = d3.range(0, 1.0001, 0.1);
 
+stops.forEach(t => {
   gradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", d3.interpolateReds(1));
-
+    .attr("offset", `${t * 100}%`)
+    .attr("stop-color", colorScale(t));  // use SAME scale
+});
   // Draw legend rectangle
   colorbarSvg.append("rect")
     .attr("x", 50)
