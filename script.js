@@ -2365,37 +2365,33 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
 
-  // Add the color bar legend
+  // Add the color bar legend at the top center
   const legendWidth = 300;
   const legendHeight = 20;
   const legendMargin = { top: 20, right: 20, bottom: 30, left: 20 };
   const legendSvg = svg.append("g")
-    .attr("transform", `translate(${maxWidth - legendWidth - legendMargin.right}, ${maxHeight - legendHeight - legendMargin.bottom})`);
+    .attr("transform", `translate(${(maxWidth - legendWidth) / 2}, 0)`);
 
-  // Define gradient
-  const defs = svg.append("defs");
-  const gradientId = `legend-gradient-${eventType.replace(/\s+/g, '-')}`;
-  const gradient = defs.append("linearGradient")
-    .attr("id", gradientId)
-    .attr("x1", "0%").attr("y1", "0%")
-    .attr("x2", "100%").attr("y2", "0%");
-  gradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", colorScale(0));
-  gradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", colorScale(d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1));
-
-  // Draw legend rectangle
+  // Legend gradient
+  const defs = legendSvg.append("defs");
+  const linearGradient = defs.append("linearGradient")
+    .attr("id", "legend-gradient");
+  linearGradient.selectAll("stop")
+    .data(d3.range(0, 1.01, 0.01))
+    .enter()
+    .append("stop")
+    .attr("offset", d => `${d * 100}%`)
+    .attr("stop-color", d => colorScale(d * d3.max(filteredData, d => d.NORMALIZED_EVENTS) || 1));
   legendSvg.append("rect")
     .attr("width", legendWidth)
     .attr("height", legendHeight)
-    .style("fill", `url(#${gradientId})`)
+    .style("fill", "url(#legend-gradient)")
     .attr("stroke", "#999")
     .attr("stroke-width", 0.5);
-  // Legend axis
+
+  // Legend axis use non normalized values
   const legendScale = d3.scaleLinear()
-    .domain([0, d3.max(filteredData, d => d.EVENTS)])
+    .domain([0, d3.max(filteredData, d => d.EVENTS) || 0])
     .range([0, legendWidth]);
   const legendAxis = d3.axisBottom(legendScale)
     .ticks(5)
@@ -2404,7 +2400,7 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
     .attr("transform", `translate(0, ${legendHeight})`)
     .call(legendAxis)
     .selectAll("text")
-    .style("font-size", "14px");
+    .style("font-size", "10px");
 
   // tooltip (remove any existing tooltip first)
   d3.select("body").selectAll(".choropleth-tooltip").remove();
@@ -2486,153 +2482,6 @@ function drawChoroplethMap(geoData, pointsData, maxWidth=600, maxHeight=450, eve
   
   return svg.node();
 }
-
-function drawChoroplethSmallMultiples(geoData, pointsData, maxWidth=900, eventTypes=['Battles', 'Explosions/Remote violence', 'Protests', 'Riots', 'Strategic developments', 'Violence against civilians'])
-{
-  // Calculate grid layout
-  const cols = 3;
-  const rows = Math.ceil(eventTypes.length / cols);
-  const mapWidth = maxWidth / cols - 20; // subtract padding
-  const mapHeight = mapWidth * 0.75; // maintain aspect ratio
-  const totalHeight = rows * (mapHeight + 60); // add space for titles
-  
-  d3.select("#choroplethMap_id").style("max-width", maxChartWidth + "px");
-  d3.select("#choroplethMap_id").style("margin", "0 auto");
-  
-  const svg = d3.create("svg")
-    .attr("viewBox", [0, 0, maxWidth, totalHeight])
-    .attr("class", "visualization m-auto")
-    .attr("chartType", "choroplethsmallmultiples");
-
-  // Single color scale for all maps (0 to 1 since data is normalized)
-  const colorScale = d3.scaleSequential()
-    .domain([0, 1])
-    .interpolator(d3.interpolateReds);
-
-  const projection = d3.geoMercator()
-    .center([67.5, 34.5])
-    .scale(mapWidth * 3.3);
-
-  const path = d3.geoPath().projection(projection);
-
-  // Create a map for each event type
-  eventTypes.forEach((eventType, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const xOffset = col * (mapWidth + 20);
-    const yOffset = row * (mapHeight + 60) + 40; // leave space for title
-
-    // Create group for this map
-    const mapGroup = svg.append("g")
-      .attr("transform", `translate(${xOffset}, ${yOffset})`);
-
-    // Add title
-    svg.append("text")
-      .attr("x", xOffset + mapWidth / 2)
-      .attr("y", yOffset - 15)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
-      .text(eventType);
-
-    // Filter data for this event type
-    const filteredData = pointsData.filter(d => d.EVENT_TYPE === eventType);
-
-    // Update projection for this map
-    const localProjection = d3.geoMercator()
-      .center([67.5, 34.5])
-      .scale(mapWidth * 3.3)
-      .translate([mapWidth / 2, mapHeight / 2]);
-    
-    const localPath = d3.geoPath().projection(localProjection);
-
-    // Draw the choropleth
-    mapGroup.selectAll("path")
-      .data(geoData.features)
-      .enter()
-      .append("path")
-      .attr("d", localPath)
-      .attr("fill", d => {
-        const geoRegionName = d.properties.name;
-        const regionData = filteredData.find(p => p.REGION === geoRegionName);
-        return regionData ? colorScale(regionData.NORMALIZED_EVENTS) : "#e0e0e0";
-      })
-      .attr("stroke", "#999")
-      .attr("stroke-width", 0.5);
-  });
-
-  // Create shared color bar
-  const colorbarWidth = 200;
-  const colorbarHeight = 10;
-  
-  const colorbarSvg = d3.create("svg")
-    .attr("viewBox", [0, 0, colorbarWidth + 100, colorbarHeight + 40])
-    .style("display", "block")
-    .style("margin", "0 auto");
-
-  // Create gradient
-  const defs = colorbarSvg.append("defs");
-  const gradient = defs.append("linearGradient")
-    .attr("id", "shared-colorbar-gradient")
-    .attr("x1", "0%")
-    .attr("x2", "100%");
-
-  gradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", d3.interpolateReds(0));
-
-  gradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", d3.interpolateReds(1));
-
-  // Draw legend rectangle
-  colorbarSvg.append("rect")
-    .attr("x", 50)
-    .attr("y", 10)
-    .attr("width", colorbarWidth)
-    .attr("height", colorbarHeight)
-    .style("fill", "url(#shared-colorbar-gradient)")
-    .attr("stroke", "#999")
-    .attr("stroke-width", 1);
-
-  // Add labels
-  colorbarSvg.append("text")
-    .attr("x", 50)
-    .attr("y", colorbarHeight + 18)
-    .attr("font-size", "4px")
-    .attr("text-anchor", "middle")
-    .text("0");
-
-  colorbarSvg.append("text")
-    .attr("x", 50 + colorbarWidth / 2)
-    .attr("y", colorbarHeight + 18)
-    .attr("font-size", "4px")
-    .attr("text-anchor", "middle")
-    .text("0.5");
-
-  colorbarSvg.append("text")
-    .attr("x", 50 + colorbarWidth)
-    .attr("y", colorbarHeight + 18)
-    .attr("font-size", "4px")
-    .attr("text-anchor", "middle")
-    .text("1.0");
-
-  // Add title to colorbar
-  colorbarSvg.append("text")
-    .attr("x", 50 + colorbarWidth / 2)
-    .attr("y", 6)
-    .attr("font-size", "7px")
-    .attr("text-anchor", "middle")
-    .attr("font-weight", "bold")
-    .text("Normalized Event Density");
-
-  // Insert colorbar into the div
-  d3.select("#shared_choroplethMap_colorbar").html("").append(() => colorbarSvg.node());
-
-  return svg.node();
-}
-
-// choroplethMap_id.appendChild(drawChoroplethSmallMultiples(afGeoData, choroplethMapData));
 
 // Single map:
 // taking the value from the select-option in the html with id event-type-select  
