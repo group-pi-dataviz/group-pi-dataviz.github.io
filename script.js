@@ -2931,3 +2931,5 @@ addThumbnail(intro_id, intro_id_nav, thumbnailScale);
 addThumbnail(sec1_id, sec1_id_nav, thumbnailScale);
 addThumbnail(sec2_id, sec2_id_nav, thumbnailScale);
 addThumbnail(sec3_id, sec3_id_nav, thumbnailScale);
+addThumbnail(sec4_id, sec4_id_nav, thumbnailScale);
+addThumbnail(sec5_id, sec5_id_nav, thumbnailScale);
