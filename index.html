@@ -85,6 +85,12 @@
                         >
                             <a href="#sec4_id" class="w-full h-full">The Geography of a Conflict</a>
                         </li>
+                        <li
+                            role="menuitem"
+                            class="cursor-pointer text-slate-800 flex w-full text-sm items-center rounded-md p-3 transition-all hover:bg-slate-100 focus:bg-slate-100 active:bg-slate-100"
+                        >
+                            <a href="#sec5_id" class="w-full h-full">Where do we go from here?</a>
+                        </li>
                     </ul>
                     <a href="#about_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                         About
@@ -117,6 +123,9 @@
                 </a>
                 <a href="#sec4_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                     The Geography of a Conflict
+                </a>
+                <a href="#sec5_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
+                    Where do we go from here?
                 </a>
                 <a href="#about_id" class="text-white hover:bg-brand-cyan block px-3 py-2 rounded-md text-base font-medium transition-colors" onclick="toggleMenu()">
                     About
@@ -610,166 +619,132 @@
                         For instance, battles and explosions are more prevalent in the southern and eastern provinces, while protests and riots tend to occur more frequently in urban centers.
                     </p>
                 </div>
+                <!-- Flow Map -->
+                <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
+                    <div class="text-center mb-4">
+                        <h5 class="font-heading font-bold text-2xl">
+                            Seeking another life
+                        </h5>
+                        <h6 class="font-heading text-gray-600">
+                            Refugee and asylum seeker movements over time
+                        </h6>
+                    </div>
 
-    <!-- Flow Map -->
-    <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
-        <div class="text-center mb-4">
-            <h5 class="font-heading font-bold text-2xl">
-                Seeking another life
-            </h5>
-            <h6 class="font-heading text-gray-600">
-                Refugee and asylum seeker movements over time
-            </h6>
-        </div>
+                    <!-- Controls: Play button, Year label, and Slider -->
+                    <div id="flowmap_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
+                        <button 
+                            id="flowmap_play-button" 
+                            onclick="togglePlay()" 
+                            class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
+                            ▶ Play
+                        </button>
+                        <span 
+                            id="flowmap_year-label" 
+                            class="text-lg font-bold text-gray-800 min-w-[60px] text-center order-first sm:order-none">
+                        </span>
+                        <input 
+                            type="range" 
+                            id="flowmap_year-slider" 
+                            class="flex-1 w-full sm:w-auto sm:max-w-[250px] h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 accent-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
+                    </div>
 
-        <!-- Controls: Play button, Year label, and Slider -->
-        <div id="flowmap_commands" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto">
-            <button 
-                id="flowmap_play-button" 
-                onclick="togglePlay()" 
-                class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
-                ▶ Play
-            </button>
-            <span 
-                id="flowmap_year-label" 
-                class="text-lg font-bold text-gray-800 min-w-[60px] text-center order-first sm:order-none">
-            </span>
-            <input 
-                type="range" 
-                id="flowmap_year-slider" 
-                class="flex-1 w-full sm:w-auto sm:max-w-[250px] h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 accent-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
-        </div>
+                    <!-- Legend -->
+                    <div class="flex justify-center items-center gap-6 mb-4 text-sm flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-0.5" style="background-color: #cf4119;"></div>
+                            <span>Outward flows (from Afghanistan)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-0.5" style="background-color: #1f77b4;"></div>
+                            <span>Inward flows (to Afghanistan)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: #ffd700; border: 1px solid #ff8c00;"></div>
+                            <span>Afghanistan</span>
+                        </div>
+                    </div>
 
-        <!-- Legend -->
-        <div class="flex justify-center items-center gap-6 mb-4 text-sm flex-wrap">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-0.5" style="background-color: #cf4119;"></div>
-                <span>Outward flows (from Afghanistan)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-0.5" style="background-color: #1f77b4;"></div>
-                <span>Inward flows (to Afghanistan)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-3 h-3 rounded-full" style="background-color: #ffd700; border: 1px solid #ff8c00;"></div>
-                <span>Afghanistan</span>
-            </div>
-        </div>
+                    <!-- Map Container -->
+                    <div id="flowMap_id" class="text-center w-full h-full p-4">
+                    </div>        
 
-        <!-- Map Container -->
-        <div id="flowMap_id" class="text-center w-full h-full p-4">
-        </div>
+                    <!-- Statistics -->
+                    <div id="flow-stats" class="text-center text-sm text-gray-600 mt-4">
+                        <span id="outward-stat" class="mr-4"></span>
+                        <span id="inward-stat"></span>
+                    </div>
 
-        <!-- Fullscreen Button -->
-         <!--
-            <button 
-            onclick="openFullscreen()"
-            class="w-full bg-gradient-to-r from-brand-cyan to-brand-blue text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
-            >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-            </svg>
-            Fullscreen Mode
-        </button>
-        -->
-        
+                    <p class="text-gray-600 text-sm mt-4">
+                        The flow map visualizes the movements of refugees and asylum seekers to and from Afghanistan over time.
+                        Lines indicate the direction and volume of flows, with outward flows (from Afghanistan) shown in red and inward flows (to Afghanistan) in blue.
+                        <br><br>
+                        This visualization highlights the significant displacement caused by ongoing conflict and instability in Afghanistan.
+                        <br><br>
+                        Both types of flows steeply increase over time. From 2021 onwards, inward flows have a dramatic decrease, likely due to the political changes in the country and the tightening of border controls by neighboring countries.
+                    </p>
+                </div>
+            </section>
 
-        <!-- Statistics -->
-        <div id="flow-stats" class="text-center text-sm text-gray-600 mt-4">
-            <span id="outward-stat" class="mr-4"></span>
-            <span id="inward-stat"></span>
-        </div>
+            <!-- Section 5 -->
+             <section id="sec5_id" class="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-16 w-full lg:w-full fade-in-up">
+                <div class="text-center mb-12">
+                    <h3 class="text-2xl sm:text-3xl font-heading font-bold text-brand-black mb-4">
+                        Where do we go from here?
+                    </h3>
+                    <h5 class="font-bold font-heading">
+                        A more in depth analysis of South-East Asia migrations
+                    </h5>
+                    <p class="text-gray-600 max-w-2xl mx-auto my-4 text-left">
+                        The South-East Asia region is characterized by significant migration flows, both within and across national borders.
+                        These movements are driven by a variety of factors, including economic opportunities, political instability, environmental changes, and social networks.
+                        Understanding the patterns and drivers of migration in this region is crucial for policymakers, humanitarian organizations, and researchers alike.
+                        The following visualization delves into the complexities of migration in South-East Asia, shedding light on key trends and challenges.
+                    </p>
+                    <div class="section-divider w-24 mx-auto mb-6"></div>
+                </div>
 
-        <p class="text-gray-600 text-sm mt-4">
-            The flow map visualizes the movements of refugees and asylum seekers to and from Afghanistan over time.
-            Lines indicate the direction and volume of flows, with outward flows (from Afghanistan) shown in red and inward flows (to Afghanistan) in blue.
-            <br><br>
-            This visualization highlights the significant displacement caused by ongoing conflict and instability in Afghanistan.
-            <br><br>
-            Both types of flows steeply increase over time. From 2021 onwards, inward flows have a dramatic decrease, likely due to the political changes in the country and the tightening of border controls by neighboring countries.
-        </p>
-    </div>
+                <!-- Network -->
+                <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
+                    <div class="text-center">
+                        <h5 class="font-heading font-bold text-2xl">
+                            Title
+                        </h5>
+                        <h6 class="font-heading text-gray-600">
+                            Subtitle
+                        </h6>
+                    </div>
 
-    </section>
+                    <div id="network_id" class="text-center w-full h-full p-4">
+                        
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Text
+                    </p>
+                </div>
 
+
+                <!-- Sankey Diagram -->
+                <div class="bg-white rounded-lg shadow-md p-6 card center my-4">
+                    <div class="text-center">
+                        <h5 class="font-heading font-bold text-2xl">
+                            Title
+                        </h5>
+                        <h6 class="font-heading text-gray-600">
+                            Subtitle
+                        </h6>
+                    </div>
+
+                    <div id="sankey_id" class="text-center w-full h-full p-4">
+                        
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Text
+                    </p>
+                </div>
+
+
+            </section>
         </main>
-
-    <!-- Modal a schermo intero -->
-    <div 
-        id="fullscreenModal" 
-        class="fixed inset-0 bg-black bg-opacity-95 modal-backdrop hidden items-center justify-center z-50 p-4"
-        onclick="closeFullscreen()"
-    >
-        <!-- Avviso "Ruota lo schermo" per schermi stretti in portrait -->
-        <div id="rotateWarning" class="hidden md:hidden flex-col items-center justify-center text-white space-y-6">
-            <div class="rotate-animation">
-                <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M16.89 2.5c-.39-.39-1.02-.39-1.41 0L14 4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-6l1.48 1.48c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L16.89 2.5zM16 18H8V6h8v12z"/>
-                    <path d="M12 15.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"/>
-                </svg>
-            </div>
-            <p class="text-2xl font-semibold text-center">Rotate your screen</p>
-            <p class="text-sm text-gray-300 text-center max-w-xs">
-                For a better viewing experience, rotate your device to landscape mode
-            </p>
-        </div>
-
-        <!-- Contenuto SVG a schermo intero (nascosto su schermi stretti in portrait) -->
-        <div id="fullscreenContent" class="modal-content relative max-w-6xl w-full hidden md:block">
-            <!-- Pulsante chiudi -->
-            <button 
-                onclick="closeFullscreen()"
-                class="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-200 z-10"
-            >
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            
-            <!-- SVG a schermo intero -->
-            <div class="bg-white rounded-3xl shadow-2xl p-8" onclick="event.stopPropagation()">
-                <!-- Controls clonati per fullscreen -->
-                <div id="flowmap_commands_fullscreen" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-4 max-w-xl mx-auto bg-gray-50 rounded-2xl mb-6">
-                    <button 
-                        id="flowmap_play-button-fullscreen" 
-                        onclick="togglePlay()" 
-                        class="px-4 py-2 text-sm font-bold text-white bg-green-500 hover:bg-green-600 active:bg-green-700 rounded-lg shadow-sm transition-colors duration-300 cursor-pointer border-0 min-w-[100px] sm:min-w-0">
-                        ▶ Play
-                    </button>
-                    <span 
-                        id="flowmap_year-label-fullscreen" 
-                        class="text-lg font-bold text-gray-800 min-w-[60px] text-center order-first sm:order-none">
-                        2001
-                    </span>
-                    <input 
-                        type="range" 
-                        id="flowmap_year-slider-fullscreen" 
-                        class="flex-1 w-full sm:w-auto sm:max-w-[250px] h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 accent-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
-                </div>
-
-                <!-- Legend clonata -->
-                <div class="flex justify-center items-center gap-6 mb-6 text-sm flex-wrap">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-0.5" style="background-color: #cf4119;"></div>
-                        <span>Outward flows</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-0.5" style="background-color: #1f77b4;"></div>
-                        <span>Inward flows</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full" style="background-color: #ffd700; border: 1px solid #ff8c00;"></div>
-                        <span>Afghanistan</span>
-                    </div>
-                </div>
-
-                <div id="flowMap_fullscreen_id" class="text-center w-full h-full p-4">
-                    <!-- L'SVG verrà clonato qui -->
-                </div>
-            </div>
-
-        </div>
-    </div>
 
 
         <!-- Aside for navigation-->
@@ -784,6 +759,7 @@
                         <li id="sec2_id_nav"><a href="#sec2_id">A country in turmoil</a></li>
                         <li id="sec3_id_nav"><a href="#sec3_id">Afghanistan: the economic side of conflict</a></li>
                         <li id="sec4_id_nav"><a href="#sec4_id">The Geography of a Conflict</a></li>
+                        <li id="sec5_id_nav"><a href="#sec5_id">Where do we go from here?</a></li>
                     </ol>
                 </nav>
             </div>
