@@ -1,5 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
+import { sankey, sankeyLinkHorizontal } from "https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/+esm";
+
 // --- --- --- Utility --- --- --
 
 const maxChartWidth = 500; // Max width for responsive charts
@@ -2922,33 +2924,13 @@ flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600,
 // --- --- ---  Sankey --- --- ---
 
 const sankeyDataPopSrc = 'migration_year_cumulative.csv';
-const sankeyDataPop = (await d3.dsv(",", './data/section_4/' + sankeyDataPopSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-}));
+const sankeyDataPop = await d3.dsv(',', './data/section_5/' + sankeyDataPopSrc, d3.autoType);
 
 const sankeyDataGenderSrc = 'migration_year_gender.csv';
-const sankeyDataGender = (await d3.dsv(",", './data/section_4/' + sankeyDataGenderSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-  gender: d.gender,
-}));
+const sankeyDataGender = await d3.dsv(',', './data/section_5/' + sankeyDataGenderSrc, d3.autoType);
 
 const sankeyDataAgeSrc = 'migration_year_age.csv';
-const sankeyDataAge = (await d3.dsv(",", './data/section_4/' + sankeyDataAgeSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-  age_range: d.age_range,
-}));
+const sankeyDataAge = await d3.dsv(',', './data/section_5/' + sankeyDataAgeSrc, d3.autoType);
 
 const sankeyData = [sankeyDataPop, sankeyDataGender, sankeyDataAge];
 
@@ -2973,16 +2955,73 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
     .attr("class", "visualization m-auto")
     .attr("chartType", "sankey");
 
-  // Set the sankey diagram properties
-  var sankey = d3.sankey()
-      .nodeWidth(36)
-      .nodePadding(40)
-      .size([width, height]);
-
-  var path = sankey.link();
+  const sankeyGenerator = sankey()
+    .nodeWidth(15)
+    .nodePadding(10)
+    .extent([[1, 1], [maxWidth - 1, maxHeight - 6]]);
 
   return svg.node();
 }
+
+// Funzione per aggiornare il Sankey
+function updateSankey(year) {
+  d3.select("#sankey_id").selectAll("*").remove();
+  sankey_id.appendChild(drawSankey(sankeyData, 600, 450, year));
+}
+
+// Gestione animazione con play/pause e slider
+let isPlayingSankey = false;
+let animationIntervalSankey;
+
+window.togglePlaySankey = function() {
+  const playButton = document.getElementById("sankey_play-button");
+  if (!playButton) return;
+  
+  if (isPlayingSankey) {
+    // Pause
+    isPlayingSankey = false;
+    playButton.textContent = "▶ Play";
+    playButton.classList.remove("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    playButton.classList.add("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    if (animationIntervalSankey) clearInterval(animationIntervalSankey);
+  } else {
+    // Play
+    isPlayingSankey = true;
+    playButton.textContent = "⏸ Pause";
+    playButton.classList.remove("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    playButton.classList.add("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    
+    animationIntervalSankey = setInterval(() => {
+      let currentIndex = parseInt(yearSliderSankey.value);
+      currentIndex = (currentIndex + 1) % availableYears.length;
+      yearSliderSankey.value = currentIndex;
+      const year = availableYears[currentIndex];
+      yearLabelSankey.textContent = year;
+      updateSankey(year);
+    }, 2000);
+  }
+}
+
+// Event listener per lo slider
+if (yearSliderFlow) {
+  yearSliderFlow.addEventListener("input", function() {
+    const year = availableYears[parseInt(this.value)];
+    yearLabelSankey.textContent = year;
+    updateSankey(year);
+    
+    // Ferma l'animazione quando l'utente muove lo slider manualmente
+    if (isPlayingSankey) {
+      togglePlaySankey();
+    }
+  });
+}
+
+// Draw the sankey iniziale
+const initialYearSankey = 2001;
+const initialIndexSankey = availableYears.indexOf(initialYearSankey);
+if (yearSliderSankey) yearSliderSankey.value = initialIndexSankey;
+if (yearLabelSankey) yearLabelSankey.textContent = initialYearSankey;
+sankey_id.appendChild(drawSankey(sankeyData, 600, 450, initialYearSankey));
 
 // --- --- --- Thumbnails --- --- ---
 
