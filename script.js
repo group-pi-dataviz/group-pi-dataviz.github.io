@@ -2923,16 +2923,9 @@ flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600,
 
 // --- --- ---  Sankey --- --- ---
 
-const sankeyDataPopSrc = 'migration_year_cumulative.csv';
-const sankeyDataPop = await d3.dsv(',', './data/section_5/' + sankeyDataPopSrc, d3.autoType);
-
-const sankeyDataGenderSrc = 'migration_year_gender.csv';
-const sankeyDataGender = await d3.dsv(',', './data/section_5/' + sankeyDataGenderSrc, d3.autoType);
-
-const sankeyDataAgeSrc = 'migration_year_age.csv';
-const sankeyDataAge = await d3.dsv(',', './data/section_5/' + sankeyDataAgeSrc, d3.autoType);
-
-const sankeyData = [sankeyDataPop, sankeyDataGender, sankeyDataAge];
+// data in format: asylum_location_code(country_id), gender, age_range, population, year
+const sankeyDataSrc = 'afghanistan_migration_data_noageall.csv';
+const sankeyData = await d3.dsv(',', './data/section_5/' + sankeyDataSrc, d3.autoType);
 
 // Ottieni gli anni disponibili e ordinali: we already have the constant: `availableYears `
 // Inizializza lo slider
@@ -2955,10 +2948,82 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
     .attr("class", "visualization m-auto")
     .attr("chartType", "sankey");
 
+  // The sankey goes from gender to country to age_range
   const sankeyGenerator = sankey()
     .nodeWidth(15)
     .nodePadding(10)
     .extent([[1, 1], [maxWidth - 1, maxHeight - 6]]);
+
+  // Filter data for the selected year
+  const filteredData = sankeyData.filter(d => d.year === year);
+  const graph = { nodes: [], links: [] };
+
+  // Create nodes and links
+  const nodeMap = new Map();
+  filteredData.forEach(d => {
+    const genderNode = `Gender: ${d.gender}`;
+    const countryNode = `Country: ${d.asylum_location_code}`;
+    const ageNode = `Age: ${d.age_range}`;
+    if (!nodeMap.has(genderNode)) {
+      nodeMap.set(genderNode, { name: genderNode });
+      graph.nodes.push(nodeMap.get(genderNode));
+    }
+    if (!nodeMap.has(countryNode)) {
+      nodeMap.set(countryNode, { name: countryNode });
+      graph.nodes.push(nodeMap.get(countryNode));
+    }
+    if (!nodeMap.has(ageNode)) {
+      nodeMap.set(ageNode, { name: ageNode });
+      graph.nodes.push(nodeMap.get(ageNode));
+    }
+    // use node references for source/target to avoid name-based lookup errors
+    graph.links.push({
+      source: nodeMap.get(genderNode),
+      target: nodeMap.get(countryNode),
+      value: d.population
+    });
+    graph.links.push({
+      source: nodeMap.get(countryNode),
+      target: nodeMap.get(ageNode),
+      value: d.population
+    });
+  });
+
+  sankeyGenerator(graph);
+
+  // Draw links
+  svg.append("g")
+    .selectAll("path")
+    .data(graph.links)
+    .enter()
+    .append("path")
+    .attr("d", sankeyLinkHorizontal())
+    .attr("fill", "none")
+    .attr("stroke", "#69b3a2")
+    .attr("stroke-width", d => Math.max(1, d.width))
+    .attr("opacity", 0.5);
+  // Draw nodes
+  const node = svg.append("g")
+    .selectAll("g")
+    .data(graph.nodes)
+    .enter()
+    .append("g");
+  node.append("rect")
+    .attr("x", d => d.x0)
+    .attr("y", d => d.y0)
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("fill", "#404080")
+    .attr("stroke", "#000");
+  node.append("text")
+    .attr("x", d => d.x0 - 6)
+    .attr("y", d => (d.y1 + d.y0) / 2)
+    .attr("dy", "0.35em")
+    .attr("text-anchor", "end")
+    .text(d => d.name)
+    .filter(d => d.x0 < maxWidth / 2)
+    .attr("x", d => d.x1 + 6)
+    .attr("text-anchor", "start");
 
   return svg.node();
 }
@@ -3003,8 +3068,8 @@ window.togglePlaySankey = function() {
 }
 
 // Event listener per lo slider
-if (yearSliderFlow) {
-  yearSliderFlow.addEventListener("input", function() {
+if (yearSliderSankey) {
+  yearSliderSankey.addEventListener("input", function() {
     const year = availableYears[parseInt(this.value)];
     yearLabelSankey.textContent = year;
     updateSankey(year);
