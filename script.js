@@ -3084,17 +3084,170 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
     .enter()
     .append("g");
 
+    // assign unique colors for age nodes and ensure their links use the same color
+    const ageNames = graph.nodes
+    .filter(n => typeof n.name === 'string' && n.name.startsWith('Age: '))
+    .map(n => n.name);
+    
+    // fallback palette (enough distinct colors for typical age buckets)
+    const palette = d3.schemeCategory10;
+    const ageColorScale = d3.scaleOrdinal().domain(ageNames).range(palette);
+    
+    const ageColorMap = new Map(ageNames.map(name => [name, ageColorScale(name)]));
+    
+    const nodeColor = d => {
+      if (d && typeof d.name === 'string' && d.name.startsWith('Age: ')) {
+        return ageColorMap.get(d.name) || '#2c5f8d';
+      }
+      return d.name === 'Male' ? '#3498db'
+            : d.name === 'Female' ? '#ff6b8a'
+            : '#2c5f8d';
+    };
+
+  // stroke for nodes (keep Male/Female behavior, make age nodes darker variant)
+  const nodeStroke = d => {
+    if (d && typeof d.name === 'string' && d.name.startsWith('Age: ')) {
+      const c = ageColorMap.get(d.name) || '#2c5f8d';
+      return d3.color(c).darker(1).toString();
+    }
+    return d.name === 'Male' ? '#1f4fb3'
+         : d.name === 'Female' ? '#9b2b3a'
+         : '#1a3a52';
+  };
+
+  // After nodes/links are appended (they're created later in the same function),
+  // apply colors so each age node and its associated links share the same color.
+  // Use a microtask so this runs after the DOM elements are created.
+  setTimeout(() => {
+    // color age node rects
+    svg.selectAll("g")
+      .filter(d => d && typeof d.name === 'string' && d.name.startsWith('Age: '))
+      .select("rect")
+      .attr("fill", d => ageColorMap.get(d.name))
+      .attr("stroke", d => d3.color(ageColorMap.get(d.name)).darker(1).toString())
+      .attr("data-default-fill", d => ageColorMap.get(d.name))
+      .attr("data-default-stroke", d => d3.color(ageColorMap.get(d.name)).darker(1).toString());
+
+    // color links: prefer target age-node color, otherwise source age-node color
+    svg.selectAll("path")
+      .filter(d => d && d.source && d.target)
+      .attr("stroke", d => {
+        if (d.target && d.target.name && d.target.name.startsWith('Age: '))
+          return ageColorMap.get(d.target.name);
+        if (d.source && d.source.name && d.source.name.startsWith('Age: '))
+          return ageColorMap.get(d.source.name);
+        // fallback to existing scheme if neither end is an age node
+        return (d.source && d.source.name === 'Male') ? '#3498db'
+             : (d.source && d.source.name === 'Female') ? '#ff6b8a'
+             : '#ccc';
+      })
+      .attr("opacity", d => {
+        // slightly stronger visibility for colored age links
+        if ((d.target && d.target.name && d.target.name.startsWith('Age: ')) ||
+            (d.source && d.source.name && d.source.name.startsWith('Age: '))) {
+          return 0.7;
+        }
+        return 0.4;
+      });
+  }, 0);
+
   node.append("rect")
     .attr("x", d => d.x0)
     .attr("y", d => d.y0)
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0)
-    .attr("fill", "#2c5f8d")
-    .attr("stroke", "#1a3a52")
+    .attr("fill", d => nodeColor(d))
+    .attr("stroke", d => nodeStroke(d))
     .attr("stroke-width", 2)
     .attr("rx", 3)
     .style("cursor", "pointer")
-    .style("transition", "all 0.2s ease");
+    .style("transition", "all 0.2s ease")
+    .attr("data-default-fill", d => nodeColor(d))
+    .attr("data-default-stroke", d => nodeStroke(d));
+
+  // color links by their source (Male => blue, Female => pink/red, else grey)
+  const linkColor = d => {
+    if (d.target && d.target.name && d.target.name.startsWith('Age: '))
+      return ageColorMap.get(d.target.name);
+    return (d.source && d.source.name === 'Male') ? '#3498db'
+          : (d.source && d.source.name === 'Female') ? '#ff6b8a'
+          : '#ccc';
+  };
+
+  links.attr("stroke", d => linkColor(d));
+
+  // Rebind interaction handlers after the rest of the Sankey setup to preserve our colors.
+  // Use setTimeout(0) so this runs replacing any handlers defined later in the function.
+  setTimeout(() => {
+    // Links: preserve colored stroke on mouseout
+    links
+      .on("mouseover", function(event, d) {
+        const value = d.value.toLocaleString();
+        const sourceName = d.source.name;
+        const targetName = d.target.name;
+
+        tooltip
+          .html(`
+            <strong>${sourceName} → ${targetName}</strong><br>
+            Population: ${value}
+          `)
+          .style("opacity", 1);
+
+        d3.select(this)
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.8);
+
+        // Gray out other links but keep their base color for later restore
+        links.filter(link => link !== d)
+          .attr("opacity", 0.1);
+      })
+      .on("mousemove", function(event) {
+        positionTooltip(event);
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        links
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.4);
+      });
+
+    // Nodes: ensure mouseout restores node to its original color (Male/Female/other)
+    node.select("rect")
+      .on("mouseover", function(event, d) {
+        const totalIn = d.targetLinks ? d3.sum(d.targetLinks, l => l.value) : 0;
+        const totalOut = d.sourceLinks ? d3.sum(d.sourceLinks, l => l.value) : 0;
+
+        let tooltipContent = `<strong>${d.name}</strong><br>`;
+        if (totalIn > 0) tooltipContent += `Incoming: ${totalIn.toLocaleString()}<br/>`;
+        if (totalOut > 0) tooltipContent += `Outgoing: ${totalOut.toLocaleString()}`;
+
+        tooltip
+          .html(tooltipContent)
+          .style("opacity", 1);
+
+        const connectedLinks = [...(d.sourceLinks || []), ...(d.targetLinks || [])];
+        links
+          .attr("stroke", link => connectedLinks.includes(link) ? linkColor(link) : "#69b3a2")
+          .attr("opacity", link => connectedLinks.includes(link) ? 0.8 : 0.1);
+
+        // brighten node fill on hover
+        const base = d3.color(nodeColor(d));
+        const hoverFill = base ? base.brighter(0.7).toString() : "#4a8fc7";
+        d3.select(this).attr("fill", hoverFill);
+      })
+      .on("mousemove", function(event) {
+        positionTooltip(event);
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        // restore links and node fills to their base colors
+        links
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.4);
+
+        node.select("rect").attr("fill", d => nodeColor(d));
+      });
+  }, 0);
 
   // Add text labels with better positioning
   node.append("text")
