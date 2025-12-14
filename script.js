@@ -3559,6 +3559,84 @@ data.forEach(function(d) {
     }
 });
 
+  //add arrow legend on the center right
+  const legendX = 480;
+  const legendY = 170;
+  const legend = svg.append("g")
+      .attr("class", "legend")
+      .attr("transform", `translate(${legendX},${legendY})`);
+  //orange arrow, west -> east
+  legend.append("path")
+      .attr("d", "M0,0 L100,0")
+      .attr("fill", "none")
+      .attr("stroke", "orange")
+      .attr("stroke-opacity", 0.6)
+      .attr("stroke-width", 5)
+      .attr("marker-end", "url(#arrowhead-orange)");
+  legend.append("text")
+      .attr("x", 0)
+      .attr("y", 15)
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "12px")
+      .text("Eastward migrations");
+
+  //purple arrow, east -> west
+  legend.append("path")
+      .attr("d", "M110,40 L10,40")
+      .attr("fill", "none")
+      .attr("stroke", "purple")
+      .attr("stroke-opacity", 0.6)
+      .attr("stroke-width", 5)
+      .attr("marker-end", "url(#arrowhead-purple)");
+  legend.append("text")
+      .attr("x", 0)
+      .attr("y", 55)
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "12px")
+      .text("Westward migrations");
+
+
+  //pie legends
+  const pieLegendX = 480;
+  const pieLegendY = 250;
+  const pieLegend = svg.append("g")
+      .attr("class", "pie-legend")
+      .attr("transform", `translate(${pieLegendX},${pieLegendY})`);
+  //red arc
+  pieLegend.append("path")
+      .attr("d", d3.arc()({
+        innerRadius: 6,
+        outerRadius: 10,
+        startAngle: 0,
+        endAngle: Math.PI * 2 / 3
+      }))
+      .attr("fill", "red")
+      .attr("fill-opacity", 0.8);
+  pieLegend.append("text")
+      .attr("x", 15)
+      .attr("y", 5)
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "12px")
+      .text("Outgoing migrants");
+
+  //blue arc
+  pieLegend.append("path")
+      .attr("transform", "translate(0,30)")
+      .attr("d", d3.arc()({
+        innerRadius: 6,
+        outerRadius: 10,
+        startAngle: Math.PI * 2 / 3,
+        endAngle: 2 * Math.PI
+      }))
+      .attr("fill", "blue")
+      .attr("fill-opacity", 0.8);
+  pieLegend.append("text")
+      .attr("x", 15)
+      .attr("y", 35)
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "12px")
+      .text("Incoming migrants");
+
   //draw centroids only if either incoming or outgoing migrants are not 0, use colors
   const countryNodes = geoData.features.map(f => {
     const countryCode = f.id;
@@ -3586,9 +3664,10 @@ data.forEach(function(d) {
           .attr("class", "outgoing-arc")
           .attr("d", d => {
             const endAngle = Math.PI * 2 * (d.outgoing / (d.outgoing + d.incoming));
+
             console.log(d.id, endAngle);
             return d3.arc()({
-              innerRadius: 4,
+              innerRadius: 6,
               outerRadius: 10,
               startAngle: 0,
               endAngle: endAngle
@@ -3611,7 +3690,7 @@ data.forEach(function(d) {
             const startAngle = Math.PI * 2* (d.outgoing / (d.outgoing + d.incoming));
 
             return d3.arc()({
-              innerRadius: 4,
+              innerRadius: 6,
               outerRadius: 10,
               startAngle: startAngle,
               endAngle: 2 * Math.PI
