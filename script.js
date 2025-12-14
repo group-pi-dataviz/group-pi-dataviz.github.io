@@ -1,5 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
+import { sankey, sankeyLinkHorizontal } from "https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/+esm";
+
 // --- --- --- Utility --- --- --
 
 const maxChartWidth = 500; // Max width for responsive charts
@@ -2921,36 +2923,9 @@ flowMap_id.appendChild(drawflowMap(flowMapData, worldGeoData, countryCodes, 600,
 
 // --- --- ---  Sankey --- --- ---
 
-const sankeyDataPopSrc = 'migration_year_cumulative.csv';
-const sankeyDataPop = (await d3.dsv(",", './data/section_4/' + sankeyDataPopSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-}));
-
-const sankeyDataGenderSrc = 'migration_year_gender.csv';
-const sankeyDataGender = (await d3.dsv(",", './data/section_4/' + sankeyDataGenderSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-  gender: d.gender,
-}));
-
-const sankeyDataAgeSrc = 'migration_year_age.csv';
-const sankeyDataAge = (await d3.dsv(",", './data/section_4/' + sankeyDataAgeSrc))
-.map(d => ({
-  year: +d.year,
-  origin_location_code: d.origin_location_code,
-  asylum_location_code: d.asylum_location_code,
-  population: +d.population,
-  age_range: d.age_range,
-}));
-
-const sankeyData = [sankeyDataPop, sankeyDataGender, sankeyDataAge];
+// data in format: year, country_name, total_population, gender, age_range, population
+const sankeyDataSrc = 'top_5_countries_migrations.csv';
+const sankeyData = await d3.dsv(',', './data/section_5/' + sankeyDataSrc, d3.autoType);
 
 // Ottieni gli anni disponibili e ordinali: we already have the constant: `availableYears `
 // Inizializza lo slider
@@ -2973,16 +2948,475 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
     .attr("class", "visualization m-auto")
     .attr("chartType", "sankey");
 
-  // Set the sankey diagram properties
-  var sankey = d3.sankey()
-      .nodeWidth(36)
-      .nodePadding(40)
-      .size([width, height]);
+  // The sankey goes from gender to country to age_range
+  const sankeyGenerator = sankey()
+    .nodeWidth(28)
+    .nodePadding(18)
+    .extent([[100, 25], [maxWidth - 100, maxHeight - 25]]);
 
-  var path = sankey.link();
+  // Filter data for the selected year
+  const filteredData = sankeyData.filter(d => d.year === year);
+  
+  // Normalize gender labels
+  filteredData.forEach(d => {
+    if (d.gender === 'm') d.gender = 'Male';
+    if (d.gender === 'f') d.gender = 'Female';
+  });
+
+  const graph = { nodes: [], links: [] };
+  const nodeMap = new Map();
+
+  // Helper to get or create node
+  function getOrCreateNode(name) {
+    if (!nodeMap.has(name)) {
+      const node = { name: name };
+      nodeMap.set(name, node);
+      graph.nodes.push(node);
+    }
+    return nodeMap.get(name);
+  }
+
+  // STEP 1: Aggregate Gender → Country flows (groupby gender, country_name)
+  const genderToCountry = d3.rollup(
+    filteredData,
+    v => d3.sum(v, d => d.population),
+    d => d.gender,
+    d => d.country_name
+  );
+
+  // Create links for Gender → Country
+  genderToCountry.forEach((countries, gender) => {
+    const genderNode = getOrCreateNode(gender);
+    countries.forEach((population, country) => {
+      const countryNode = getOrCreateNode(country);
+      graph.links.push({
+        source: genderNode,
+        target: countryNode,
+        value: population
+      });
+    });
+  });
+
+  // STEP 2: Aggregate Country → Age Range flows (groupby country_name, age_range)
+  const countryToAge = d3.rollup(
+    filteredData,
+    v => d3.sum(v, d => d.population),
+    d => d.country_name,
+    d => d.age_range
+  );
+
+  // Create links for Country → Age Range
+  countryToAge.forEach((ageRanges, country) => {
+    const countryNode = getOrCreateNode(country);
+    ageRanges.forEach((population, ageRange) => {
+      const ageNode = getOrCreateNode(`Age: ${ageRange}`);
+      graph.links.push({
+        source: countryNode,
+        target: ageNode,
+        value: population
+      });
+    });
+  });
+
+  sankeyGenerator(graph);
+
+  // Create tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".sankey-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "sankey-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("opacity", 0);
+
+  // Position helper
+  function positionTooltip(event, offsetX = 12, offsetY = 12) {
+    const pageX = event.pageX;
+    const pageY = event.pageY;
+
+    const node = tooltip.node();
+    if (!node) return;
+
+    let left = pageX + offsetX;
+    let top = pageY + offsetY;
+
+    const rect = node.getBoundingClientRect();
+    const tw = rect.width;
+    const th = rect.height;
+    const scrollX = window.pageXOffset;
+    const scrollY = window.pageYOffset;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    if (left + tw > scrollX + vw - 8) {
+      left = pageX - offsetX - tw;
+    }
+    if (top + th > scrollY + vh - 8) {
+      top = pageY - offsetY - th;
+    }
+
+    tooltip.style("left", left + "px").style("top", top + "px");
+  }
+
+  // Draw links with gray default, colored on hover
+  const links = svg.append("g")
+    .selectAll("path")
+    .data(graph.links)
+    .enter()
+    .append("path")
+    .attr("d", sankeyLinkHorizontal())
+    .attr("fill", "none")
+    .attr("stroke", "#ccc")
+    .attr("stroke-width", d => Math.max(1, d.width))
+    .attr("opacity", 0.4)
+    .style("transition", "all 0.2s ease");
+
+  // Draw nodes
+  const node = svg.append("g")
+    .selectAll("g")
+    .data(graph.nodes)
+    .enter()
+    .append("g");
+
+    // assign unique colors for age nodes and ensure their links use the same color
+    const ageNames = graph.nodes
+    .filter(n => typeof n.name === 'string' && n.name.startsWith('Age: '))
+    .map(n => n.name);
+    
+    // fallback palette (enough distinct colors for typical age buckets)
+    const palette = d3.schemeCategory10;
+    const ageColorScale = d3.scaleOrdinal().domain(ageNames).range(palette);
+    
+    const ageColorMap = new Map(ageNames.map(name => [name, ageColorScale(name)]));
+    
+    const nodeColor = d => {
+      if (d && typeof d.name === 'string' && d.name.startsWith('Age: ')) {
+        return ageColorMap.get(d.name) || '#2c5f8d';
+      }
+      return d.name === 'Male' ? '#3498db'
+            : d.name === 'Female' ? '#ff6b8a'
+            : '#2c5f8d';
+    };
+
+  // stroke for nodes (keep Male/Female behavior, make age nodes darker variant)
+  const nodeStroke = d => {
+    if (d && typeof d.name === 'string' && d.name.startsWith('Age: ')) {
+      const c = ageColorMap.get(d.name) || '#2c5f8d';
+      return d3.color(c).darker(1).toString();
+    }
+    return d.name === 'Male' ? '#1f4fb3'
+         : d.name === 'Female' ? '#9b2b3a'
+         : '#1a3a52';
+  };
+
+  // After nodes/links are appended (they're created later in the same function),
+  // apply colors so each age node and its associated links share the same color.
+  // Use a microtask so this runs after the DOM elements are created.
+  setTimeout(() => {
+    // color age node rects
+    svg.selectAll("g")
+      .filter(d => d && typeof d.name === 'string' && d.name.startsWith('Age: '))
+      .select("rect")
+      .attr("fill", d => ageColorMap.get(d.name))
+      .attr("stroke", d => d3.color(ageColorMap.get(d.name)).darker(1).toString())
+      .attr("data-default-fill", d => ageColorMap.get(d.name))
+      .attr("data-default-stroke", d => d3.color(ageColorMap.get(d.name)).darker(1).toString());
+
+    // color links: prefer target age-node color, otherwise source age-node color
+    svg.selectAll("path")
+      .filter(d => d && d.source && d.target)
+      .attr("stroke", d => {
+        if (d.target && d.target.name && d.target.name.startsWith('Age: '))
+          return ageColorMap.get(d.target.name);
+        if (d.source && d.source.name && d.source.name.startsWith('Age: '))
+          return ageColorMap.get(d.source.name);
+        // fallback to existing scheme if neither end is an age node
+        return (d.source && d.source.name === 'Male') ? '#3498db'
+             : (d.source && d.source.name === 'Female') ? '#ff6b8a'
+             : '#ccc';
+      })
+      .attr("opacity", d => {
+        // slightly stronger visibility for colored age links
+        if ((d.target && d.target.name && d.target.name.startsWith('Age: ')) ||
+            (d.source && d.source.name && d.source.name.startsWith('Age: '))) {
+          return 0.7;
+        }
+        return 0.4;
+      });
+  }, 0);
+
+  node.append("rect")
+    .attr("x", d => d.x0)
+    .attr("y", d => d.y0)
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("fill", d => nodeColor(d))
+    .attr("stroke", d => nodeStroke(d))
+    .attr("stroke-width", 2)
+    .attr("rx", 3)
+    .style("cursor", "pointer")
+    .style("transition", "all 0.2s ease")
+    .attr("data-default-fill", d => nodeColor(d))
+    .attr("data-default-stroke", d => nodeStroke(d));
+
+  // color links by their source (Male => blue, Female => pink/red, else grey)
+  const linkColor = d => {
+    if (d.target && d.target.name && d.target.name.startsWith('Age: '))
+      return ageColorMap.get(d.target.name);
+    return (d.source && d.source.name === 'Male') ? '#3498db'
+          : (d.source && d.source.name === 'Female') ? '#ff6b8a'
+          : '#ccc';
+  };
+
+  links.attr("stroke", d => linkColor(d));
+
+  // Rebind interaction handlers after the rest of the Sankey setup to preserve our colors.
+  // Use setTimeout(0) so this runs replacing any handlers defined later in the function.
+  setTimeout(() => {
+    // Links: preserve colored stroke on mouseout
+    links
+      .on("mouseover", function(event, d) {
+        const value = d.value.toLocaleString();
+        const sourceName = d.source.name;
+        const targetName = d.target.name;
+
+        tooltip
+          .html(`
+            <strong>${sourceName} → ${targetName}</strong><br>
+            Population: ${value}
+          `)
+          .style("opacity", 1);
+
+        d3.select(this)
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.8);
+
+        // Gray out other links but keep their base color for later restore
+        links.filter(link => link !== d)
+          .attr("opacity", 0.1);
+      })
+      .on("mousemove", function(event) {
+        positionTooltip(event);
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        links
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.4);
+      });
+
+    // Nodes: ensure mouseout restores node to its original color (Male/Female/other)
+    node.select("rect")
+      .on("mouseover", function(event, d) {
+        const totalIn = d.targetLinks ? d3.sum(d.targetLinks, l => l.value) : 0;
+        const totalOut = d.sourceLinks ? d3.sum(d.sourceLinks, l => l.value) : 0;
+
+        let tooltipContent = `<strong>${d.name}</strong><br>`;
+        if (totalIn > 0) tooltipContent += `Incoming: ${totalIn.toLocaleString()}<br/>`;
+        if (totalOut > 0) tooltipContent += `Outgoing: ${totalOut.toLocaleString()}`;
+
+        tooltip
+          .html(tooltipContent)
+          .style("opacity", 1);
+
+        const connectedLinks = [...(d.sourceLinks || []), ...(d.targetLinks || [])];
+        links
+          .attr("stroke", link => connectedLinks.includes(link) ? linkColor(link) : "#69b3a2")
+          .attr("opacity", link => connectedLinks.includes(link) ? 0.8 : 0.1);
+
+        // brighten node fill on hover
+        const base = d3.color(nodeColor(d));
+        const hoverFill = base ? base.brighter(0.7).toString() : "#4a8fc7";
+        d3.select(this).attr("fill", hoverFill);
+      })
+      .on("mousemove", function(event) {
+        positionTooltip(event);
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        // restore links and node fills to their base colors
+        links
+          .attr("stroke", l => linkColor(l))
+          .attr("opacity", 0.4);
+
+        node.select("rect").attr("fill", d => nodeColor(d));
+      });
+  }, 0);
+
+  // Add text labels with better positioning
+  node.append("text")
+    .attr("x", d => {
+      // Position based on which third of the chart the node is in
+      if (d.x0 < maxWidth / 3) {
+        return d.x0 - 10;
+      } else if (d.x0 > 2 * maxWidth / 3) {
+        return d.x1 + 10;
+      } else {
+        return (d.x0 + d.x1) / 2;
+      }
+    })
+    .attr("y", d => (d.y1 + d.y0) / 2)
+    .attr("dy", "0.35em")
+    .attr("text-anchor", d => {
+      if (d.x0 < maxWidth / 3) return "end";
+      if (d.x0 > 2 * maxWidth / 3) return "start";
+      return "middle";
+    })
+    .attr("font-size", "12px")
+    .attr("font-weight", "700")
+    .attr("fill", "#1a1a1a")
+    .attr("stroke", "#ffffff")
+    .attr("stroke-width", "3px")
+    .attr("paint-order", "stroke")
+    .text(d => d.name)
+    .style("pointer-events", "none");
+
+  // Add interactivity to links
+  links
+    .on("mouseover", function(event, d) {
+      const value = d.value.toLocaleString();
+      const sourceName = d.source.name;
+      const targetName = d.target.name;
+
+      tooltip
+        .html(`
+          <strong>${sourceName} → ${targetName}</strong><br>
+          Population: ${value}
+        `)
+        .style("opacity", 1);
+
+      // Highlight this link
+      d3.select(this)
+        .attr("stroke", "#69b3a2")
+        .attr("opacity", 0.8);
+
+      // Gray out other links
+      links.filter(link => link !== d)
+        .attr("opacity", 0.1);
+    })
+    .on("mousemove", function(event) {
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      
+      // Restore all links
+      links
+        .attr("stroke", "#ccc")
+        .attr("opacity", 0.4);
+    });
+
+  // Add interactivity to nodes
+  node.select("rect")
+    .on("mouseover", function(event, d) {
+      const totalIn = d.targetLinks ? d3.sum(d.targetLinks, l => l.value) : 0;
+      const totalOut = d.sourceLinks ? d3.sum(d.sourceLinks, l => l.value) : 0;
+
+      let tooltipContent = `<strong>${d.name}</strong><br>`;
+      if (totalIn > 0) {
+        tooltipContent += `Incoming: ${totalIn.toLocaleString()}<br>`;
+      }
+      if (totalOut > 0) {
+        tooltipContent += `Outgoing: ${totalOut.toLocaleString()}`;
+      }
+
+      tooltip
+        .html(tooltipContent)
+        .style("opacity", 1);
+
+      // Highlight connected links
+      const connectedLinks = [...(d.sourceLinks || []), ...(d.targetLinks || [])];
+      links
+        .attr("stroke", link => connectedLinks.includes(link) ? "#69b3a2" : "#ccc")
+        .attr("opacity", link => connectedLinks.includes(link) ? 0.8 : 0.1);
+
+      // Highlight this node
+      d3.select(this)
+        .attr("fill", "#4a8fc7");
+    })
+    .on("mousemove", function(event) {
+      positionTooltip(event);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      
+      // Restore all elements
+      links
+        .attr("stroke", "#ccc")
+        .attr("opacity", 0.4);
+      
+      node.select("rect")
+        .attr("fill", "#2c5f8d");
+    });
 
   return svg.node();
 }
+
+// Funzione per aggiornare il Sankey
+function updateSankey(year) {
+  d3.select("#sankey_id").selectAll("*").remove();
+  sankey_id.appendChild(drawSankey(sankeyData, 600, 450, year));
+}
+
+// Gestione animazione con play/pause e slider
+let isPlayingSankey = false;
+let animationIntervalSankey;
+
+window.togglePlaySankey = function() {
+  const playButton = document.getElementById("sankey_play-button");
+  if (!playButton) return;
+  
+  if (isPlayingSankey) {
+    // Pause
+    isPlayingSankey = false;
+    playButton.textContent = "▶ Play";
+    playButton.classList.remove("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    playButton.classList.add("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    if (animationIntervalSankey) clearInterval(animationIntervalSankey);
+  } else {
+    // Play
+    isPlayingSankey = true;
+    playButton.textContent = "⏸ Pause";
+    playButton.classList.remove("bg-green-500", "hover:bg-green-600", "active:bg-green-700");
+    playButton.classList.add("bg-red-500", "hover:bg-red-600", "active:bg-red-700");
+    
+    animationIntervalSankey = setInterval(() => {
+      let currentIndex = parseInt(yearSliderSankey.value);
+      currentIndex = (currentIndex + 1) % availableYears.length;
+      yearSliderSankey.value = currentIndex;
+      const year = availableYears[currentIndex];
+      yearLabelSankey.textContent = year;
+      updateSankey(year);
+    }, 2000);
+  }
+}
+
+// Event listener per lo slider
+if (yearSliderSankey) {
+  yearSliderSankey.addEventListener("input", function() {
+    const year = availableYears[parseInt(this.value)];
+    yearLabelSankey.textContent = year;
+    updateSankey(year);
+    
+    // Ferma l'animazione quando l'utente muove lo slider manualmente
+    if (isPlayingSankey) {
+      togglePlaySankey();
+    }
+  });
+}
+
+// Draw the sankey iniziale
+const initialYearSankey = 2001;
+const initialIndexSankey = availableYears.indexOf(initialYearSankey);
+if (yearSliderSankey) yearSliderSankey.value = initialIndexSankey;
+if (yearLabelSankey) yearLabelSankey.textContent = initialYearSankey;
+sankey_id.appendChild(drawSankey(sankeyData, 600, 450, initialYearSankey));
 
 // --- --- --- Network --- --- ---
 
