@@ -3665,7 +3665,6 @@ data.forEach(function(d) {
           .attr("d", d => {
             const endAngle = Math.PI * 2 * (d.outgoing / (d.outgoing + d.incoming));
 
-            console.log(d.id, endAngle);
             return d3.arc()({
               innerRadius: 6,
               outerRadius: 10,
