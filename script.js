@@ -2984,6 +2984,127 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
   return svg.node();
 }
 
+// --- --- --- Network --- --- ---
+
+const apacGeodataSrc = 'world.json';
+const apacGeoData = await d3.json('./json/' + apacGeodataSrc);
+
+const networkDataSrc = 'apac_migration_data.csv';
+const networkData = (await d3.dsv(",", './data/section_5/' + networkDataSrc))
+.filter(d => d.year === '2020');
+// .map(d => ({
+//   origin_location_code: d.origin_location_code,
+//   destination_country: d.asylum_location_code,
+//   migrants: +d.population,
+// }));
+
+function drawNetwork(geoData, data) {
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, 600, 450])
+    .attr("class", "visualization m-auto")
+    .attr("chartType", "network");
+    
+  const projection = d3.geoMercator()
+    .scale(350)
+    .translate([250, 225])
+    .center([100, 20]);
+
+  const path = d3.geoPath().projection(projection);
+
+  svg.append("g")
+    .selectAll("path")
+    .data(geoData.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("fill", "#e0e0e0")
+    .attr("stroke", "#999")
+    .attr("stroke-width", 0.5);
+
+  //draw centroids
+  svg.append("g")
+    .selectAll("circle")
+    .data(geoData.features)
+    .enter()
+    .append("circle")
+    .attr("cx", function(d) {
+      return projection(d3.geoCentroid(d))[0];
+    })
+    .attr("cy", function(d) {
+      return projection(d3.geoCentroid(d))[1];
+    })
+    .attr("r", 10)
+    .attr("fill", "#333")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 0.5)
+    .style("opacity", 0.6);
+
+  //hover country name tooltip
+  const tooltip = d3.select("body").select(".network-tooltip").empty() 
+    ? d3.select("body").append("div").attr("class", "network-tooltip")
+    : d3.select("body").select(".network-tooltip");
+  tooltip.style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "rgba(0, 0, 0, 0.9)")
+    .style("color", "white")
+    .style("padding", "10px 14px")
+    .style("border-radius", "6px")
+    .style("font-size", "13px")
+    .style("pointer-events", "none")
+    .style("z-index", "1000");
+  svg.selectAll("circle")
+
+    .on("mouseover", function(event, d) {
+      const countryName = d.properties.name;
+      tooltip.style("visibility", "visible")
+        .html(`<strong>${countryName}</strong>`);
+    })
+    .on("mousemove", function(event) {
+      tooltip.style("top", (event.pageY - 10) + "px")
+        .style("left", (event.pageX + 10) + "px");
+    })
+    .on("mouseout", function(event, d) {
+      tooltip.style("visibility", "hidden");
+    });
+
+
+  //draw arrows for each adjacent pair
+  const arrowsGroup = svg.append("g")
+    .attr("class", "arrows-group");
+
+  data.forEach(function(d) { 
+    const originFeature = geoData.features.find(function(feature) {
+      // console.log("Checking feature id:", feature.id, "against origin code:", d.origin_location_code);
+      return feature.id === d.origin_location_code;
+    });
+    const destFeature = geoData.features.find(function(feature) {
+      return feature.id === d.asylum_location_code;
+    });
+    console.log("Origin:", d.origin_location_code, "Dest:", d.asylum_location_code, "Migrants:", d.population);
+    console.log("Origin Feature:", originFeature ? originFeature.properties.name : "Not found");
+    console.log("Dest Feature:", destFeature ? destFeature.properties.name : "Not found");
+    if (originFeature && destFeature) {
+      const originCentroid = projection(d3.geoCentroid(originFeature));
+      const destCentroid = projection(d3.geoCentroid(destFeature));
+      arrowsGroup.append("line")
+        .attr("x1", originCentroid[0])
+        .attr("y1", originCentroid[1])
+        .attr("x2", destCentroid[0])
+        .attr("y2", destCentroid[1])
+        .attr("stroke", "red")
+        .attr("stroke-width", Math.max(1, Math.log(d.population) / 2))
+        .attr("marker-end", "url(#arrowhead)");
+    }
+  });
+
+  
+
+  return svg.node();
+}
+
+network_id.appendChild(drawNetwork(apacGeoData, networkData));
+
+
 // --- --- --- Thumbnails --- --- ---
 
 function computeNavScale() {
