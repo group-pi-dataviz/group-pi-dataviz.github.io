@@ -3216,10 +3216,10 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
       .on("mouseover", function(event, d) {
         const totalIn = d.targetLinks ? d3.sum(d.targetLinks, l => l.value) : 0;
         const totalOut = d.sourceLinks ? d3.sum(d.sourceLinks, l => l.value) : 0;
-
+        let total = totalIn > 0 ? totalIn : totalOut;
+        
         let tooltipContent = `<strong>${d.name}</strong><br>`;
-        if (totalIn > 0) tooltipContent += `Incoming: ${totalIn.toLocaleString()}<br/>`;
-        if (totalOut > 0) tooltipContent += `Outgoing: ${totalOut.toLocaleString()}`;
+        tooltipContent += `Population: ${total.toLocaleString()}<br>`;
 
         tooltip
           .html(tooltipContent)
@@ -3319,13 +3319,8 @@ function drawSankey(sankeyData, maxWidth=600, maxHeight=450, year=2020)
       const totalOut = d.sourceLinks ? d3.sum(d.sourceLinks, l => l.value) : 0;
 
       let tooltipContent = `<strong>${d.name}</strong><br>`;
-      if (totalIn > 0) {
-        tooltipContent += `Incoming: ${totalIn.toLocaleString()}<br>`;
-      }
-      if (totalOut > 0) {
-        tooltipContent += `Outgoing: ${totalOut.toLocaleString()}`;
-      }
-
+      let total = totalIn > 0 ? totalIn : totalOut;
+      tooltipContent += `Population: ${total.toLocaleString()}<br>`;
       tooltip
         .html(tooltipContent)
         .style("opacity", 1);
