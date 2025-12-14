@@ -3423,9 +3423,8 @@ sankey_id.appendChild(drawSankey(sankeyData, 600, 450, initialYearSankey));
 const apacGeodataSrc = 'world.json';
 const apacGeoData = await d3.json('./json/' + apacGeodataSrc);
 
-const networkDataSrc = 'apac_migration_data.csv';
+const networkDataSrc = 'apac_migration_data_neighbours.csv';
 const networkData = (await d3.dsv(",", './data/section_5/' + networkDataSrc))
-.filter(d => d.year === '2020');
 // .map(d => ({
 //   origin_location_code: d.origin_location_code,
 //   destination_country: d.asylum_location_code,
@@ -3456,82 +3455,237 @@ function drawNetwork(geoData, data) {
     .attr("stroke-width", 0.5);
 
   //draw centroids
-  svg.append("g")
-    .selectAll("circle")
-    .data(geoData.features)
-    .enter()
-    .append("circle")
-    .attr("cx", function(d) {
-      return projection(d3.geoCentroid(d))[0];
-    })
-    .attr("cy", function(d) {
-      return projection(d3.geoCentroid(d))[1];
-    })
-    .attr("r", 10)
-    .attr("fill", "#333")
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 0.5)
-    .style("opacity", 0.6);
-
-  //hover country name tooltip
-  const tooltip = d3.select("body").select(".network-tooltip").empty() 
-    ? d3.select("body").append("div").attr("class", "network-tooltip")
-    : d3.select("body").select(".network-tooltip");
-  tooltip.style("position", "absolute")
-    .style("visibility", "hidden")
-    .style("background-color", "rgba(0, 0, 0, 0.9)")
-    .style("color", "white")
-    .style("padding", "10px 14px")
-    .style("border-radius", "6px")
-    .style("font-size", "13px")
-    .style("pointer-events", "none")
-    .style("z-index", "1000");
-  svg.selectAll("circle")
-
-    .on("mouseover", function(event, d) {
-      const countryName = d.properties.name;
-      tooltip.style("visibility", "visible")
-        .html(`<strong>${countryName}</strong>`);
-    })
-    .on("mousemove", function(event) {
-      tooltip.style("top", (event.pageY - 10) + "px")
-        .style("left", (event.pageX + 10) + "px");
-    })
-    .on("mouseout", function(event, d) {
-      tooltip.style("visibility", "hidden");
-    });
-
+  
 
   //draw arrows for each adjacent pair
-  const arrowsGroup = svg.append("g")
+  
+  // Add a definition for the arrowhead marker
+  // 1. DEFINE MARKERS (Create one for Red and one for Blue)
+const defs = svg.append("defs");
+
+// Helper function to create markers easily
+function createMarker(color) {
+  defs.append("marker")
+    .attr("id", `arrowhead-${color}`) // ID becomes "arrowhead-red" or "arrowhead-blue"
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", .1) // Increased refX slightly to ensure tip doesn't overlap circle edge
+    .attr("refY", 0)
+    .attr("markerWidth", 2) 
+    .attr("markerHeight", 2)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", color) // Fill matches the passed color
+    .attr("opacity", 0.6);
+}
+
+createMarker("orange");
+createMarker("purple");
+
+const arrowsGroup = svg.append("g")
     .attr("class", "arrows-group");
 
-  data.forEach(function(d) { 
-    const originFeature = geoData.features.find(function(feature) {
-      // console.log("Checking feature id:", feature.id, "against origin code:", d.origin_location_code);
-      return feature.id === d.origin_location_code;
-    });
-    const destFeature = geoData.features.find(function(feature) {
-      return feature.id === d.asylum_location_code;
-    });
-    console.log("Origin:", d.origin_location_code, "Dest:", d.asylum_location_code, "Migrants:", d.population);
-    console.log("Origin Feature:", originFeature ? originFeature.properties.name : "Not found");
-    console.log("Dest Feature:", destFeature ? destFeature.properties.name : "Not found");
-    if (originFeature && destFeature) {
-      const originCentroid = projection(d3.geoCentroid(originFeature));
-      const destCentroid = projection(d3.geoCentroid(destFeature));
-      arrowsGroup.append("line")
-        .attr("x1", originCentroid[0])
-        .attr("y1", originCentroid[1])
-        .attr("x2", destCentroid[0])
-        .attr("y2", destCentroid[1])
-        .attr("stroke", "red")
-        .attr("stroke-width", Math.max(1, Math.log(d.population) / 2))
-        .attr("marker-end", "url(#arrowhead)");
-    }
-  });
+data.forEach(function(d) {
+    if (d.population <= 0) return;
 
-  
+    const originFeature = geoData.features.find(f => f.id === d.origin_location_code);
+    const destFeature = geoData.features.find(f => f.id === d.asylum_location_code);
+
+    if (originFeature && destFeature) {
+        const width = Math.max(1, Math.pow(d.population, 1/8) - 1);
+
+        const source = projection(d3.geoCentroid(originFeature));
+        const target = projection(d3.geoCentroid(destFeature));
+
+        // --- 1. Control Point Calculation (Same as before) ---
+        const dx = target[0] - source[0];
+        const dy = target[1] - source[1];
+        const dr = Math.sqrt(dx * dx + dy * dy);
+        
+        const mx = (source[0] + target[0]) / 2;
+        const my = (source[1] + target[1]) / 2;
+        
+        const normX = -dy / dr;
+        const normY = dx / dr;
+        const curveStrength = 1000 / (dr ** 2); 
+        
+        const cx = mx + (dr * curveStrength * normX);
+        const cy = my + (dr * curveStrength * normY);
+
+        // --- 2. Shorten the Path (New Logic) ---
+        let fromBuffer = 8;
+        let toBuffer = 10 + width * 2;
+
+        if (fromBuffer + toBuffer > 2 * dr) {
+            const scale = dr / ((fromBuffer + toBuffer) * 2);
+            fromBuffer *= scale;
+            toBuffer *= scale;
+        }
+
+        // Shorten Source: Move 'source' towards 'control' (cx, cy)
+        // Tangent vector at start = Control - Source
+        const dsx = cx - source[0];
+        const dsy = cy - source[1];
+        const lenStart = Math.sqrt(dsx*dsx + dsy*dsy);
+        
+        const newSourceX = source[0] + (dsx / lenStart) * fromBuffer;
+        const newSourceY = source[1] + (dsy / lenStart) * fromBuffer;
+
+        // Shorten Target: Move 'target' towards 'control' (cx, cy)
+        // Tangent vector at end = Target - Control
+        // We want to go backwards, so we subtract
+        const dtx = target[0] - cx;
+        const dty = target[1] - cy;
+        const lenEnd = Math.sqrt(dtx*dtx + dty*dty);
+
+        const newTargetX = target[0] - (dtx / lenEnd) * toBuffer;
+        const newTargetY = target[1] - (dty / lenEnd) * toBuffer;
+
+
+        // --- 3. Draw ---
+        const pathString = `M ${newSourceX},${newSourceY} Q ${cx},${cy} ${newTargetX},${newTargetY}`;
+        
+        // Determine color
+        const color = source[0] < target[0] ? "orange" : "purple";
+
+        arrowsGroup.append("path")
+            .attr("d", pathString)
+            .attr("fill", "none")
+            .attr("stroke", color)
+            .attr("stroke-opacity", 0.6)
+            .attr("stroke-width", width)
+            // Dynamically select the marker ID based on the color variable
+            .attr("marker-end", `url(#arrowhead-${color})`);
+    }
+});
+
+  //draw centroids only if either incoming or outgoing migrants are not 0, use colors
+  const countryNodes = geoData.features.map(f => {
+    const countryCode = f.id;
+    const outgoingSplit = data.filter(l => l.origin_location_code === countryCode);
+    const outgoing = d3.sum(outgoingSplit, l => l.population);
+    const incomingSplit = data.filter(l => l.asylum_location_code === countryCode);
+    const incoming = d3.sum(incomingSplit, l => l.population);
+    return {
+      id: countryCode,
+      properties: f.properties,
+      outgoingSplit: outgoingSplit,
+      outgoing: outgoing,
+      incomingSplit: incomingSplit,
+      incoming: incoming
+    };
+  }
+  ).filter(d => d.outgoing > 0 || d.incoming > 0);
+
+  svg.append("g")
+  //draw 2 arcs for each country, one for incoming (green) and one for outgoing (orange)
+      .selectAll(".outgoing-arc")
+      .data(countryNodes)
+      .enter()
+      .append("path")
+          .attr("class", "outgoing-arc")
+          .attr("d", d => {
+            const endAngle = Math.PI * 2 * (d.outgoing / (d.outgoing + d.incoming));
+            console.log(d.id, endAngle);
+            return d3.arc()({
+              innerRadius: 4,
+              outerRadius: 10,
+              startAngle: 0,
+              endAngle: endAngle
+            });
+          })
+          .attr("transform", d => {
+            const centroid = projection(d3.geoCentroid(geoData.features.find(f => f.id === d.id)));
+            return `translate(${centroid[0]},${centroid[1]})`;
+          })
+          .attr("fill", "red")
+          .attr("fill-opacity", 0.8);
+
+  svg.append("g")
+      .selectAll(".incoming-arc")
+      .data(countryNodes)
+      .enter()
+      .append("path")
+          .attr("class", "incoming-arc")
+          .attr("d", d => {
+            const startAngle = Math.PI * 2* (d.outgoing / (d.outgoing + d.incoming));
+
+            return d3.arc()({
+              innerRadius: 4,
+              outerRadius: 10,
+              startAngle: startAngle,
+              endAngle: 2 * Math.PI
+            });
+          }
+          )
+          .attr("transform", d => {
+            const centroid = projection(d3.geoCentroid(geoData.features.find(f => f.id === d.id)));
+            return `translate(${centroid[0]},${centroid[1]})`;
+          })
+          .attr("fill", "blue")
+          .attr("fill-opacity", 0.8);
+
+
+  //add back circles for countries involved for tooltips
+  svg.append("g")
+      .selectAll("circle")
+      .data(countryNodes)
+      .enter().append("circle")
+          .attr("cx", d => projection(d3.geoCentroid(geoData.features.find(f => f.id === d.id)))[0])
+          .attr("cy", d => projection(d3.geoCentroid(geoData.features.find(f => f.id === d.id)))[1])
+          .attr("r", 10)
+          .attr("fill", "transparent")
+          .style("cursor", "pointer");
+
+        
+
+  //hover country name tooltip with incoming and outgoing migrants, only for countries involved in the data
+  // Create tooltip (remove any existing tooltip first)
+  d3.select("body").selectAll(".network-tooltip").remove();
+  const tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "network-tooltip")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("background", "white")
+    .style("border", "1px solid #666")
+    .style("padding", "8px")
+    .style("border-radius", "4px")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("font-size", "12px")
+    .style("visibility", "hidden");
+
+  svg.selectAll("circle")
+      .on("mouseover", function(event, d) {
+        const countryCode = d.id;
+        const outgoing = d.outgoing;
+        const outgoingSplit = d.outgoingSplit;
+        const incoming = d.incoming;
+        const incomingSplit = d.incomingSplit;
+        tooltip.style("visibility", "visible")
+          .html(() => {
+            let html = `<strong>${d.properties.name}</strong><br/>`;
+            html += `<span style="color:red;">Outgoing Migrants: ${outgoing.toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}</span><br/>`;
+            outgoingSplit.forEach(l => {
+              if (l.population <= 0) return;
+              html += `&nbsp;&nbsp;- To ${l.asylum_location_code}: ${parseInt(l.population).toLocaleString()}<br/>`;
+            });
+            html += `<span style="color:blue;">Incoming Migrants: ${incoming.toLocaleString(undefined, {maximumFractionDigits: 0, minimumFractionDigits: 0})}</span><br/>`;
+            incomingSplit.forEach(l => {
+              if (l.population <= 0) return;
+              html += `&nbsp;&nbsp;- From ${l.origin_location_code}: ${parseInt(l.population).toLocaleString()}<br/>`;
+            });
+            return html;
+          });
+      })
+      .on("mousemove", function(event) {
+        tooltip.style("top", (event.pageY - 10) + "px")
+          .style("left", (event.pageX + 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        tooltip.style("visibility", "hidden");
+      });
+
 
   return svg.node();
 }
